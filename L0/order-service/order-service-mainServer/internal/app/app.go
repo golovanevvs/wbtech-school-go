@@ -23,10 +23,6 @@ type app struct {
 
 func Run() {
 	zlog.Init()
-	zlog.Logger = zlog.Logger.Level(zerolog.DebugLevel).Output(zerolog.ConsoleWriter{
-		Out:        os.Stdout,
-		TimeFormat: "2006-01-02 15:04:05",
-	})
 
 	configFile := "config.yaml"
 	envFile := ".env"
@@ -36,13 +32,13 @@ func Run() {
 	envPath := fmt.Sprintf("../../%s", envFile)
 
 	zlog.Logger.Info().Msg("Starting order-service-mainServer...")
-	zlog.Logger.Info().Msgf("Loading configuration from %s...", configFile)
+	zlog.Logger.Info().Str("file", configFile).Msg("Loading configuration...")
 
 	cfg := config.New()
 	err := cfg.Load(configPath, envPath, "")
 	if err != nil {
-		zlog.Logger.Error().Err(err).Msgf("Failed to load configuration from %s", configFile)
-		zlog.Logger.Warn().Msgf("Loading default configuration from %s...", configDefaultFile)
+		zlog.Logger.Error().Err(err).Str("file", configFile).Msg("Failed to load configuration")
+		zlog.Logger.Warn().Str("file", configDefaultFile).Msg("Loading default configuration...")
 		err := cfg.Load(configDefaultPath, envPath, "")
 		if err != nil {
 			zlog.Logger.Fatal().Err(err).Msg("Failed to load default configuration")
@@ -55,10 +51,8 @@ func Run() {
 	if err != nil {
 		zlog.Logger.Fatal().Err(err).Msg("Failed to parse log level")
 	}
-	zlog.Logger = zlog.Logger.Level(logLevel).Output(zerolog.ConsoleWriter{
-		Out:        os.Stdout,
-		TimeFormat: "2006-01-02 15:04:05",
-	})
+	zlog.Logger = zlog.Logger.Level(logLevel)
+	zlog.Logger.Info().Str("logLevel", zlog.Logger.GetLevel().String()).Msg("Logging level")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
