@@ -1,0 +1,5 @@
+server:
+  addr: ":5757"
+
+logging:
+  level: "debug"
