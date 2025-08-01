@@ -26,9 +26,9 @@ func Run() {
 
 	configFile := "config.yaml"
 	envFile := ".env"
-	configPath := fmt.Sprintf("../../%s", configFile)
+	configPath := fmt.Sprintf("../../config/%s", configFile)
 	configDefaultFile := "default-config.yaml"
-	configDefaultPath := fmt.Sprintf("../../%s", configDefaultFile)
+	configDefaultPath := fmt.Sprintf("../../config/%s", configDefaultFile)
 	envPath := fmt.Sprintf("../../%s", envFile)
 
 	zlog.Logger.Info().Msg("Starting order-service-mainServer...")
@@ -54,9 +54,6 @@ func Run() {
 	zlog.Logger = zlog.Logger.Level(logLevel)
 	zlog.Logger.Info().Str("logLevel", zlog.Logger.GetLevel().String()).Msg("Logging level")
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	h := handler.New(&zlog.Logger)
 
 	a := app{
@@ -65,9 +62,10 @@ func Run() {
 		logger:  &zlog.Logger,
 	}
 
-	a.handler.Router.Use(a.handler.WithLogging())
-
 	a.handler.InitRoutes()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

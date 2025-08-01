@@ -22,5 +22,7 @@ func (h *Handler) Run(addr string) error {
 }
 
 func (h *Handler) InitRoutes() {
+	h.Router.Use(h.WithLogging())
+
 	h.Router.GET("/sample", h.hSample)
 }
