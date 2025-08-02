@@ -11,6 +11,7 @@ import (
 
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/config"
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/logger/zlog"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/transport/http/handler"
 	"github.com/rs/zerolog"
 )
@@ -19,9 +20,13 @@ type app struct {
 	config  *config.Config
 	handler *handler.Handler
 	logger  *zerolog.Logger
+	rp      *repository.Repository
 }
 
 func Run() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	zlog.Init()
 
 	configFile := "config.yaml"
@@ -31,61 +36,64 @@ func Run() {
 	configDefaultPath := fmt.Sprintf("../../config/%s", configDefaultFile)
 	envPath := fmt.Sprintf("../../%s", envFile)
 
-	zlog.Logger.Info().Msg("Starting order-service-mainServer...")
-	zlog.Logger.Info().Str("file", configFile).Msg("Loading configuration...")
+	zlog.Logger.Info().Msg("starting order-service-mainServer...")
+	zlog.Logger.Info().Str("file", configFile).Msg("loading configuration...")
 
 	cfg := config.New()
 	err := cfg.Load(configPath, envPath, "")
 	if err != nil {
-		zlog.Logger.Error().Err(err).Str("file", configFile).Msg("Failed to load configuration")
-		zlog.Logger.Warn().Str("file", configDefaultFile).Msg("Loading default configuration...")
+		zlog.Logger.Error().Err(err).Str("file", configFile).Msg("failed to load configuration")
+		zlog.Logger.Warn().Str("file", configDefaultFile).Msg("loading default configuration...")
 		err := cfg.Load(configDefaultPath, envPath, "")
 		if err != nil {
-			zlog.Logger.Fatal().Err(err).Msg("Failed to load default configuration")
+			zlog.Logger.Fatal().Err(err).Msg("failed to load default configuration")
 		}
 	}
-	zlog.Logger.Info().Msg("Configuration loaded successfully")
+	zlog.Logger.Info().Msg("configuration loaded successfully")
 
 	logLevelStr := cfg.Logger.LogLevel
 	logLevel, err := zlog.ParseLogLevel(logLevelStr)
 	if err != nil {
-		zlog.Logger.Fatal().Err(err).Msg("Failed to parse log level")
+		zlog.Logger.Fatal().Err(err).Msg("failed to parse log level")
 	}
+	zlog.Logger.Info().Str("logLevel", zlog.Logger.GetLevel().String()).Msg("logging level")
 	zlog.Logger = zlog.Logger.Level(logLevel)
-	zlog.Logger.Info().Str("logLevel", zlog.Logger.GetLevel().String()).Msg("Logging level")
 
-	h := handler.New(&zlog.Logger)
+	rp, err := repository.New(ctx, &cfg.Repository, &zlog.Logger)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	h := handler.New(&cfg.Handler, &zlog.Logger)
 
 	a := app{
 		config:  cfg,
 		handler: h,
 		logger:  &zlog.Logger,
+		rp:      rp,
 	}
 
 	a.handler.InitRoutes()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		a.logger.Info().Str("address", a.config.Server.Addr).Msg("Starting HTTP server")
+		a.logger.Info().Str("address", a.config.Server.Addr).Msg("starting HTTP server")
 		if err := a.handler.Run(a.config.Server.Addr); err != nil {
-			a.logger.Error().Err(err).Msg("Failed to start HTTP server")
+			a.logger.Error().Err(err).Msg("failed to start HTTP server")
 			cancel()
 		}
 	}()
 
 	select {
 	case sig := <-quit:
-		a.logger.Warn().Str("signal", sig.String()).Msg("Received shutdown signal")
+		a.logger.Warn().Str("signal", sig.String()).Msg("received shutdown signal")
 	case <-ctx.Done():
-		a.logger.Warn().Msg("Context cancelled")
+		a.logger.Warn().Msg("context cancelled")
 	}
 
-	a.logger.Warn().Msg("Shutting down server...")
+	a.logger.Warn().Msg("shutting down server...")
 
 	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -95,9 +103,11 @@ func Run() {
 		Handler: a.handler.Router,
 	}
 
+	rp.Close()
+
 	if err := srv.Shutdown(ctx); err != nil {
-		a.logger.Fatal().Err(err).Msg("Server forced to shutdown")
+		a.logger.Fatal().Err(err).Msg("server forced to shutdown")
 	}
 
-	a.logger.Info().Msg("Server exited")
+	a.logger.Info().Msg("server exited")
 }

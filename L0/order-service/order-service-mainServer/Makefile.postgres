@@ -1,7 +1,6 @@
 .PHONY: up down clean list_db list_tables show_table
 
 include .env
-export $(.VARIABLES)
 
 POSTGRES_CONTAINER_NAME := order_service_mainServer_postgres
 

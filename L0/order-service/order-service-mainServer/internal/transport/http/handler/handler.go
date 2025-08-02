@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/config"
 	"github.com/rs/zerolog"
 )
 
@@ -10,9 +11,11 @@ type Handler struct {
 	Logger *zerolog.Logger
 }
 
-func New(logger *zerolog.Logger) *Handler {
+func New(cfgHd *config.Handler, logger *zerolog.Logger) *Handler {
+	gin.SetMode(cfgHd.GinMode)
+	router := gin.New()
 	return &Handler{
-		Router: gin.New(),
+		Router: router,
 		Logger: logger,
 	}
 }
