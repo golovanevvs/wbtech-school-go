@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/config"
-	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/handler"
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/logger/zlog"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/transport/http/handler"
 	"github.com/rs/zerolog"
 )
 

@@ -1,0 +1,50 @@
+.PHONY: up down clean list_db list_tables show_table
+
+include .env
+export $(.VARIABLES)
+
+POSTGRES_CONTAINER_NAME := order_service_mainServer_postgres
+
+up:
+	@echo "Starting PostgreSQL container..."
+	@docker run -d \
+		--name $(POSTGRES_CONTAINER_NAME) \
+		-p $(POSTGRES_PORT):5432 \
+		-e POSTGRES_USER=$(POSTGRES_USER) \
+		-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+		-e POSTGRES_DB=$(POSTGRES_DB) \
+		-v pgdata:/var/lib/postgresql/data \
+		--health-cmd="pg_isready -U $(POSTGRES_USER) -d $(POSTGRES_DB)" \
+		--health-interval=10s \
+		--health-timeout=5s \
+		--health-retries=5 \
+		--health-start-period=15s \
+		postgres:latest
+	@echo "Waiting 3 seconds for initialization..."
+	@sleep 3
+	@docker logs -f $(POSTGRES_CONTAINER_NAME) | grep -q "database system is ready" || (echo "Initialization failed"; exit 1)
+
+down:
+	@echo "Stopping container..."
+	@-docker stop $(POSTGRES_CONTAINER_NAME)
+	@-docker rm $(POSTGRES_CONTAINER_NAME)
+	
+
+clean:
+	@echo "Performing full cleanup..."
+	@-docker stop $(POSTGRES_CONTAINER_NAME) 2>/dev/null
+	@-docker rm $(POSTGRES_CONTAINER_NAME) 2>/dev/null
+	@-docker volume rm pgdata 2>/dev/null
+
+list_db:
+	@echo "Listing databases..."
+	@docker exec -it $(POSTGRES_CONTAINER_NAME) psql -U $(POSTGRES_USER) -l
+
+list_tables:
+	@echo "Listing tables in database \"$(POSTGRES_DB)\"..."
+	@docker exec -it $(POSTGRES_CONTAINER_NAME) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\dt"
+
+show_table:
+	@echo "Showing 10 rows of table \"$(TABLE)\"..."
+	@docker exec -it $(POSTGRES_CONTAINER_NAME) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) \
+	-c "SELECT * FROM $(TABLE) LIMIT 10"
