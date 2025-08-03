@@ -5,23 +5,24 @@ import (
 	"strings"
 	"time"
 
+	"github.com/IBM/sarama"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
 	vip        *viper.Viper
-	Server     server
-	Logger     logger
+	Server     Server
+	Logger     Logger
 	Repository Repository
 	Handler    Handler
 }
 
-type server struct {
+type Server struct {
 	Addr string
 }
 
-type logger struct {
+type Logger struct {
 	LogLevel string
 }
 
@@ -38,6 +39,17 @@ type postgres struct {
 
 type Handler struct {
 	GinMode string
+}
+
+type Kafka struct {
+	Brokers             []string
+	ClientID            string
+	ConsumerGroup       string
+	Version             string
+	RetryMax            int
+	RequiredAcks        sarama.RequiredAcks
+	Partitioner         string
+	EnableReturnSuccess bool
 }
 
 func New() *Config {

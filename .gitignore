@@ -31,3 +31,4 @@ go.work.sum
 .idea/
 .vscode/
 config.yaml
+/L0/order-service/order-service-mainServer/config/kafka

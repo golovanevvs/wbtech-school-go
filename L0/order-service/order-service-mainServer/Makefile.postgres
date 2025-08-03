@@ -38,7 +38,7 @@ clean:
 	@echo "Performing full cleanup PostgreSQL..."
 	@-docker stop $(POSTGRES_CONTAINER_NAME) 2>/dev/null
 	@-docker rm -f $(POSTGRES_CONTAINER_NAME) 2>/dev/null || true
-	@-docker volume rm pgdata 2>/dev/null || true
+	@docker volume rm pgdata 2>/dev/null || true
 	@echo "Cleanup PostgreSQL completed"
 
 list_db:
