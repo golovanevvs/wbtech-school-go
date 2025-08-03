@@ -3,6 +3,7 @@
 include .env
 
 POSTGRES_CONTAINER_NAME := order_service_mainServer_postgres
+STARTUP_TIMEOUT := 8
 
 up:
 	@echo "Starting PostgreSQL container..."
@@ -19,21 +20,26 @@ up:
 		--health-retries=5 \
 		--health-start-period=15s \
 		postgres:latest
-	@echo "Waiting 3 seconds for initialization..."
-	@sleep 3
-	@docker logs -f $(POSTGRES_CONTAINER_NAME) | grep -q "database system is ready" || (echo "Initialization failed"; exit 1)
+	@echo "Waiting for database system to start (timeout: $(STARTUP_TIMEOUT)s...)"
+	@timeout $(STARTUP_TIMEOUT) sh -c \
+	  'until docker logs $(POSTGRES_CONTAINER_NAME) 2>&1 | grep -q "database system is ready to accept connections"; do \
+	    sleep 1; \
+	  done' || \
+	  (echo "database system failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
+	@docker logs -f $(POSTGRES_CONTAINER_NAME)
 
 down:
-	@echo "Stopping container..."
+	@echo "Stopping PostgreSQL container..."
 	@-docker stop $(POSTGRES_CONTAINER_NAME)
 	@-docker rm $(POSTGRES_CONTAINER_NAME)
-	
+	@echo "PostgreSQL container stopped and removed"
 
 clean:
-	@echo "Performing full cleanup..."
+	@echo "Performing full cleanup PostgreSQL..."
 	@-docker stop $(POSTGRES_CONTAINER_NAME) 2>/dev/null
-	@-docker rm $(POSTGRES_CONTAINER_NAME) 2>/dev/null
-	@-docker volume rm pgdata 2>/dev/null
+	@-docker rm -f $(POSTGRES_CONTAINER_NAME) 2>/dev/null || true
+	@-docker volume rm pgdata 2>/dev/null || true
+	@echo "Cleanup PostgreSQL completed"
 
 list_db:
 	@echo "Listing databases..."

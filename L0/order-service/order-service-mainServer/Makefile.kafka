@@ -1,0 +1,60 @@
+KAFKA_IMAGE ?= apache/kafka:4.0.0
+CONTAINER_NAME ?= kafka
+DATA_VOLUME ?= kafka_data
+CONFIG_DIR ?= $(CURDIR)/config
+DATA_DIR ?= $(CURDIR)/data
+PORT ?= 9092
+CONTROLLER_PORT ?= 9093
+STARTUP_TIMEOUT ?= 8
+
+.PHONY: start stop clean check prepare-config
+
+start: prepare-config
+	@echo "Starting Kafka container (logs will follow)..."
+	@docker run --rm \
+	  --name $(CONTAINER_NAME) \
+	  -p $(PORT):9092 \
+	  -p $(CONTROLLER_PORT):9093 \
+	  -v $(DATA_DIR):/tmp/kafka-data \
+	  -v $(CONFIG_DIR):/opt/kafka/config \
+	  $(KAFKA_IMAGE) &
+	@echo "Waiting for Kafka to start (timeout: $(STARTUP_TIMEOUT)s)..."
+	@timeout $(STARTUP_TIMEOUT) sh -c \
+	  'until docker logs $(CONTAINER_NAME) 2>&1 | grep -q "Kafka Server started"; do \
+	    sleep 1; \
+	  done' || \
+	  (echo "Kafka failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
+	@echo "Kafka started successfully. Press Ctrl+C to detach from logs."
+	@docker logs -f $(CONTAINER_NAME)
+
+stop:
+	@echo "Stopping Kafka..."
+	@docker stop $(CONTAINER_NAME)
+
+clean:
+	@echo "Stopping Kafka..."
+	@docker stop $(CONTAINER_NAME)
+	@echo "Cleaning up..."
+	@docker rm -f $(CONTAINER_NAME) 2>/dev/null || true
+	@docker volume rm $(DATA_VOLUME) 2>/dev/null || true
+	@rm -rf $(DATA_DIR) 2>/dev/null || true
+
+check:
+	@echo "Checking Kafka status..."
+	@docker exec $(CONTAINER_NAME) \
+	  /opt/kafka/bin/kafka-broker-api-versions.sh \
+	  --bootstrap-server localhost:9092
+
+prepare-config:
+	@mkdir -p $(CONFIG_DIR) $(DATA_DIR)
+	@if [ ! -f $(CONFIG_DIR)/server.properties ]; then \
+	  echo "Creating default server.properties..."; \
+	  echo "process.roles=broker,controller" > $(CONFIG_DIR)/server.properties; \
+	  echo "node.id=1" >> $(CONFIG_DIR)/server.properties; \
+	  echo "controller.quorum.voters=1@localhost:$(CONTROLLER_PORT)" >> $(CONFIG_DIR)/server.properties; \
+	  echo "listeners=PLAINTEXT://:9092,CONTROLLER://:$(CONTROLLER_PORT)" >> $(CONFIG_DIR)/server.properties; \
+	  echo "advertised.listeners=PLAINTEXT://localhost:$(PORT)" >> $(CONFIG_DIR)/server.properties; \
+	  echo "controller.listener.names=CONTROLLER" >> $(CONFIG_DIR)/server.properties; \
+	  echo "inter.broker.listener.name=PLAINTEXT" >> $(CONFIG_DIR)/server.properties; \
+	  echo "log.dirs=/tmp/kafka-data" >> $(CONFIG_DIR)/server.properties; \
+	fi
