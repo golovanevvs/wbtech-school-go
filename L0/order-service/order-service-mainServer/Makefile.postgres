@@ -1,8 +1,8 @@
-.PHONY: up down clean list_db list_tables show_table
+.PHONY: up down clean list-db list-tables show-table
 
 include .env
 
-POSTGRES_CONTAINER_NAME := order_service_mainServer_postgres
+POSTGRES_CONTAINER_NAME := order-service-mainServer-postgres
 STARTUP_TIMEOUT := 8
 
 up:
@@ -41,15 +41,15 @@ clean:
 	@docker volume rm pgdata 2>/dev/null || true
 	@echo "Cleanup PostgreSQL completed"
 
-list_db:
+list-db:
 	@echo "Listing databases..."
 	@docker exec -it $(POSTGRES_CONTAINER_NAME) psql -U $(POSTGRES_USER) -l
 
-list_tables:
+list-tables:
 	@echo "Listing tables in database \"$(POSTGRES_DB)\"..."
 	@docker exec -it $(POSTGRES_CONTAINER_NAME) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\dt"
 
-show_table:
+show-table:
 	@echo "Showing 10 rows of table \"$(TABLE)\"..."
 	@docker exec -it $(POSTGRES_CONTAINER_NAME) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) \
 	-c "SELECT * FROM $(TABLE) LIMIT 10"

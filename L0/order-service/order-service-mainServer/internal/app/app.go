@@ -31,10 +31,10 @@ func Run() {
 
 	configFile := "config.yaml"
 	envFile := ".env"
-	configPath := fmt.Sprintf("../../config/%s", configFile)
+	configPath := fmt.Sprintf("./config/%s", configFile)
 	configDefaultFile := "default-config.yaml"
-	configDefaultPath := fmt.Sprintf("../../config/%s", configDefaultFile)
-	envPath := fmt.Sprintf("../../%s", envFile)
+	configDefaultPath := fmt.Sprintf("./config/%s", configDefaultFile)
+	envPath := fmt.Sprintf("./%s", envFile)
 
 	zlog.Logger.Info().Msg("starting order-service-mainServer...")
 	zlog.Logger.Info().Str("file", configFile).Msg("loading configuration...")
@@ -56,7 +56,7 @@ func Run() {
 	if err != nil {
 		zlog.Logger.Fatal().Err(err).Msg("failed to parse log level")
 	}
-	zlog.Logger.Info().Str("logLevel", zlog.Logger.GetLevel().String()).Msg("logging level")
+	zlog.Logger.Info().Str("logLevel", logLevel.String()).Msg("logging level")
 	zlog.Logger = zlog.Logger.Level(logLevel)
 
 	rp, err := repository.New(ctx, &cfg.Repository, &zlog.Logger)
@@ -110,4 +110,5 @@ func Run() {
 	}
 
 	a.logger.Info().Msg("server exited")
+	time.Sleep(5 * time.Second)
 }
