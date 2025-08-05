@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
@@ -16,6 +15,7 @@ type Config struct {
 	Logger     Logger
 	Repository Repository
 	Handler    Handler
+	Kafka      Kafka
 }
 
 type Server struct {
@@ -47,8 +47,8 @@ type Kafka struct {
 	ConsumerGroup       string
 	Version             string
 	RetryMax            int
-	RequiredAcks        sarama.RequiredAcks
-	Partitioner         string
+	RequiredAcks        int    // NoResponse=0, WaitForLocal=1, WaitForAll=-1
+	Partitioner         string //"roundrobin", "hash"
 	EnableReturnSuccess bool
 }
 
@@ -92,6 +92,15 @@ func (c *Config) Load(pathConfigFile string, pathEnvFile string, envPrefix strin
 	c.Repository.Postgres.ConnMaxLifetime = c.vip.GetDuration("postgres.conn_max_lifetime")
 
 	c.Handler.GinMode = c.vip.GetString("gin.mode")
+
+	c.Kafka.Brokers = c.vip.GetStringSlice("kafka.brokers")
+	c.Kafka.ClientID = c.vip.GetString("kafka.client_id")
+	c.Kafka.ConsumerGroup = c.vip.GetString("kafka.consumer_group")
+	c.Kafka.Version = c.vip.GetString("kafka.version")
+	c.Kafka.RetryMax = c.vip.GetInt("kafka.retry_max")
+	c.Kafka.RequiredAcks = c.vip.GetInt("kafka.required_acks")
+	c.Kafka.Partitioner = c.vip.GetString("kafka.partitioner")
+	c.Kafka.EnableReturnSuccess = c.vip.GetBool(("kafka.enable_return_success"))
 
 	return nil
 }

@@ -24,10 +24,11 @@ type app struct {
 }
 
 func Run() {
+	zlog.Init()
+	zlog.Logger.Info().Msg("starting order-service-mainServer...")
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	zlog.Init()
 
 	configFile := "config.yaml"
 	envFile := ".env"
@@ -36,7 +37,6 @@ func Run() {
 	configDefaultPath := fmt.Sprintf("./config/%s", configDefaultFile)
 	envPath := fmt.Sprintf("./%s", envFile)
 
-	zlog.Logger.Info().Msg("starting order-service-mainServer...")
 	zlog.Logger.Info().Str("file", configFile).Msg("loading configuration...")
 
 	cfg := config.New()

@@ -15,9 +15,7 @@ type Postgres struct {
 }
 
 func New(ctx context.Context, cfgRp *config.Repository, logger *zerolog.Logger) (*Postgres, error) {
-	log := logger.With().
-		Str("component", "postgres").
-		Logger()
+	log := logger.With().Str("component", "postgres").Logger()
 
 	log.Info().Msg("сonnecting to PostgreSQL")
 
