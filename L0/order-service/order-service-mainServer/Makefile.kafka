@@ -12,9 +12,9 @@ KAFKA_CONFIG_DIR ?= $(KAFKA_HOME)/config
 KAFKA_BIN_DIR ?= $(KAFKA_HOME)/bin
 KAFKA_DATA_DIR ?= /var/lib/kafka/data
 
-.PHONY: start stop clean check topics create-topic
+.PHONY: up down clean check topics create-topic
 
-start:
+up:
 	@if docker ps -a --filter "name=$(CONTAINER_NAME)" --format '{{.Status}}' | grep -q "Exited"; then \
 		echo "Restarting existing stopped container..."; \
 		docker start $(CONTAINER_NAME); \
@@ -31,21 +31,25 @@ start:
 		echo "Kafka container is already running"; \
 		exit 0; \
 	fi
+
 	@echo "Waiting for Kafka to start..."
 	@timeout $(STARTUP_TIMEOUT) sh -c \
-	  'until docker logs $(CONTAINER_NAME) 2>&1 | grep -q "Kafka Server started"; do sleep 1; done' || \
-	  (echo "Kafka failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
+	  'until docker logs $(CONTAINER_NAME) 2>&1 | grep -qE "Kafka Server started|started \(kafka.server.KafkaServer\)"; do \
+	     sleep 1; \
+	   done' || \
+	   (echo "Kafka failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
+
 	@echo "Kafka started successfully."
 	@docker logs -f $(CONTAINER_NAME)
 
-stop:
+down:
 	@echo "Gracefully stopping Kafka..."
 	@-docker exec $(CONTAINER_NAME) opt/kafka/bin/kafka-server-stop.sh || true
 	@sleep $(SHUTDOWN_TIMEOUT)
 	@-docker stop $(CONTAINER_NAME) 2>/dev/null || true
 	@echo "Kafka container stopped (container preserved)"
 
-clean: stop
+clean: down
 	@echo "Performing full cleanup..."
 	@-docker rm -f $(CONTAINER_NAME) 2>/dev/null || true
 	@-docker volume rm $(KAFKA_DATA_VOLUME) 2>/dev/null || true

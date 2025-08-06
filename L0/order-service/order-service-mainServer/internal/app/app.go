@@ -99,7 +99,7 @@ func Run() {
 		return nil
 	}
 
-	consumerGroup, err := kafka.NewConsumerGroup(k, &zlog.Logger, topics, kafkaHandler)
+	consumerGroup, err := kafka.NewConsumerGroup(k, topics, kafkaHandler)
 	if err != nil {
 		os.Exit(1)
 	}

@@ -23,3 +23,4 @@ kafka:
   partitioner: "roundrobin"
   enable_return_success: true
   topic: "order-info"
+  consumer_worker_count: 10

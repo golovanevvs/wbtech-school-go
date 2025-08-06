@@ -51,6 +51,18 @@ type Kafka struct {
 	Partitioner         string //"roundrobin", "hash"
 	EnableReturnSuccess bool
 	Topic               string
+	ConsumerWorkerCount int
+}
+
+type Cache struct {
+	RedisCache redisCache
+}
+
+type redisCache struct {
+	Addr     string
+	Password string
+	DB       int
+	TTL      time.Duration
 }
 
 func New() *Config {
@@ -103,6 +115,7 @@ func (c *Config) Load(pathConfigFile string, pathEnvFile string, envPrefix strin
 	c.Kafka.Partitioner = c.vip.GetString("kafka.partitioner")
 	c.Kafka.EnableReturnSuccess = c.vip.GetBool(("kafka.enable_return_success"))
 	c.Kafka.Topic = c.vip.GetString("kafka.topic")
+	c.Kafka.ConsumerWorkerCount = c.vip.GetInt("kafka.consumer_worker_count")
 
 	return nil
 }

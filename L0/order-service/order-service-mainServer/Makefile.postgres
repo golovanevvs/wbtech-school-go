@@ -31,8 +31,7 @@ up:
 down:
 	@echo "Stopping PostgreSQL container..."
 	@-docker stop $(POSTGRES_CONTAINER_NAME)
-	@-docker rm $(POSTGRES_CONTAINER_NAME)
-	@echo "PostgreSQL container stopped and removed"
+	@echo "PostgreSQL container stopped"
 
 clean:
 	@echo "Performing full cleanup PostgreSQL..."

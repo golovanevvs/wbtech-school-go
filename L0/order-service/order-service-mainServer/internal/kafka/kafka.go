@@ -11,10 +11,11 @@ import (
 )
 
 type Kafka struct {
-	cfg           *sarama.Config
-	brokers       []string
-	consumerGroup string
-	log           *zerolog.Logger
+	cfg                 *sarama.Config
+	brokers             []string
+	consumerGroup       string
+	consumerWorkerCount int
+	log                 *zerolog.Logger
 }
 
 func New(cfg *config.Kafka, logger *zerolog.Logger) (*Kafka, error) {
@@ -48,10 +49,11 @@ func New(cfg *config.Kafka, logger *zerolog.Logger) (*Kafka, error) {
 	saramaCfg.Consumer.Offsets.Initial = sarama.OffsetNewest
 
 	return &Kafka{
-		cfg:           saramaCfg,
-		brokers:       cfg.Brokers,
-		consumerGroup: cfg.ConsumerGroup,
-		log:           &log,
+		cfg:                 saramaCfg,
+		brokers:             cfg.Brokers,
+		consumerGroup:       cfg.ConsumerGroup,
+		consumerWorkerCount: cfg.ConsumerWorkerCount,
+		log:                 &log,
 	}, nil
 }
 
@@ -231,8 +233,9 @@ func (p *Producer) Close() error {
 type MessageHandler func(ctx context.Context, msg *sarama.ConsumerMessage) error
 
 type consumerGroupHandler struct {
-	handler MessageHandler
-	log     *zerolog.Logger
+	handler             MessageHandler
+	consumerWorkerCount int
+	log                 *zerolog.Logger
 }
 
 func (h *consumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error {
@@ -246,34 +249,61 @@ func (h *consumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error {
 }
 
 func (h *consumerGroupHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	for msg := range claim.Messages() {
-		if err := h.handler(session.Context(), msg); err != nil {
-			h.log.Error().Err(err).
-				Str("topic", msg.Topic).
-				Int32("partition", msg.Partition).
-				Int64("offset", msg.Offset).
-				Msg("failed to process message")
-			continue
-		}
-		session.MarkMessage(msg, "")
-		h.log.Debug().
-			Str("topic", msg.Topic).
-			Int32("partition", msg.Partition).
-			Int64("offset", msg.Offset).
-			Msg("message processed successfully")
+	msgCh := make(chan *sarama.ConsumerMessage)
+
+	var wg sync.WaitGroup
+
+	for i := range h.consumerWorkerCount {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			for msg := range msgCh {
+				if err := h.handler(session.Context(), msg); err != nil {
+					h.log.Error().Err(err).
+						Int("worker id", workerID).
+						Str("topic", msg.Topic).
+						Int32("partition", msg.Partition).
+						Int64("offset", msg.Offset).
+						Msg("failed to process message")
+					continue
+				}
+				session.MarkMessage(msg, "")
+				h.log.Debug().
+					Int("worker id", workerID).
+					Str("topic", msg.Topic).
+					Int32("partition", msg.Partition).
+					Int64("offset", msg.Offset).
+					Msg("message processed successfully")
+			}
+		}(i)
 	}
+
+outer:
+	for msg := range claim.Messages() {
+		select {
+		case msgCh <- msg:
+		case <-session.Context().Done():
+			break outer
+		}
+	}
+
+	close(msgCh)
+
+	wg.Wait()
+
 	return nil
 }
 
 type ConsumerGroup struct {
-	group   sarama.ConsumerGroup
-	handler MessageHandler
-	topics  []string
-	log     *zerolog.Logger
+	group               sarama.ConsumerGroup
+	handler             MessageHandler
+	topics              []string
+	consumerWorkerCount int
+	log                 *zerolog.Logger
 }
 
-func NewConsumerGroup(k *Kafka, logger *zerolog.Logger, topics []string, handler MessageHandler) (*ConsumerGroup, error) {
-	log := logger.With().Str("component", "consumer group").Logger()
+func NewConsumerGroup(k *Kafka, topics []string, handler MessageHandler) (*ConsumerGroup, error) {
+	log := k.log.With().Str("component", "consumer group").Logger()
 
 	group, err := sarama.NewConsumerGroup(k.brokers, k.consumerGroup, k.cfg)
 	if err != nil {
@@ -287,10 +317,11 @@ func NewConsumerGroup(k *Kafka, logger *zerolog.Logger, topics []string, handler
 		Msg("consumer group created")
 
 	return &ConsumerGroup{
-		group:   group,
-		handler: handler,
-		topics:  topics,
-		log:     &log,
+		group:               group,
+		handler:             handler,
+		topics:              topics,
+		consumerWorkerCount: k.consumerWorkerCount,
+		log:                 &log,
 	}, nil
 }
 
@@ -311,8 +342,9 @@ func (c *ConsumerGroup) Start(ctx context.Context) error {
 			}
 
 			handler := &consumerGroupHandler{
-				handler: c.handler,
-				log:     c.log,
+				handler:             c.handler,
+				consumerWorkerCount: c.consumerWorkerCount,
+				log:                 c.log,
 			}
 
 			if err := c.group.Consume(ctx, c.topics, handler); err != nil {
