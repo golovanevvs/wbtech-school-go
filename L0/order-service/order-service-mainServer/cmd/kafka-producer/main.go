@@ -65,7 +65,7 @@ func main() {
 		zlog.Logger.Fatal().Err(err).Msg("error time parse")
 	}
 
-	for i := range 10 {
+	for i := range 100 {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		var items []model.Item
@@ -74,7 +74,7 @@ func main() {
 		for range rj {
 			price := rand.Intn(10000)
 			sale := rand.Intn(50)
-			totalPrice := price - price*sale
+			totalPrice := price - price*sale/100
 			goodsTotal += totalPrice
 			item := model.Item{
 				ChrtID:      9934930,
@@ -133,18 +133,8 @@ func main() {
 			zlog.Logger.Fatal().Err(err).Msg("error encoding json")
 		}
 
-		topic := "order-info"
-		partition, offset, err := sp.SendSync(ctx, topic, nil, sarama.ByteEncoder(mJSON), nil)
-		if err != nil {
-			zlog.Logger.Error().Err(err).Msg("failed to send message")
-		} else {
-			zlog.Logger.Info().
-				Str("topic", topic).
-				Int32("partition", partition).
-				Int64("offset", offset).
-				Msg("message sent successfully")
-		}
+		sp.SendSync(ctx, cfg.Kafka.Topic, nil, sarama.ByteEncoder(mJSON), nil)
 
-		time.Sleep(time.Second * 1)
+		time.Sleep(time.Second * 2)
 	}
 }

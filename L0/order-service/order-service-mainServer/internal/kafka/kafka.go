@@ -166,7 +166,7 @@ func (p *Producer) SendSync(ctx context.Context, topic string, key, value []byte
 			return 0, 0, sendErr
 		}
 
-		p.log.Info().
+		p.log.Debug().
 			Str("topic", topic).
 			Int32("partition", part).
 			Int64("offset", off).
@@ -194,7 +194,7 @@ func (p *Producer) SendAsync(ctx context.Context, topic string, key, value []byt
 		return ctx.Err()
 
 	case p.asyncProducer.Input() <- msg:
-		p.log.Info().
+		p.log.Debug().
 			Str("topic", topic).
 			Bytes("key", key).
 			Bytes("value", value).

@@ -11,3 +11,15 @@ postgres:
 
 gin:
   mode: "release"
+
+kafka:
+  brokers:
+    - "localhost:9092"
+  client_id: "order-service-client"
+  consumer_group: "order-service-group"
+  version: "4.0.0"
+  retry_max: 5
+  required_acks: -1
+  partitioner: "roundrobin"
+  enable_return_success: true
+  topic: "order-info"

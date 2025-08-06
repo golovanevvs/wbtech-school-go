@@ -98,7 +98,7 @@ func (p *Postgres) AddOrder(ctx context.Context, order model.Order) error {
 		return err
 	}
 
-	log.Info().
+	log.Debug().
 		Int("order_id", orderID).
 		Msg("order successfully added to database")
 

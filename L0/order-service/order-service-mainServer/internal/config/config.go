@@ -50,6 +50,7 @@ type Kafka struct {
 	RequiredAcks        int    // NoResponse=0, WaitForLocal=1, WaitForAll=-1
 	Partitioner         string //"roundrobin", "hash"
 	EnableReturnSuccess bool
+	Topic               string
 }
 
 func New() *Config {
@@ -101,6 +102,7 @@ func (c *Config) Load(pathConfigFile string, pathEnvFile string, envPrefix strin
 	c.Kafka.RequiredAcks = c.vip.GetInt("kafka.required_acks")
 	c.Kafka.Partitioner = c.vip.GetString("kafka.partitioner")
 	c.Kafka.EnableReturnSuccess = c.vip.GetBool(("kafka.enable_return_success"))
+	c.Kafka.Topic = c.vip.GetString("kafka.topic")
 
 	return nil
 }

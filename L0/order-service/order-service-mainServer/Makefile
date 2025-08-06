@@ -9,3 +9,15 @@ run-server:
 	@echo "Running server completed"
 
 build-run-server: build-server run-server
+
+build-producer:
+	@echo "Building kafka producer..."
+	@go build ./cmd/kafka-producer
+	@echo "Building kafka producer completed"
+
+run-producer:
+	@echo "Running kafka producer..."
+	@start "" "/C/Program Files/Git/git-bash.exe" -c "./kafka-producer"
+	@echo "Running kafka producer completed"
+
+build-run-producer: build-producer run-producer

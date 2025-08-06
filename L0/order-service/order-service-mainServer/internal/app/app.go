@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,8 +10,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/IBM/sarama"
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/config"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/kafka"
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/logger/zlog"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/model"
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/transport/http/handler"
 	"github.com/rs/zerolog"
@@ -26,9 +30,6 @@ type app struct {
 func Run() {
 	zlog.Init()
 	zlog.Logger.Info().Msg("starting order-service-mainServer...")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	configFile := "config.yaml"
 	envFile := ".env"
@@ -59,6 +60,9 @@ func Run() {
 	zlog.Logger.Info().Str("logLevel", logLevel.String()).Msg("logging level")
 	zlog.Logger = zlog.Logger.Level(logLevel)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	rp, err := repository.New(ctx, &cfg.Repository, &zlog.Logger)
 	if err != nil {
 		os.Exit(1)
@@ -66,49 +70,71 @@ func Run() {
 
 	h := handler.New(&cfg.Handler, &zlog.Logger)
 
-	a := app{
-		config:  cfg,
-		handler: h,
-		logger:  &zlog.Logger,
-		rp:      rp,
-	}
-
-	a.handler.InitRoutes()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	h.InitRoutes()
 
 	go func() {
-		a.logger.Info().Str("address", a.config.Server.Addr).Msg("starting HTTP server")
-		if err := a.handler.Run(a.config.Server.Addr); err != nil {
-			a.logger.Error().Err(err).Msg("failed to start HTTP server")
+		zlog.Logger.Info().Str("address", cfg.Server.Addr).Msg("starting HTTP server")
+		if err := h.Run(cfg.Server.Addr); err != nil {
+			zlog.Logger.Error().Err(err).Msg("failed to start HTTP server")
 			cancel()
 		}
 	}()
 
-	select {
-	case sig := <-quit:
-		a.logger.Warn().Str("signal", sig.String()).Msg("received shutdown signal")
-	case <-ctx.Done():
-		a.logger.Warn().Msg("context cancelled")
+	k, err := kafka.New(&cfg.Kafka, &zlog.Logger)
+	if err != nil {
+		os.Exit(1)
 	}
 
-	a.logger.Warn().Msg("shutting down server...")
+	topics := []string{cfg.Kafka.Topic}
+
+	kafkaHandler := func(ctx context.Context, msg *sarama.ConsumerMessage) error {
+		var order model.Order
+		err := json.Unmarshal(msg.Value, &order)
+		if err != nil {
+			zlog.Logger.Error().Err(err).Msg("error decoding message to model")
+		}
+
+		rp.AddOrder(ctx, order)
+
+		return nil
+	}
+
+	consumerGroup, err := kafka.NewConsumerGroup(k, &zlog.Logger, topics, kafkaHandler)
+	if err != nil {
+		os.Exit(1)
+	}
+	defer consumerGroup.Close()
+
+	go func() {
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+		<-sigCh
+		cancel()
+	}()
+
+	if err := consumerGroup.Start(ctx); err != nil {
+		os.Exit(1)
+	}
+
+	<-ctx.Done()
+	zlog.Logger.Warn().Msg("received shutdown signal")
+
+	zlog.Logger.Warn().Msg("shutting down server...")
 
 	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	srv := &http.Server{
-		Addr:    a.config.Server.Addr,
-		Handler: a.handler.Router,
+		Addr:    cfg.Server.Addr,
+		Handler: h.Router,
 	}
 
 	rp.Close()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		a.logger.Fatal().Err(err).Msg("server forced to shutdown")
+		zlog.Logger.Fatal().Err(err).Msg("server forced to shutdown")
 	}
 
-	a.logger.Info().Msg("server exited")
+	zlog.Logger.Info().Msg("server exited")
 	time.Sleep(5 * time.Second)
 }
