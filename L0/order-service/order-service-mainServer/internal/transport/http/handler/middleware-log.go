@@ -22,7 +22,7 @@ func (w *responseBody) Write(b []byte) (int, error) {
 
 func (h Handler) WithLogging() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		logLevel := h.Logger.GetLevel()
+		logLevel := h.logger.GetLevel()
 
 		if logLevel == zerolog.Disabled {
 			c.Next()
@@ -42,7 +42,7 @@ func (h Handler) WithLogging() gin.HandlerFunc {
 
 		c.Next()
 
-		logCtx := h.Logger.With().
+		logCtx := h.logger.With().
 			Str("Request method", c.Request.Method).
 			Str("Request path", c.Request.URL.Path).
 			Str("Request query", c.Request.URL.RawQuery).

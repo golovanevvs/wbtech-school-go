@@ -12,6 +12,8 @@ func (p *Postgres) AddOrder(ctx context.Context, order model.Order) error {
 		Str("method", "AddOrder").
 		Logger()
 
+	log.Debug().Msg("starting AddOrder")
+
 	log.Trace().Msg("starting transaction")
 	tx, err := p.db.BeginTxx(ctx, nil)
 	if err != nil {

@@ -74,7 +74,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	h := handler.New(&cfg.Handler, &zlog.Logger)
+	h := handler.New(&cfg.Handler, &zlog.Logger, rp, rd)
 
 	h.InitRoutes()
 
