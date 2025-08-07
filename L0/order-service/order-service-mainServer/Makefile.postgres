@@ -3,7 +3,7 @@
 include .env
 
 POSTGRES_CONTAINER_NAME := order-service-mainServer-postgres
-STARTUP_TIMEOUT := 8
+STARTUP_TIMEOUT := 30
 
 up:
 	@echo "Starting PostgreSQL container..."
