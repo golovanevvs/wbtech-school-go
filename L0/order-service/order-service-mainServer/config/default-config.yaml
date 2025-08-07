@@ -1,8 +1,8 @@
 server:
-  addr: ":5757"
+  addr: ":6000"
   
 logging:
-  level: "debug"
+  level: "trace"
 
 postgres:
   max_open_conns: 10
@@ -24,3 +24,9 @@ kafka:
   enable_return_success: true
   topic: "order-info"
   consumer_worker_count: 10
+
+redis:
+  addr: ":6379"
+  password: ""
+  db: 0
+  ttl: "30s"

@@ -1,23 +1,29 @@
-build-server:
-	@echo "Building server..."
-	@go build ./cmd/order-service-mainServer
-	@echo "Building server completed"
+kafka-up:
+	$(MAKE) -f Makefile.kafka up
 
-run-server:
-	@echo "Running server..."
-	@start "" "/C/Program Files/Git/git-bash.exe" -c "./order-service-mainServer"
-	@echo "Running server completed"
+kafka-clean:
+	$(MAKE) -f Makefile.kafka clean
 
-build-run-server: build-server run-server
+redis-up:
+	$(MAKE) -f Makefile.redis up
 
-build-producer:
-	@echo "Building kafka producer..."
-	@go build ./cmd/kafka-producer
-	@echo "Building kafka producer completed"
+redis-clean:
+	$(MAKE) -f Makefile.redis clean
 
-run-producer:
-	@echo "Running kafka producer..."
-	@start "" "/C/Program Files/Git/git-bash.exe" -c "./kafka-producer"
-	@echo "Running kafka producer completed"
+postgres-up:
+	$(MAKE) -f Makefile.postgres up
 
-build-run-producer: build-producer run-producer
+postgres-clean:
+	$(MAKE) -f Makefile.postgres clean
+
+migrate-up:
+	$(MAKE) -f Makefile.migrate up
+
+main-build-run-server-producer:
+	$(MAKE) -f Makefile.main build-run-server-producer
+
+run-all: kafka-up redis-up postgres-up migrate-up main-build-run-server-producer
+
+run-main: main-build-run-server-producer
+
+clean-all: kafka-clean redis-clean postgres-clean

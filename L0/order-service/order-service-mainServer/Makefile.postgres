@@ -2,7 +2,7 @@
 
 include .env
 
-POSTGRES_CONTAINER_NAME := order-service-mainServer-postgres
+POSTGRES_CONTAINER_NAME := postgres-order-service
 STARTUP_TIMEOUT := 30
 
 up:
@@ -26,7 +26,6 @@ up:
 	    sleep 1; \
 	  done' || \
 	  (echo "database system failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
-	@docker logs -f $(POSTGRES_CONTAINER_NAME)
 
 down:
 	@echo "Stopping PostgreSQL container..."
@@ -39,6 +38,9 @@ clean:
 	@-docker rm -f $(POSTGRES_CONTAINER_NAME) 2>/dev/null || true
 	@docker volume rm pgdata 2>/dev/null || true
 	@echo "Cleanup PostgreSQL completed"
+
+logs:
+	@docker logs -f $(POSTGRES_CONTAINER_NAME)
 
 list-db:
 	@echo "Listing databases..."

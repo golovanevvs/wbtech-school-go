@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/IBM/sarama"
+	rediscache "github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/cache/redis"
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/config"
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/kafka"
 	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/logger/zlog"
@@ -64,6 +65,11 @@ func Run() {
 	defer cancel()
 
 	rp, err := repository.New(ctx, &cfg.Repository, &zlog.Logger)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	rd, err := rediscache.New(&cfg.RedisCache, &zlog.Logger)
 	if err != nil {
 		os.Exit(1)
 	}

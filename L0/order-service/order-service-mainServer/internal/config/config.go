@@ -16,6 +16,7 @@ type Config struct {
 	Repository Repository
 	Handler    Handler
 	Kafka      Kafka
+	RedisCache RedisCache
 }
 
 type Server struct {
@@ -54,11 +55,7 @@ type Kafka struct {
 	ConsumerWorkerCount int
 }
 
-type Cache struct {
-	RedisCache redisCache
-}
-
-type redisCache struct {
+type RedisCache struct {
 	Addr     string
 	Password string
 	DB       int
@@ -116,6 +113,11 @@ func (c *Config) Load(pathConfigFile string, pathEnvFile string, envPrefix strin
 	c.Kafka.EnableReturnSuccess = c.vip.GetBool(("kafka.enable_return_success"))
 	c.Kafka.Topic = c.vip.GetString("kafka.topic")
 	c.Kafka.ConsumerWorkerCount = c.vip.GetInt("kafka.consumer_worker_count")
+
+	c.RedisCache.Addr = c.vip.GetString("redis.addr")
+	c.RedisCache.Password = c.vip.GetString("redis.password")
+	c.RedisCache.DB = c.vip.GetInt("redis.db")
+	c.RedisCache.TTL = c.vip.GetDuration("redis.ttl")
 
 	return nil
 }

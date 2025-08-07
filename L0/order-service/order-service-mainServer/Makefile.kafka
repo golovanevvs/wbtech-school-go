@@ -1,5 +1,5 @@
 KAFKA_IMAGE ?= apache/kafka:4.0.0
-CONTAINER_NAME ?= kafka
+CONTAINER_NAME ?= kafka-order-service
 KAFKA_DATA_VOLUME ?= kafka_data
 KAFKA_CONFIG_VOLUME ?= kafka_config
 PORT ?= 9092
@@ -40,7 +40,6 @@ up:
 	   (echo "Kafka failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
 
 	@echo "Kafka started successfully."
-	@docker logs -f $(CONTAINER_NAME)
 
 down:
 	@echo "Gracefully stopping Kafka..."
@@ -55,6 +54,9 @@ clean: down
 	@-docker volume rm $(KAFKA_DATA_VOLUME) 2>/dev/null || true
 	@-docker volume rm $(KAFKA_CONFIG_VOLUME) 2>/dev/null || true
 	@echo "Cleanup completed"
+
+logs:
+	@docker logs -f $(CONTAINER_NAME)
 
 check:
 	@echo "Checking Kafka status..."

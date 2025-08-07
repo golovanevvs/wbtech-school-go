@@ -12,7 +12,7 @@ func (p *Postgres) AddOrder(ctx context.Context, order model.Order) error {
 		Str("method", "AddOrder").
 		Logger()
 
-	log.Debug().Msg("starting transaction")
+	log.Trace().Msg("starting transaction")
 	tx, err := p.db.BeginTxx(ctx, nil)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to begin transaction")
@@ -27,7 +27,7 @@ func (p *Postgres) AddOrder(ctx context.Context, order model.Order) error {
 		}
 	}()
 
-	log.Debug().Msg("inserting order record")
+	log.Trace().Msg("inserting order record")
 	row := tx.QueryRowContext(ctx, `
 	INSERT INTO orders
 		(order_uid, track_number, entry, locale, internal_signature, customer_id, delivery_service, shardkey, sm_id, date_created, oof_chard)
@@ -42,7 +42,7 @@ func (p *Postgres) AddOrder(ctx context.Context, order model.Order) error {
 		return err
 	}
 
-	log.Debug().Msg("inserting delivery record")
+	log.Trace().Msg("inserting delivery record")
 	_, err = tx.ExecContext(ctx, `
 	INSERT INTO delivery
 		(name, phone, zip, city, address, region, email, order_id)
@@ -56,7 +56,7 @@ func (p *Postgres) AddOrder(ctx context.Context, order model.Order) error {
 		return err
 	}
 
-	log.Debug().Msg("inserting payment record")
+	log.Trace().Msg("inserting payment record")
 	_, err = tx.ExecContext(ctx, `
 	INSERT INTO payment
 		(transaction, request_id, currency, provider, amount, payment_dt, bank, delivery_cost, goods_total, custom_fee, order_id)
@@ -71,7 +71,7 @@ func (p *Postgres) AddOrder(ctx context.Context, order model.Order) error {
 	}
 
 	if len(order.Items) > 0 {
-		log.Debug().
+		log.Trace().
 			Int("items_count", len(order.Items)).
 			Msg("inserting items")
 		for i := range order.Items {
@@ -91,7 +91,7 @@ func (p *Postgres) AddOrder(ctx context.Context, order model.Order) error {
 		}
 	}
 
-	log.Debug().Msg("commiting transaction")
+	log.Trace().Msg("commiting transaction")
 	if err = tx.Commit(); err != nil {
 		log.Error().Err(err).
 			Msg("failed to commit transaction")

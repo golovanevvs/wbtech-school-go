@@ -1,4 +1,4 @@
-REDIS_CONTAINER_NAME=redis-server
+REDIS_CONTAINER_NAME=redis-order-service
 REDIS_PORT=6379
 MAXMEMORY=1024mb
 MAXMEMORY_POLICY=allkeys-lru
@@ -26,7 +26,7 @@ up:
 	   done' || \
 	   (echo "Redis failed to respond to ping within $(STARTUP_TIMEOUT) seconds"; exit 1)
 
-	@docker logs -f $(REDIS_CONTAINER_NAME)
+	
 
 down:
 	@echo "Stopping Redis container..."
@@ -38,3 +38,6 @@ clean: down
 	@-docker stop $(REDIS_CONTAINER_NAME) 2>/dev/null
 	@-docker rm -f $(REDIS_CONTAINER_NAME) 2>/dev/null || true
 	@echo "Cleanup Redis completed"
+
+logs:
+	@docker logs -f $(REDIS_CONTAINER_NAME)
