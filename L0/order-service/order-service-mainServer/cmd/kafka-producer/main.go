@@ -133,6 +133,7 @@ func main() {
 			zlog.Logger.Fatal().Err(err).Msg("error encoding json")
 		}
 
+		zlog.Logger.Trace().Str("order_uid", m.OrderUID).Msg("sending")
 		sp.SendSync(ctx, cfg.Kafka.Topic, nil, sarama.ByteEncoder(mJSON), nil)
 
 		time.Sleep(time.Second * 2)

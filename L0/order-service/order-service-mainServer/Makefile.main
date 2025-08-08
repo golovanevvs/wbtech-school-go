@@ -8,6 +8,7 @@ build-server:
 run-server:
 	@echo "Running server..."
 	@start "" "/C/Program Files/Git/git-bash.exe" -c "./order-service-mainServer"
+	@sleep 8
 	@echo "Running server completed"
 
 build-run-server: build-server run-server

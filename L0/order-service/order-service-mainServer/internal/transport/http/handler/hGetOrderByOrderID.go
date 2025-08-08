@@ -35,12 +35,15 @@ func (h *Handler) hGetOrderByOrderUID(c *gin.Context) {
 				}
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
+			} else {
+				c.JSON(http.StatusOK, order)
+				return
 			}
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 	}
-	c.JSON(http.StatusOK, order)
 
+	c.JSON(http.StatusOK, order)
 }
