@@ -1,30 +1,28 @@
-.PHONY: build-server run-server build-run-server build-producer run-producer build-run-producer build-run-server-producer run-server-producer
-
-build-server:
+server-build:
 	@echo "Building server..."
 	@go build ./cmd/order-service-mainServer
 	@echo "Building server completed"
 
-run-server:
+server-up:
 	@echo "Running server..."
 	@start "" "/C/Program Files/Git/git-bash.exe" -c "./order-service-mainServer"
 	@sleep 8
 	@echo "Running server completed"
 
-build-run-server: build-server run-server
+server-build-up: server-build server-up
 
-build-producer:
+producer-build:
 	@echo "Building kafka producer..."
 	@go build ./cmd/kafka-producer
 	@echo "Building kafka producer completed"
 
-run-producer:
+producer-up:
 	@echo "Running kafka producer..."
 	@start "" "/C/Program Files/Git/git-bash.exe" -c "./kafka-producer"
 	@echo "Running kafka producer completed"
 
-build-run-producer: build-producer run-producer
+producer-build-up: producer-build producer-up
 
-build-run-server-producer: build-run-server build-run-producer
+server-producer-build-up: server-build-up producer-build-up
 
-run-server-producer: run-server run-producer
+server-producer-up: server-up producer-up

@@ -1,31 +1,42 @@
-.PHONY: up down clean list-db list-tables show-table
+.PHONY: up down clean list-db list-tables show-table logs
 
 include .env
 
+POSTGRES_IMAGE ?= postgres:latest
 POSTGRES_CONTAINER_NAME := postgres-order-service
 STARTUP_TIMEOUT := 30
+PGDATA_VOLUME ?= pgdata
 
 up:
-	@echo "Starting PostgreSQL container..."
-	@docker run -d \
-		--name $(POSTGRES_CONTAINER_NAME) \
-		-p $(POSTGRES_PORT):5432 \
-		-e POSTGRES_USER=$(POSTGRES_USER) \
-		-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
-		-e POSTGRES_DB=$(POSTGRES_DB) \
-		-v pgdata:/var/lib/postgresql/data \
-		--health-cmd="pg_isready -U $(POSTGRES_USER) -d $(POSTGRES_DB)" \
-		--health-interval=10s \
-		--health-timeout=5s \
-		--health-retries=5 \
-		--health-start-period=15s \
-		postgres:latest
+	@if docker ps -a --filter "name=$(POSTGRES_CONTAINER_NAME)" --format '{{.Status}}' | grep -q "Exited"; then \
+		echo "Restarting existing stopped PostgreSQL container..."; \
+		docker start $(POSTGRES_CONTAINER_NAME); \
+	elif ! docker ps -a --filter "name=$(POSTGRES_CONTAINER_NAME)" | grep -q $(POSTGRES_CONTAINER_NAME); then \
+		echo "Starting new PostgreSQL container..."; \
+		docker run -d \
+			--name $(POSTGRES_CONTAINER_NAME) \
+			-p $(POSTGRES_PORT):5432 \
+			-e POSTGRES_USER=$(POSTGRES_USER) \
+			-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+			-e POSTGRES_DB=$(POSTGRES_DB) \
+			-v $(PGDATA_VOLUME):/var/lib/postgresql/data \
+			--health-cmd="pg_isready -U $(POSTGRES_USER) -d $(POSTGRES_DB)" \
+			--health-interval=10s \
+			--health-timeout=5s \
+			--health-retries=5 \
+			--health-start-period=15s \
+			$(POSTGRES_IMAGE); \
+	else \
+		echo "PostgreSQL container is already running"; \
+		exit 0; \
+	fi
+
 	@echo "Waiting for database system to start (timeout: $(STARTUP_TIMEOUT)s...)"
 	@timeout $(STARTUP_TIMEOUT) sh -c \
 	  'until docker logs $(POSTGRES_CONTAINER_NAME) 2>&1 | grep -q "database system is ready to accept connections"; do \
 	    sleep 1; \
 	  done' || \
-	  (echo "database system failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
+	  (echo "Database system failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
 
 down:
 	@echo "Stopping PostgreSQL container..."

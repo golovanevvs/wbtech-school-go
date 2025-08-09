@@ -1,3 +1,4 @@
+REDIS_IMAGE ?= redis:latest
 REDIS_CONTAINER_NAME=redis-order-service
 REDIS_PORT=6379
 MAXMEMORY=1024mb
@@ -5,19 +6,27 @@ MAXMEMORY_POLICY=allkeys-lru
 
 STARTUP_TIMEOUT := 30
 
-.PHONY: up down clean
+.PHONY: up down clean logs
 
 up:
-	@echo "Starting Redis container..."
-	@docker run -d \
-		--name $(REDIS_CONTAINER_NAME) \
-		-p $(REDIS_PORT):6379 \
-		redis:latest \
-		redis-server \
-		--maxmemory $(MAXMEMORY) \
-		--maxmemory-policy $(MAXMEMORY_POLICY) \
-		--save "" \
-		--appendonly no
+	@if docker ps -a --filter "name=$(REDIS_CONTAINER_NAME)" --format '{{.Status}}' | grep -q "Exited"; then \
+		echo "Restarting existing stopped Redis container..."; \
+		docker start $(REDIS_CONTAINER_NAME); \
+	elif ! docker ps -a --filter "name=$(REDIS_CONTAINER_NAME)" | grep -q $(REDIS_CONTAINER_NAME); then \
+		echo "Starting new Redis container..."; \
+		docker run -d \
+			--name $(REDIS_CONTAINER_NAME) \
+			-p $(REDIS_PORT):6379 \
+			$(REDIS_IMAGE) \
+			redis-server \
+			--maxmemory $(MAXMEMORY) \
+			--maxmemory-policy $(MAXMEMORY_POLICY) \
+			--save "" \
+			--appendonly no; \
+	else \
+		echo "Redis container is already running"; \
+		exit 0; \
+	fi
 
 	@echo "Waiting for Redis to be available (timeout: $(STARTUP_TIMEOUT)s)..."
 	@timeout $(STARTUP_TIMEOUT) sh -c \
