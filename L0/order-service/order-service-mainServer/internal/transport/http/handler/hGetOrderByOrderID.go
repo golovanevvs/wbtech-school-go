@@ -36,7 +36,9 @@ func (h *Handler) hGetOrderByOrderUID(c *gin.Context) {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			} else {
+				log.Debug().Msg("data retrieved from database")
 				c.JSON(http.StatusOK, order)
+				h.cache.SetOrder(ctx, orderUID, order)
 				return
 			}
 		} else {
@@ -44,6 +46,6 @@ func (h *Handler) hGetOrderByOrderUID(c *gin.Context) {
 			return
 		}
 	}
-
+	log.Debug().Msg("data retrieved from cache")
 	c.JSON(http.StatusOK, order)
 }

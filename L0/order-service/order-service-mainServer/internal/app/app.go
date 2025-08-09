@@ -64,15 +64,30 @@ func Run() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	rp, err := repository.New(ctx, &cfg.Repository, &zlog.Logger)
-	if err != nil {
-		os.Exit(1)
-	}
+	zlog.Logger.Info().Msg("loading data into cache")
 
 	rd, err := rediscache.New(&cfg.RedisCache, &zlog.Logger)
 	if err != nil {
 		os.Exit(1)
 	}
+
+	rp, err := repository.New(ctx, &cfg.Repository, &zlog.Logger)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	ordersForCache, err := rp.GetOrdersForCache(ctx)
+	if err != nil {
+		os.Exit(1)
+	}
+
+	for _, order := range ordersForCache {
+		err := rd.SetOrder(ctx, order.OrderUID, &order)
+		if err != nil {
+			os.Exit(1)
+		}
+	}
+	zlog.Logger.Info().Msg("loading data into cache completed successfully")
 
 	h := handler.New(&cfg.Handler, &zlog.Logger, rp, rd)
 

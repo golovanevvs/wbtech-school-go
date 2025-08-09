@@ -37,7 +37,9 @@ main-producer-up:
 
 dep-up: kafka-up redis-up postgres-up migrate-up
 
-main-up: mainserver-producer-build-up
+main-build-up: main-server-producer-build-up
+
+main-up: main-server-up main-producer-up
 
 all-up: dep-up main-up
 

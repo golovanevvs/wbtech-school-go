@@ -27,6 +27,7 @@ func (p *Postgres) GetOrderByOrderUID(ctx context.Context, orderUID string) (*mo
 
 	var row orderRow
 	err := p.db.GetContext(ctx, &row, `
+
 		SELECT 
 			o.*,
 			d.name as "delivery.name",
@@ -50,6 +51,7 @@ func (p *Postgres) GetOrderByOrderUID(ctx context.Context, orderUID string) (*mo
 		LEFT JOIN delivery d ON d.order_id = o.id
 		LEFT JOIN payment p ON p.order_id = o.id
 		WHERE o.order_uid = $1
+
 	`, orderUID)
 
 	if err != nil {
@@ -66,14 +68,15 @@ func (p *Postgres) GetOrderByOrderUID(ctx context.Context, orderUID string) (*mo
 	order.Payment = row.Payment
 
 	err = p.db.SelectContext(ctx, &order.Items, `
+
 		SELECT chrt_id, track_number, price, rid, name, sale, size, total_price, nm_id, brand, status
 		FROM items
 		WHERE order_id = $1
+
 	`, order.ID)
 	if err != nil {
 		log.Error().Err(err).
-			Int("order_id", order.ID).
-			Msg("failed to get items for order")
+			Int("order_id", order.ID).Msg("failed to get items for order")
 		return nil, err
 	}
 
