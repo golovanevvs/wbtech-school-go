@@ -29,8 +29,9 @@ type app struct {
 }
 
 func Run() {
+	t := 5
 	zlog.Init()
-	zlog.Logger.Info().Msg("starting order-service-mainServer...")
+	zlog.Logger.Info().Msg("starting order-service_main-server...")
 
 	configFile := "config.yaml"
 	envFile := ".env"
@@ -48,7 +49,9 @@ func Run() {
 		zlog.Logger.Warn().Str("file", configDefaultFile).Msg("loading default configuration...")
 		err := cfg.Load(configDefaultPath, envPath, "")
 		if err != nil {
-			zlog.Logger.Fatal().Err(err).Msg("failed to load default configuration")
+			zlog.Logger.Error().Err(err).Msg("failed to load default configuration")
+			time.Sleep(time.Duration(t) * time.Second)
+			os.Exit(1)
 		}
 	}
 	zlog.Logger.Info().Msg("configuration loaded successfully")
@@ -56,7 +59,9 @@ func Run() {
 	logLevelStr := cfg.Logger.LogLevel
 	logLevel, err := zlog.ParseLogLevel(logLevelStr)
 	if err != nil {
-		zlog.Logger.Fatal().Err(err).Msg("failed to parse log level")
+		zlog.Logger.Error().Err(err).Msg("failed to parse log level")
+		time.Sleep(time.Duration(t) * time.Second)
+		os.Exit(1)
 	}
 	zlog.Logger.Info().Str("logLevel", logLevel.String()).Msg("logging level")
 	zlog.Logger = zlog.Logger.Level(logLevel)
@@ -68,22 +73,26 @@ func Run() {
 
 	rd, err := rediscache.New(&cfg.RedisCache, &zlog.Logger)
 	if err != nil {
+		time.Sleep(time.Duration(t) * time.Second)
 		os.Exit(1)
 	}
 
 	rp, err := repository.New(ctx, &cfg.Repository, &zlog.Logger)
 	if err != nil {
+		time.Sleep(time.Duration(t) * time.Second)
 		os.Exit(1)
 	}
 
 	ordersForCache, err := rp.GetOrdersForCache(ctx)
 	if err != nil {
+		time.Sleep(time.Duration(t) * time.Second)
 		os.Exit(1)
 	}
 
 	for _, order := range ordersForCache {
 		err := rd.SetOrder(ctx, order.OrderUID, &order)
 		if err != nil {
+			time.Sleep(time.Duration(t) * time.Second)
 			os.Exit(1)
 		}
 	}
@@ -103,6 +112,7 @@ func Run() {
 
 	k, err := kafka.New(&cfg.Kafka, &zlog.Logger)
 	if err != nil {
+		time.Sleep(time.Duration(t) * time.Second)
 		os.Exit(1)
 	}
 
@@ -122,6 +132,7 @@ func Run() {
 
 	consumerGroup, err := kafka.NewConsumerGroup(k, topics, kafkaHandler)
 	if err != nil {
+		time.Sleep(time.Duration(t) * time.Second)
 		os.Exit(1)
 	}
 	defer consumerGroup.Close()
@@ -134,6 +145,7 @@ func Run() {
 	}()
 
 	if err := consumerGroup.Start(ctx); err != nil {
+		time.Sleep(time.Duration(t) * time.Second)
 		os.Exit(1)
 	}
 
@@ -153,9 +165,11 @@ func Run() {
 	rp.Close()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		zlog.Logger.Fatal().Err(err).Msg("server forced to shutdown")
+		zlog.Logger.Error().Err(err).Msg("server forced to shutdown")
+		time.Sleep(time.Duration(t) * time.Second)
+		os.Exit(1)
 	}
 
 	zlog.Logger.Info().Msg("server exited")
-	time.Sleep(5 * time.Second)
+	time.Sleep(time.Duration(t) * time.Second)
 }

@@ -1,3 +1,5 @@
+MAKEFLAGS += --no-print-directory
+
 KAFKA_IMAGE ?= apache/kafka:4.0.0
 CONTAINER_NAME ?= kafka-order-service
 KAFKA_DATA_VOLUME ?= kafka_data

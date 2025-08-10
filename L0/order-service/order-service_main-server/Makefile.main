@@ -1,3 +1,5 @@
+MAKEFLAGS += --no-print-directory
+
 server-build:
 	@echo "Building server..."
 	@go build ./cmd/order-service_main-server

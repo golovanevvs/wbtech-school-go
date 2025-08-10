@@ -16,6 +16,8 @@ import (
 )
 
 func main() {
+	t := 5
+
 	zlog.Init()
 
 	zlog.Logger.Info().Msg("kafka-producer starting")
@@ -36,7 +38,9 @@ func main() {
 		zlog.Logger.Warn().Str("file", configDefaultFile).Msg("loading default configuration...")
 		err := cfg.Load(configDefaultPath, envPath, "")
 		if err != nil {
-			zlog.Logger.Fatal().Err(err).Msg("failed to load default configuration")
+			zlog.Logger.Error().Err(err).Msg("failed to load default configuration")
+			time.Sleep(time.Duration(t) * time.Second)
+			os.Exit(1)
 		}
 	}
 	zlog.Logger.Info().Msg("configuration loaded successfully")
@@ -44,25 +48,31 @@ func main() {
 	logLevelStr := cfg.Logger.LogLevel
 	logLevel, err := zlog.ParseLogLevel(logLevelStr)
 	if err != nil {
-		zlog.Logger.Fatal().Err(err).Msg("failed to parse log level")
+		zlog.Logger.Error().Err(err).Msg("failed to parse log level")
+		time.Sleep(time.Duration(t) * time.Second)
+		os.Exit(1)
 	}
 	zlog.Logger.Info().Str("logLevel", logLevel.String()).Msg("logging level")
 	zlog.Logger = zlog.Logger.Level(logLevel)
 
 	k, err := kafka.New(&cfg.Kafka, &zlog.Logger)
 	if err != nil {
+		time.Sleep(time.Duration(t) * time.Second)
 		os.Exit(1)
 	}
 
 	sp, err := kafka.NewSyncProducer(k)
 	if err != nil {
+		time.Sleep(time.Duration(t) * time.Second)
 		os.Exit(1)
 	}
 	defer sp.Close()
 
-	t, err := time.Parse(time.RFC3339Nano, "2021-11-26T06:22:19Z")
+	dc, err := time.Parse(time.RFC3339Nano, "2021-11-26T06:22:19Z")
 	if err != nil {
-		zlog.Logger.Fatal().Err(err).Msg("error time parse")
+		zlog.Logger.Error().Err(err).Msg("error time parse")
+		time.Sleep(time.Duration(t) * time.Second)
+		os.Exit(1)
 	}
 
 	for i := range 100 {
@@ -124,18 +134,20 @@ func main() {
 			DeliveryService:   "meest",
 			Shardkey:          "9",
 			SmID:              99,
-			DateCreated:       t,
+			DateCreated:       dc,
 			OofShard:          "1",
 		}
 
 		mJSON, err := json.MarshalIndent(m, "", "\t")
 		if err != nil {
-			zlog.Logger.Fatal().Err(err).Msg("error encoding json")
+			zlog.Logger.Error().Err(err).Msg("error encoding json")
+			time.Sleep(time.Duration(t) * time.Second)
+			os.Exit(1)
 		}
 
 		zlog.Logger.Trace().Str("order_uid", m.OrderUID).Msg("sending")
 		sp.SendSync(ctx, cfg.Kafka.Topic, nil, sarama.ByteEncoder(mJSON), nil)
 
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Duration(t) * time.Second)
 	}
 }

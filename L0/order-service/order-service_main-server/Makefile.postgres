@@ -1,3 +1,5 @@
+MAKEFLAGS += --no-print-directory
+
 .PHONY: up down clean list-db list-tables show-table logs
 
 include .env
