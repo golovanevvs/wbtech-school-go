@@ -6,14 +6,18 @@
   --button-primary-hover: #383838;
   --button-secondary-hover: #f2f2f2;
 
-  display: grid;
-  grid-template-rows: 20px 1fr 20px;
-  align-items: center;
-  justify-items: center;
-  min-height: 100svh;
-  padding: 80px;
-  gap: 64px;
+  display: flex;
+  flex-direction: column;
+
+  /* grid-template-rows: 20px 1fr 20px; */
+  /* align-items: center; */
+  /* justify-items: center; */
+  /* min-height: 100svh; */
+  /* padding: 80px; */
+  /* gap: 64px; */
   font-family: var(--font-geist-sans);
+  /* border: 5px solid red; */
+  min-width: 620;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -66,11 +70,9 @@
   border-radius: 128px;
   height: 48px;
   padding: 0 20px;
+  border: none;
   border: 1px solid transparent;
-  transition:
-    background 0.2s,
-    color 0.2s,
-    border-color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
   cursor: pointer;
   display: flex;
   align-items: center;
