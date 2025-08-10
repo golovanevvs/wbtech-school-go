@@ -1,0 +1,87 @@
+MAKEFLAGS += --no-print-directory
+
+KAFKA_IMAGE ?= apache/kafka:4.0.0
+CONTAINER_NAME ?= kafka-order-service
+KAFKA_DATA_VOLUME ?= kafka_data
+KAFKA_CONFIG_VOLUME ?= kafka_config
+PORT ?= 9092
+CONTROLLER_PORT ?= 9093
+STARTUP_TIMEOUT ?= 120
+SHUTDOWN_TIMEOUT ?= 3
+
+KAFKA_HOME ?= /opt/kafka
+KAFKA_CONFIG_DIR ?= $(KAFKA_HOME)/config
+KAFKA_BIN_DIR ?= $(KAFKA_HOME)/bin
+KAFKA_DATA_DIR ?= /var/lib/kafka/data
+
+.PHONY: up down clean check topics create-topic
+
+up:
+	@if docker ps -a --filter "name=$(CONTAINER_NAME)" --format '{{.Status}}' | grep -q "Exited"; then \
+		echo "Restarting existing stopped container..."; \
+		docker start $(CONTAINER_NAME); \
+	elif ! docker ps -a --filter "name=$(CONTAINER_NAME)" | grep -q $(CONTAINER_NAME); then \
+		echo "Starting new Kafka container..."; \
+		docker run -d \
+		  --name $(CONTAINER_NAME) \
+		  -p $(PORT):9092 \
+		  -p $(CONTROLLER_PORT):9093 \
+		  -v $(KAFKA_DATA_VOLUME):$(KAFKA_DATA_DIR) \
+		  -v $(KAFKA_CONFIG_VOLUME):$(KAFKA_CONFIG_DIR) \
+		  $(KAFKA_IMAGE); \
+	else \
+		echo "Kafka container is already running"; \
+		exit 0; \
+	fi
+
+	@echo "Waiting for Kafka to start..."
+	@timeout $(STARTUP_TIMEOUT) sh -c \
+	  'until docker logs $(CONTAINER_NAME) 2>&1 | grep -qE "Kafka Server started|started \(kafka.server.KafkaServer\)"; do \
+	     sleep 1; \
+	   done' || \
+	   (echo "Kafka failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
+
+	@echo "Kafka started successfully."
+
+down:
+	@echo "Gracefully stopping Kafka..."
+	@-docker exec $(CONTAINER_NAME) opt/kafka/bin/kafka-server-stop.sh || true
+	@sleep $(SHUTDOWN_TIMEOUT)
+	@-docker stop $(CONTAINER_NAME) 2>/dev/null || true
+	@echo "Kafka container stopped (container preserved)"
+
+clean: down
+	@echo "Performing full cleanup..."
+	@-docker rm -f $(CONTAINER_NAME) 2>/dev/null || true
+	@-docker volume rm $(KAFKA_DATA_VOLUME) 2>/dev/null || true
+	@-docker volume rm $(KAFKA_CONFIG_VOLUME) 2>/dev/null || true
+	@echo "Cleanup completed"
+
+logs:
+	@docker logs -f $(CONTAINER_NAME)
+
+check:
+	@echo "Checking Kafka status..."
+	@docker exec $(CONTAINER_NAME) \
+	  $(KAFKA_BIN_DIR)/kafka-broker-api-versions.sh \
+	  --bootstrap-server localhost:9092
+
+topics:
+	@echo "Listing all Kafka topics..."
+	@docker exec $(CONTAINER_NAME) \
+		$(KAFKA_BIN_DIR)/kafka-topics.sh \
+		--list \
+		--bootstrap-server localhost:9092
+
+create-topic:
+ifndef TOPIC
+	$(error TOPIC is not defined. Usage: make create-topic TOPIC=topic_name [PARTITIONS=N] [REPLICATION=N])
+endif
+	@echo "Creating topic '$(TOPIC)'..."
+	@docker exec $(CONTAINER_NAME) \
+	  $(KAFKA_BIN_DIR)/kafka-topics.sh \
+	  --create \
+	  --topic $(TOPIC) \
+	  --partitions $(if $(PARTITIONS),$(PARTITIONS),1) \
+	  --replication-factor $(if $(REPLICATION),$(REPLICATION),1) \
+	  --bootstrap-server localhost:9092

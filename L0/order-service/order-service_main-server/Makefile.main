@@ -1,0 +1,30 @@
+MAKEFLAGS += --no-print-directory
+
+server-build:
+	@echo "Building server..."
+	@go build ./cmd/order-service_main-server
+	@echo "Building server completed"
+
+server-up:
+	@echo "Running server..."
+	@start "" "/C/Program Files/Git/git-bash.exe" -c "./order-service_main-server"
+	@sleep 8
+	@echo "Running server completed"
+
+server-build-up: server-build server-up
+
+producer-build:
+	@echo "Building kafka producer..."
+	@go build ./cmd/kafka-producer
+	@echo "Building kafka producer completed"
+
+producer-up:
+	@echo "Running kafka producer..."
+	@start "" "/C/Program Files/Git/git-bash.exe" -c "./kafka-producer"
+	@echo "Running kafka producer completed"
+
+producer-build-up: producer-build producer-up
+
+server-producer-build-up: server-build-up producer-build-up
+
+server-producer-up: server-up producer-up
