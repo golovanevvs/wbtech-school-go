@@ -57,32 +57,3 @@ export interface OrderResponse {
   data?: OrderData
   error?: string
 }
-
-// interface FieldConfig {
-//   label: string
-//   value: string | number
-//   path?: string
-//   color?: string
-// }
-
-// export interface SectionConfig {
-//   title: string
-//   condition?: boolean
-//   fields: FieldConfig[]
-// }
-
-// Если добавить path в конфиг полей, можно сделать автоматическое получение значений:
-
-// const getValueByPath = (obj: any, path: string) =>
-//   path.split('.').reduce((acc, part) => acc?.[part], obj)
-
-// Использование:
-// value: getValueByPath(orderResponse, field.path) || "-"
-
-// Можно добавить в конфиг поле component для кастомных компонентов:
-
-// {
-//   label: "Дата создания",
-//   component: (value) => <DateDisplay value={value} />,
-//   path: "data.date_created"
-// }

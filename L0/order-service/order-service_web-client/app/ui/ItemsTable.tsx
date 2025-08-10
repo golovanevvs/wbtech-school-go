@@ -14,10 +14,8 @@ interface ItemsTableProps {
 }
 
 export const ItemsTable = ({ orderResponse }: ItemsTableProps) => {
-  // Получаем товары из orderResponse или пустой массив, если данных нет
   const items: Item[] = orderResponse?.data?.items || []
 
-  // Колонки таблицы (адаптированы под структуру Item)
   const columns: MRT_ColumnDef<Item>[] = [
     {
       accessorKey: "chrt_id",
@@ -76,7 +74,6 @@ export const ItemsTable = ({ orderResponse }: ItemsTableProps) => {
     },
   ]
 
-  // Настройки таблицы
   const defaultMRTOptions = getDefaultMRTOptions<Item>()
   const table = useMaterialReactTable({
     ...defaultMRTOptions,

@@ -34,7 +34,6 @@ export default function ThemeProvider({
     setMode((prev) => (prev === "light" ? "dark" : "light"))
   }
 
-  // Мемоизация темы для оптимизации
   const theme = useMemo(
     () => (mode === "light" ? lightTheme : darkTheme),
     [mode]
@@ -43,7 +42,7 @@ export default function ThemeProvider({
   return (
     <ThemeContext.Provider value={{ mode, toggleTheme }}>
       <MuiThemeProvider theme={theme}>
-        <CssBaseline /> {/* Важно для тёмной темы! */}
+        <CssBaseline />
         {children}
       </MuiThemeProvider>
     </ThemeContext.Provider>

@@ -58,58 +58,56 @@ export const baseTheme = createTheme({
   },
 })
 
-// Светлая тема
 export const lightTheme = createTheme({
   ...baseTheme,
   palette: {
     mode: "light",
     primary: {
-      main: "#6a1b9a",   // Фиолетовый, но мягкий
-      light: "#9c4dcc",  // Светлый акцент
-      dark: "#4a0072",   // Глубокий фиолет
+      main: "#6a1b9a",
+      light: "#9c4dcc",
+      dark: "#4a0072",
     },
     secondary: {
-      main: "#ff9800",   // Тёплый оранжевый
-      light: "#ffc947",  // Мягкий жёлто-оранжевый
-      dark: "#c66900",   // Глубокий оранжевый
+      main: "#ff9800",
+      light: "#ffc947",
+      dark: "#c66900",
     },
     error: {
-      main: "#d32f2f",   // Красный, но не кислотный
+      main: "#d32f2f",
     },
     success: {
-      main: "#2e7d32",   // Зелёный в сторону изумрудного
+      main: "#2e7d32",
     },
     background: {
-      default: "#f9f4fb", // Очень светлый фиолетово-серый фон
-      paper: "#ffffff",   // Белая карточка
+      default: "#f9f4fb",
+      paper: "#ffffff",
     },
   },
 })
 
-// Тёмная тема
 export const darkTheme = createTheme({
   ...baseTheme,
   palette: {
     mode: "dark",
     primary: {
-      main: "#ce93d8",   // Пастельный фиолетовый
-      light: "#f3e5f5",  // Очень светлый фиолет
-      dark: "#9c4dcc",   // Более насыщенный
+      main: "#ce93d8",
+      light: "#f3e5f5",
+      dark: "#9c4dcc",
     },
     secondary: {
-      main: "#ffb74d",   // Мягкий тёплый
-      light: "#ffe97d",  // Светлый золотистый
-      dark: "#c88719",   // Тёмный золотой
+      main: "#ffb74d",
+      light: "#ffe97d",
+      dark: "#c88719",
     },
     error: {
-      main: "#ef5350",   // Красный без излишней агрессии
+      main: "#ef5350",
     },
     success: {
-      main: "#81c784",   // Мягкий зелёный
+      main: "#81c784",
     },
     background: {
-      default: "#1a0f1d", // Глубокий фиолетово-серый
-      paper: "#2c1b2f",   // Карточка чуть светлее фона
+      default: "#1a0f1d",
+      paper: "#2c1b2f",
     },
   },
 })

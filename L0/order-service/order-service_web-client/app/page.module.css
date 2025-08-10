@@ -9,14 +9,7 @@
   display: flex;
   flex-direction: column;
 
-  /* grid-template-rows: 20px 1fr 20px; */
-  /* align-items: center; */
-  /* justify-items: center; */
-  /* min-height: 100svh; */
-  /* padding: 80px; */
-  /* gap: 64px; */
   font-family: var(--font-geist-sans);
-  /* border: 5px solid red; */
   min-width: 620;
 }
 

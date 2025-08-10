@@ -24,8 +24,6 @@ export default function Home() {
       sx={{
         width: "1800",
         bgcolor: "background.default",
-        // border: "2px solid",
-        // borderColor: "#2add0eff",
       }}
     >
       <Container sx={{ width: "550px" }}>
