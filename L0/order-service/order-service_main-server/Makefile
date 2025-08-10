@@ -43,7 +43,7 @@ main-build-up: main-server-producer-build-up
 
 main-up: main-server-up main-producer-up
 
-all-up: dep-up main-up
+all-up: dep-up main-build-up
 
 all-down: kafka-down redis-down postgres-down
 
