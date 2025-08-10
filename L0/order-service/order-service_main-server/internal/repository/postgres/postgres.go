@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/config"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/config"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"

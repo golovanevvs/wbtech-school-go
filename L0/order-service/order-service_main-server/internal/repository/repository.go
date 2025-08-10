@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/config"
-	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/repository/postgres"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/config"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/repository/postgres"
 	"github.com/rs/zerolog"
 )
 

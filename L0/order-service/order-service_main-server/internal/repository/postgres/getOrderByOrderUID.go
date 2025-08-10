@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/model"
 )
 
 // ErrNoExists is returned when a order uid is not found in database.

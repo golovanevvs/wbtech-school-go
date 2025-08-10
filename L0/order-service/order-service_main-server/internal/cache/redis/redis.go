@@ -6,8 +6,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/config"
-	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/config"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/model"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 )

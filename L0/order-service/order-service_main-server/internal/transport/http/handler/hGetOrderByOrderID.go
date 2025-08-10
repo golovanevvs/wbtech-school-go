@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	rediscache "github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/cache/redis"
-	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/repository/postgres"
+	rediscache "github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/cache/redis"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/repository/postgres"
 )
 
 func (h *Handler) hGetOrderByOrderUID(c *gin.Context) {

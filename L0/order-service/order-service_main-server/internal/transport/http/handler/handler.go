@@ -2,9 +2,9 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
-	rediscache "github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/cache/redis"
-	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/config"
-	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/repository"
+	rediscache "github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/cache/redis"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/config"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/repository"
 	"github.com/rs/zerolog"
 )
 

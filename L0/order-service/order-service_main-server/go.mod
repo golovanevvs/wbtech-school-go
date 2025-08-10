@@ -1,4 +1,4 @@
-module github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer
+module github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server
 
 go 1.24.4
 

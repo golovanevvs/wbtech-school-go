@@ -3,7 +3,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service-mainServer/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server/internal/model"
 )
 
 func (p *Postgres) GetOrdersForCache(ctx context.Context) ([]model.Order, error) {

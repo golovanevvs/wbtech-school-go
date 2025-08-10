@@ -1,11 +1,11 @@
 server-build:
 	@echo "Building server..."
-	@go build ./cmd/order-service-mainServer
+	@go build ./cmd/order-service_main-server
 	@echo "Building server completed"
 
 server-up:
 	@echo "Running server..."
-	@start "" "/C/Program Files/Git/git-bash.exe" -c "./order-service-mainServer"
+	@start "" "/C/Program Files/Git/git-bash.exe" -c "./order-service_main-server"
 	@sleep 8
 	@echo "Running server completed"
 
