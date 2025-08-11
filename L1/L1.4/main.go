@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -11,16 +12,21 @@ import (
 
 func main() {
 	var n int
+	var tSec int
 	fmt.Println("Enter the number of workers")
 	fmt.Scan(&n)
+	fmt.Println("Enter the program runtime in seconds")
+	fmt.Scan(&tSec)
 
-	wg := sync.WaitGroup{}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(tSec)*time.Second)
+	defer cancel()
 
 	inCh := make(chan int)
 
 	signalCh := make(chan os.Signal, 1)
-
 	signal.Notify(signalCh, syscall.SIGINT)
+
+	wg := sync.WaitGroup{}
 
 	for w := range n {
 		wg.Add(1)
@@ -32,13 +38,18 @@ func main() {
 			}
 			fmt.Printf("worker %d has closed\n", i)
 		}(w)
-
 	}
+
+	go func() {
+		for range signalCh {
+			cancel()
+		}
+	}()
 
 	for i := 1; i > 0; i++ {
 		select {
-		case sig := <-signalCh:
-			fmt.Printf("received signal: %v\n", sig)
+		case <-ctx.Done():
+			fmt.Printf("received signal: %v\n", ctx.Err())
 			close(inCh)
 			wg.Wait()
 			fmt.Println("end of work")
@@ -46,5 +57,4 @@ func main() {
 		case inCh <- i:
 		}
 	}
-
 }
