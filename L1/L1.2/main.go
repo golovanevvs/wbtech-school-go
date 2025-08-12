@@ -14,7 +14,7 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			fmt.Printf("%d в квадрате равно %d\n", i, i*i)
+			fmt.Printf("%d squared equals %d\n", i, i*i)
 		}(v)
 	}
 
