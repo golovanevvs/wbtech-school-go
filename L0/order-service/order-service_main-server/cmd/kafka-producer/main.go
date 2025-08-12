@@ -75,9 +75,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	for i := range 100 {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
+
 		var items []model.Item
 		goodsTotal := 0
 		rj := rand.Intn(30)
