@@ -1,6 +1,6 @@
 module github.com/golovanevvs/wbtech-school-go/L0/order-service/order-service_main-server
 
-go 1.24.4
+go 1.25
 
 require github.com/rs/zerolog v1.34.0
 
@@ -68,7 +68,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/redis/go-redis/v9 v9.12.0
+	github.com/redis/go-redis/v9 v9.12.1
 	github.com/spf13/viper v1.20.1
 	golang.org/x/sys v0.35.0 // indirect
 )
