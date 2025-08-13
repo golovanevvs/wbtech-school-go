@@ -1,3 +1,4 @@
+// main.go
 package main
 
 import (
@@ -7,103 +8,73 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
 func main() {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
-
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
-		fmt.Print("> ")
-		if !scanner.Scan() {
-			fmt.Println("\nexit")
+		path, err := os.Getwd()
+		if err != nil {
+			fmt.Println(err)
 			return
 		}
+		fmt.Print(path + ">")
 
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
-			continue
-		}
+		scanner.Scan()
 
-		parts := strings.Split(line, "|")
-		if len(parts) > 1 {
-			runPipeline(ctx, parts)
-			continue
-		}
+		input := scanner.Text()
 
-		args := strings.Fields(line)
-		runCommand(ctx, args, os.Stdout, os.Stderr)
+		input = expandEnvVars(input)
+
+		ctx, cancel := context.WithCancel(context.Background())
+
+		runCommand(ctx, input)
+
+		cancel()
+
 	}
+
 }
 
-func runPipeline(ctx context.Context, cmds []string) {
-	var commands []*exec.Cmd
-	for _, c := range cmds {
-		args := strings.Fields(strings.TrimSpace(c))
-		if len(args) == 0 {
-			return
-		}
-		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
-		commands = append(commands, cmd)
-	}
-
-	for i := 0; i < len(commands)-1; i++ {
-		r, w := io.Pipe()
-		commands[i].Stdout = w
-		commands[i+1].Stdin = r
-	}
-
-	commands[len(commands)-1].Stdout = os.Stdout
-
-	for _, cmd := range commands {
-		if err := cmd.Start(); err != nil {
-			fmt.Println("error:", err)
-			return
+func expandEnvVars(line string) string {
+	for _, part := range strings.Fields(line) {
+		if strings.HasPrefix(part, "$") && len(part) > 1 {
+			val := os.Getenv(part[1:])
+			line = strings.ReplaceAll(line, part, val)
 		}
 	}
-
-	for _, cmd := range commands {
-		cmd.Wait()
-	}
+	return line
 }
 
-func runCommand(ctx context.Context, args []string, stdout, stderr io.Writer) int {
-	if len(args) == 0 {
+func runCommand(ctx context.Context, input string) int {
+	if strings.Contains(input, "|") {
+		runPipeline(ctx, strings.Split(input, "|"))
 		return 0
 	}
 
+	args := strings.Split(input, " ")
+
 	switch args[0] {
 	case "cd":
-		return builtin_cd(args)
+		return cmdCd(ctx, args)
 	case "pwd":
-		return builtin_pwd(stdout)
+		return cmdPwd(ctx, os.Stdout)
 	case "echo":
-		return builtin_echo(args, stdout)
+		return cmdEcho(ctx, args, os.Stdout)
 	case "kill":
-		return builtin_kill(ctx, args)
+		return cmdKill(ctx, args)
 	case "ps":
-		return builtin_ps(ctx, args, stdout)
-	case "exit":
-		os.Exit(0)
+		return cmdPs(ctx, args, os.Stdout)
 	}
 
-	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
-	cmd.Stdin = os.Stdin
-	if err := cmd.Run(); err != nil {
-		fmt.Fprintln(stderr, err)
-		return 1
-	}
 	return 0
 }
 
-func builtin_cd(args []string) int {
+func cmdCd(ctx context.Context, args []string) int {
 	if len(args) < 2 {
 		fmt.Println("cd: missing operand")
 		return 1
@@ -120,7 +91,7 @@ func builtin_cd(args []string) int {
 	return 0
 }
 
-func builtin_pwd(w io.Writer) int {
+func cmdPwd(ctx context.Context, w io.Writer) int {
 	dir, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintln(w, "pwd:", err)
@@ -130,7 +101,117 @@ func builtin_pwd(w io.Writer) int {
 	return 0
 }
 
-func builtin_echo(args []string, w io.Writer) int {
+func cmdEcho(ctx context.Context, args []string, w io.Writer) int {
+
 	fmt.Fprintln(w, strings.Join(args[1:], " "))
 	return 0
+}
+
+func cmdKill(ctx context.Context, args []string) int {
+	if len(args) < 2 {
+		fmt.Println("kill: missing pid")
+		return 1
+	}
+
+	cmdName := ""
+	if runtime.GOOS == "windows" {
+		cmdName = "taskkill"
+		args = append([]string{"/PID"}, args[1:]...)
+		args = append(args, "/F")
+	} else {
+		cmdName = "kill"
+	}
+
+	cmd := exec.CommandContext(ctx, cmdName, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return exitErr.ExitCode()
+		}
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	return 0
+}
+
+func cmdPs(ctx context.Context, args []string, w io.Writer) int {
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.CommandContext(ctx, "tasklist")
+	} else {
+		cmd = exec.CommandContext(ctx, "ps", args[1:]...)
+	}
+	cmd.Stdout = w
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return exitErr.ExitCode()
+		}
+		fmt.Fprintln(os.Stderr, err)
+		return 1
+	}
+	return 0
+}
+
+func runPipeline(ctx context.Context, cmds []string) int {
+	cc := []string{"cd", "pwd", "echo", "ps", "kill"}
+	ccStr := strings.Join(cc, " ")
+	flag := false
+	for _, cmd := range cmds {
+		if !strings.Contains(ccStr, cmd) {
+			fmt.Fprintf(os.Stdout, "Unknown command: %s", cmd)
+			flag = true
+		}
+	}
+	if flag {
+		return 1
+	}
+
+	for _, cmd := range cmds {
+		args := strings.Split(cmd, " ")
+
+		switch args[0] {
+		case "cd":
+			return cmdCd(ctx, args)
+		case "pwd":
+			return cmdPwd(ctx, os.Stdout)
+		case "echo":
+			return cmdEcho(ctx, args, os.Stdout)
+		case "kill":
+			return cmdKill(ctx, args)
+		case "ps":
+			return cmdPs(ctx, args, os.Stdout)
+		}
+
+	}
+	return 0
+
+	// var commands []*exec.Cmd
+	// for _, c := range cmds {
+	// 	args := strings.Fields(strings.TrimSpace(c))
+	// 	if len(args) == 0 {
+	// 		return
+	// 	}
+	// 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
+	// 	commands = append(commands, cmd)
+	// }
+
+	// for i := 0; i < len(commands)-1; i++ {
+	// 	r, w := io.Pipe()
+	// 	commands[i].Stdout = w
+	// 	commands[i+1].Stdin = r
+	// }
+
+	// commands[len(commands)-1].Stdout = os.Stdout
+	// commands[len(commands)-1].Stderr = os.Stderr
+
+	// for _, cmd := range commands {
+	// 	cmd.Start()
+	// }
+	// for _, cmd := range commands {
+	// 	cmd.Wait()
+	// }
 }
