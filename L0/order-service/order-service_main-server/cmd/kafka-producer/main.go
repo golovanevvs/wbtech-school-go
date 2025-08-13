@@ -75,10 +75,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	var ctx context.Context
+	var cancel context.CancelFunc
 
 	for i := range 100 {
+		ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
 
 		var items []model.Item
 		goodsTotal := 0
@@ -152,4 +153,6 @@ func main() {
 
 		time.Sleep(time.Duration(t) * time.Second)
 	}
+
+	cancel()
 }
