@@ -8,9 +8,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -24,20 +27,38 @@ func main() {
 		}
 		fmt.Print(path + ">")
 
-		scanner.Scan()
+		if !scanner.Scan() {
+			fmt.Println()
+			break
+		}
 
-		input := scanner.Text()
+		input := strings.TrimSpace(scanner.Text())
+		if input == "" {
+			continue
+		}
 
 		input = expandEnvVars(input)
 
 		ctx, cancel := context.WithCancel(context.Background())
 
-		runCommand(ctx, input)
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGQUIT)
 
+		go func() {
+			s := <-sigCh
+			if s == syscall.SIGQUIT {
+				os.Exit(0)
+			}
+			cancel()
+		}()
+
+		exitCode := runCommand(ctx, input)
+
+		fmt.Printf("exit code: %d\n", exitCode)
+
+		close(sigCh)
 		cancel()
-
 	}
-
 }
 
 func expandEnvVars(line string) string {
@@ -52,19 +73,18 @@ func expandEnvVars(line string) string {
 
 func runCommand(ctx context.Context, input string) int {
 	if strings.Contains(input, "|") {
-		runPipeline(ctx, strings.Split(input, "|"))
-		return 0
+		return runPipeline(ctx, strings.Split(input, "|"))
 	}
 
 	args := strings.Split(input, " ")
 
 	switch args[0] {
 	case "cd":
-		return cmdCd(ctx, args)
+		return cmdCd(args)
 	case "pwd":
-		return cmdPwd(ctx, os.Stdout)
+		return cmdPwd(os.Stdout)
 	case "echo":
-		return cmdEcho(ctx, args, os.Stdout)
+		return cmdEcho(args, os.Stdout)
 	case "kill":
 		return cmdKill(ctx, args)
 	case "ps":
@@ -74,7 +94,7 @@ func runCommand(ctx context.Context, input string) int {
 	return 0
 }
 
-func cmdCd(ctx context.Context, args []string) int {
+func cmdCd(args []string) int {
 	if len(args) < 2 {
 		fmt.Println("cd: missing operand")
 		return 1
@@ -91,7 +111,7 @@ func cmdCd(ctx context.Context, args []string) int {
 	return 0
 }
 
-func cmdPwd(ctx context.Context, w io.Writer) int {
+func cmdPwd(w io.Writer) int {
 	dir, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintln(w, "pwd:", err)
@@ -101,7 +121,7 @@ func cmdPwd(ctx context.Context, w io.Writer) int {
 	return 0
 }
 
-func cmdEcho(ctx context.Context, args []string, w io.Writer) int {
+func cmdEcho(args []string, w io.Writer) int {
 
 	fmt.Fprintln(w, strings.Join(args[1:], " "))
 	return 0
@@ -157,61 +177,33 @@ func cmdPs(ctx context.Context, args []string, w io.Writer) int {
 }
 
 func runPipeline(ctx context.Context, cmds []string) int {
-	cc := []string{"cd", "pwd", "echo", "ps", "kill"}
-	ccStr := strings.Join(cc, " ")
-	flag := false
-	for _, cmd := range cmds {
-		if !strings.Contains(ccStr, cmd) {
-			fmt.Fprintf(os.Stdout, "Unknown command: %s", cmd)
-			flag = true
+	var commands []*exec.Cmd
+	for _, c := range cmds {
+		args := strings.Fields(strings.TrimSpace(c))
+		if len(args) == 0 {
+			return 1
 		}
-	}
-	if flag {
-		return 1
+		cmd := exec.CommandContext(ctx, args[0], args[1:]...)
+		commands = append(commands, cmd)
 	}
 
-	for _, cmd := range cmds {
-		args := strings.Split(cmd, " ")
+	for i := 0; i < len(commands)-1; i++ {
+		stdout, _ := commands[i].StdoutPipe()
+		commands[i+1].Stdin = stdout
+	}
 
-		switch args[0] {
-		case "cd":
-			return cmdCd(ctx, args)
-		case "pwd":
-			return cmdPwd(ctx, os.Stdout)
-		case "echo":
-			return cmdEcho(ctx, args, os.Stdout)
-		case "kill":
-			return cmdKill(ctx, args)
-		case "ps":
-			return cmdPs(ctx, args, os.Stdout)
+	commands[len(commands)-1].Stdout = os.Stdout
+	commands[len(commands)-1].Stderr = os.Stderr
+
+	for _, cmd := range commands {
+		start := time.Now()
+		if err := cmd.Run(); err != nil {
+			fmt.Println("error:", err)
+			return 1
 		}
-
+		dur := time.Since(start)
+		fmt.Printf("end cmd: %v, dur: %v\n", cmd, dur)
 	}
+
 	return 0
-
-	// var commands []*exec.Cmd
-	// for _, c := range cmds {
-	// 	args := strings.Fields(strings.TrimSpace(c))
-	// 	if len(args) == 0 {
-	// 		return
-	// 	}
-	// 	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
-	// 	commands = append(commands, cmd)
-	// }
-
-	// for i := 0; i < len(commands)-1; i++ {
-	// 	r, w := io.Pipe()
-	// 	commands[i].Stdout = w
-	// 	commands[i+1].Stdin = r
-	// }
-
-	// commands[len(commands)-1].Stdout = os.Stdout
-	// commands[len(commands)-1].Stderr = os.Stderr
-
-	// for _, cmd := range commands {
-	// 	cmd.Start()
-	// }
-	// for _, cmd := range commands {
-	// 	cmd.Wait()
-	// }
 }
