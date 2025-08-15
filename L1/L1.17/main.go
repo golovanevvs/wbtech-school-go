@@ -31,7 +31,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf("The index of the taget value %d is %d\n", targetValue, index)
+	fmt.Printf("The index of the target value %d is %d\n", targetValue, index)
 }
 
 func search(data []int, targetValue int) int {
