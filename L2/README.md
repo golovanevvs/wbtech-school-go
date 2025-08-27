@@ -77,3 +77,23 @@ func main() {
   fmt.Println(err == nil)
 }
 ```
+
+## [L2.4](L2.4)
+
+Что выведет программа?
+
+Объяснить вывод программы.
+
+```go
+func main() {
+  ch := make(chan int)
+  go func() {
+    for i := 0; i < 10; i++ {
+    ch <- i
+  }
+}()
+  for n := range ch {
+    println(n)
+  }
+}
+```
