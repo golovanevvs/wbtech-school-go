@@ -130,3 +130,30 @@ func main() {
   println("ok")
 }
 ```
+
+## [L2.6](L2.6)
+
+Что выведет программа?
+
+Объяснить поведение срезов при передаче их в функцию.
+
+```go
+package main
+
+import (
+  "fmt"
+)
+
+func main() {
+  var s = []string{"1", "2", "3"} // a{1,2,3} l=3,c=3
+  modifySlice(s)
+  fmt.Println(s) // a{3,2,3} l=3,c=3
+}
+
+func modifySlice(i []string) {
+  i[0] = "3" // a{3,2,3} l=3,c=3
+  i = append(i, "4") // b{3,2,3,4} l=4,c=6
+  i[1] = "5" // b{3,2,3,4,5} l=5,c=6
+  i = append(i, "6") // b{3,2,3,4,5,6} l=6,c=6
+}
+```
