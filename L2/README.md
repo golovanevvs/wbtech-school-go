@@ -145,15 +145,15 @@ import (
 )
 
 func main() {
-  var s = []string{"1", "2", "3"} // a{1,2,3} l=3,c=3
+  var s = []string{"1", "2", "3"}
   modifySlice(s)
-  fmt.Println(s) // a{3,2,3} l=3,c=3
+  fmt.Println(s)
 }
 
 func modifySlice(i []string) {
-  i[0] = "3" // a{3,2,3} l=3,c=3
-  i = append(i, "4") // b{3,2,3,4} l=4,c=6
-  i[1] = "5" // b{3,2,3,4,5} l=5,c=6
-  i = append(i, "6") // b{3,2,3,4,5,6} l=6,c=6
+  i[0] = "3"
+  i = append(i, "4")
+  i[1] = "5"
+  i = append(i, "6")
 }
 ```
