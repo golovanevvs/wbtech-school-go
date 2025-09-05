@@ -1,6 +1,6 @@
 module github.com/golovanevvs/wbtech-school-go/L2
 
-go 1.25
+go 1.25.1
 
 require github.com/beevik/ntp v1.4.3
 

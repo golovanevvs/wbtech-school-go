@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/spf13/cobra"
 )
@@ -43,7 +44,7 @@ func main() {
 	rootCmd.Flags().BoolVarP(&opts.Month, "month", "M", false, "sort by month name")
 	rootCmd.Flags().BoolVarP(&opts.IgnoreTB, "ignore-trailing-blanks", "b", false, "ignore trailing blanks")
 	rootCmd.Flags().BoolVarP(&opts.Check, "check", "c", false, "check whether input is sorted; do not sort")
-	rootCmd.Flags().BoolVarP(&opts.Human, "human-numeric-sort", "h", false, "compare human readable numbers (2K, 1M)")
+	rootCmd.Flags().BoolVarP(&opts.Human, "human-numeric-sort", "H", false, "compare human readable numbers (2K, 1M)")
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
@@ -72,19 +73,6 @@ func run(args []string, opts *options) error {
 		reader = f
 	}
 
-	lines, err := readLines(reader, *opts)
-	if err != nil {
-		return err
-	}
-
-	if opts.Check {
-
-	}
-
-	return nil
-}
-
-func readLines(reader io.Reader, opts options) ([]string, error) {
 	var lines []string
 
 	s := bufio.NewScanner(reader)
@@ -92,29 +80,83 @@ func readLines(reader io.Reader, opts options) ([]string, error) {
 	for s.Scan() {
 		line := s.Text()
 		if opts.IgnoreTB {
-			line = strings.TrimRight(line, "\t")
+			line = strings.TrimRightFunc(line, unicode.IsSpace)
 		}
 		lines = append(lines, line)
 	}
+	if s.Err() != nil {
+		fmt.Printf("error scan: %v", s.Err())
+		os.Exit(1)
+	}
 
-	return lines, s.Err()
-}
+	if opts.Check {
+		isSorted := sort.SliceIsSorted(lines, func(i, j int) bool {
+			vi := getKeyString(lines[i], opts.Column)
+			vj := getKeyString(lines[j], opts.Column)
 
-func isSorted(lines []string, opts *options) bool {
-	return sort.SliceIsSorted(lines, func(i, j int) bool {
+			switch {
+			case opts.Month:
+				return opts.monthCompare(vi, vj)
+			case opts.Human:
+				return opts.humanCompare(vi, vj)
+			case opts.Numeric:
+				return opts.numericCompare(vi, vj)
+			default:
+				return vi < vj
+			}
+		})
+
+		if !isSorted {
+			fmt.Fprintf(os.Stderr, "data is not sorted")
+			os.Exit(1)
+		}
+		return nil
+	}
+
+	// sorting
+	sort.SliceStable(lines, func(i, j int) bool {
 		vi := getKeyString(lines[i], opts.Column)
 		vj := getKeyString(lines[j], opts.Column)
 
+		var less bool
 		switch {
 		case opts.Month:
-			return opts.monthCompare(vi, vj)
+			less = opts.monthCompare(vi, vj)
 		case opts.Human:
-			return opts.humanCompare(vi, vj)
+			less = opts.humanCompare(vi, vj)
 		case opts.Numeric:
+			less = opts.numericCompare(vi, vj)
 		default:
-			return vi < vj
+			less = vi < vj
 		}
+
+		if opts.Reverse {
+			return !less
+		}
+
+		return less
 	})
+
+	if opts.Unique {
+		if len(lines) > 0 {
+			out := make([]string, 0, len(lines))
+			prev := lines[0]
+			out = append(out, prev)
+			for i := 1; i < len(lines); i++ {
+				if lines[i] != prev {
+					prev = lines[i]
+					out = append(out, prev)
+				}
+			}
+			lines = out
+		}
+	}
+
+	for _, line := range lines {
+		fmt.Println(line)
+	}
+
+	return nil
 }
 
 func getKeyString(s string, column int) string {
@@ -160,12 +202,12 @@ func parseMonth(s string) (int, error) {
 }
 
 func (opts *options) humanCompare(a, b string) bool {
-	ai, errA := opts.parseHuman(a)
-	bi, errB := opts.parseHuman(b)
+	af, errA := opts.parseHuman(a)
+	bf, errB := opts.parseHuman(b)
 
 	switch {
 	case errA == nil && errB == nil:
-		return ai < bi
+		return af < bf
 	case errA == nil && errB != nil:
 		return true
 	case errA != nil && errB == nil:
@@ -220,9 +262,7 @@ func (opts *options) parseHuman(s string) (float64, error) {
 
 	rs := strings.ToUpper(rest)
 
-	if strings.HasSuffix(rs, "B") {
-		rs = strings.TrimSuffix(rs, "B")
-	}
+	rs = strings.TrimSuffix(rs, "B")
 
 	if len(rs) == 0 {
 		return sign * baseVal, nil
@@ -235,4 +275,20 @@ func (opts *options) parseHuman(s string) (float64, error) {
 	}
 
 	return sign * baseVal * mult, nil
+}
+
+func (*options) numericCompare(a, b string) bool {
+	af, errA := strconv.ParseFloat(strings.TrimSpace(a), 64)
+	bf, errB := strconv.ParseFloat(strings.TrimSpace(b), 64)
+
+	switch {
+	case errA == nil && errB == nil:
+		return af < bf
+	case errA == nil && errB != nil:
+		return true
+	case errA != nil && errB == nil:
+		return false
+	default:
+		return a < b
+	}
 }
