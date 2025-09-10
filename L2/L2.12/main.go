@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -48,5 +50,21 @@ func newOptions() *options {
 }
 
 func run(args []string, opts *options) error {
+	var reader io.Reader = os.Stdin
+	if len(args) == 0 {
+		return fmt.Errorf("no search pattern specified")
+	}
+
+	pattern := args[0]
+
+	if len(args) > 1 {
+		f, err := os.Open(args[1])
+		if err != nil {
+			return fmt.Errorf("failed to open file: %w", err)
+		}
+		defer f.Close()
+		reader = f
+	}
+
 	return nil
 }
