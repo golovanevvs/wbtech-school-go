@@ -7,6 +7,7 @@ import (
 	"github.com/golovanevvs/wbtech-school-go/L2/L2.18/cal/internal/config"
 	"github.com/golovanevvs/wbtech-school-go/L2/L2.18/cal/internal/handler"
 	"github.com/golovanevvs/wbtech-school-go/L2/L2.18/cal/internal/logger/zlog"
+	"github.com/golovanevvs/wbtech-school-go/L2/L2.18/cal/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/L2/L2.18/cal/internal/server"
 )
 
@@ -22,7 +23,9 @@ func Run() {
 		os.Exit(1)
 	}
 
-	hd := handler.New(&cfg.Handler, &zlog.Logger)
+	rp := repository.New()
+
+	hd := handler.New(&cfg.Handler, &zlog.Logger, rp)
 	hd.InitRoutes()
 
 	srv := server.New(&cfg.Server, hd.Router, &zlog.Logger)
