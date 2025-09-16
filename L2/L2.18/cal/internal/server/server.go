@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golovanevvs/wbtech-school-go/L2/L2.18/cal/internal/config"
@@ -26,7 +27,7 @@ func New(config *config.Server, router *gin.Engine, logger *zerolog.Logger) *Ser
 	}
 }
 
-func (s *Server) RunServerWithGracefulShutdown() {
+func (s *Server) RunServerWithGracefulShutdown(DelayBeforeClosing time.Duration) {
 	srv := &http.Server{
 		Addr:    s.config.Addr,
 		Handler: s.router,
@@ -51,4 +52,6 @@ func (s *Server) RunServerWithGracefulShutdown() {
 	}
 
 	s.logger.Info().Msg("server exited gracefully")
+
+	time.Sleep(DelayBeforeClosing)
 }

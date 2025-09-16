@@ -21,12 +21,14 @@ func Init() {
 }
 
 func SetLevel(logLevelStr string) error {
+	log := Logger.With().Str("component", "logger").Logger()
 	logLevel, err := zerolog.ParseLevel(logLevelStr)
 	if err != nil {
+		log.Error().Err(err).Msg("failed to set log level")
 		return err
 	}
 
-	Logger.Info().Str("logLevel", logLevel.String()).Msg("logging level")
+	log.Info().Str("logLevel", logLevel.String()).Msg("logging level")
 	Logger = Logger.Level(logLevel)
 
 	return nil

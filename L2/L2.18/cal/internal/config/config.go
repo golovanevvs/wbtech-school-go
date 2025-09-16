@@ -11,10 +11,10 @@ import (
 
 type Config struct {
 	vip     *viper.Viper
-	App     *App
-	Server  *Server
-	Logger  *Logger
-	Handler *Handler
+	App     App
+	Server  Server
+	Logger  Logger
+	Handler Handler
 }
 
 type App struct {
@@ -39,10 +39,10 @@ func New(pathEnvFile string) *Config {
 
 	cfg := &Config{
 		vip: vip,
-		App: &App{
+		App: App{
 			DelayBeforeClosing: 5 * time.Second,
 		},
-		Server: &Server{
+		Server: Server{
 			Timeout: 5 * time.Second,
 		},
 	}

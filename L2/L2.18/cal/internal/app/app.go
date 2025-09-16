@@ -18,15 +18,14 @@ func Run() {
 
 	err := zlog.SetLevel(cfg.Logger.LogLevel)
 	if err != nil {
-		zlog.Logger.Error().Err(err).Msg("failed to parse log level")
 		time.Sleep(cfg.App.DelayBeforeClosing)
 		os.Exit(1)
 	}
 
-	hd := handler.New(cfg.Handler, &zlog.Logger)
+	hd := handler.New(&cfg.Handler, &zlog.Logger)
 	hd.InitRoutes()
 
-	srv := server.New(cfg.Server, hd.Router, &zlog.Logger)
+	srv := server.New(&cfg.Server, hd.Router, &zlog.Logger)
 
-	srv.RunServerWithGracefulShutdown()
+	srv.RunServerWithGracefulShutdown(cfg.App.DelayBeforeClosing)
 }
