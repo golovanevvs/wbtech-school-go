@@ -28,6 +28,10 @@ func New(config *config.Handler, logger *zerolog.Logger, repository *repository.
 func (h *Handler) InitRoutes() {
 	h.Router.Use(h.WithLogging())
 
-	h.Router.GET("/sample", h.hSample)
-
+	h.Router.POST("/event/create", h.createEvent)
+	h.Router.POST("/event/update", h.updateEvent)
+	h.Router.POST("/event/delete", h.deleteEvent)
+	h.Router.GET("/events/day", h.getEventsForDay)
+	h.Router.GET("/events/week", h.getEventsForWeek)
+	h.Router.GET("/events/month", h.getEventsForMonth)
 }

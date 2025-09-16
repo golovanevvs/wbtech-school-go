@@ -1,8 +1,31 @@
 package model
 
+import (
+	"encoding/json"
+	"time"
+)
+
+type dateOnly time.Time
+
 type Event struct {
-	Id      int    `json:"id"`
-	Title   string `json:"title"`
-	Comment string `json:"comment"`
-	Date    string `json:"date"`
+	UserId  string   `json:"user_id"`
+	Id      string   `json:"id"`
+	Title   string   `json:"title"`
+	Comment string   `json:"comment"`
+	Date    dateOnly `json:"date"`
+}
+
+func (d *dateOnly) UnmarshalJSON(b []byte) error {
+	s := string(b)
+	s = s[1 : len(s)-1]
+	t, err := time.Parse("2006-01-02", s)
+	if err != nil {
+		return err
+	}
+	*d = dateOnly(t)
+	return nil
+}
+
+func (d dateOnly) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Time(d).Format("2006-01-02"))
 }
