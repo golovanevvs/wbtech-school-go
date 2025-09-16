@@ -11,9 +11,9 @@ type Handler struct {
 	logger *zerolog.Logger
 }
 
-func New(cfgHd *config.Handler, logger *zerolog.Logger) *Handler {
+func New(config *config.Handler, logger *zerolog.Logger) *Handler {
 	log := logger.With().Str("component", "handler").Logger()
-	gin.SetMode(cfgHd.GinMode)
+	gin.SetMode(config.GinMode)
 	router := gin.New()
 
 	return &Handler{

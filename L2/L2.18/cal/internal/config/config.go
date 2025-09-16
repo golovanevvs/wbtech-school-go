@@ -2,6 +2,7 @@ package config
 
 import (
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
@@ -10,13 +11,19 @@ import (
 
 type Config struct {
 	vip     *viper.Viper
-	Server  Server
-	Logger  Logger
-	Handler Handler
+	App     *App
+	Server  *Server
+	Logger  *Logger
+	Handler *Handler
+}
+
+type App struct {
+	DelayBeforeClosing time.Duration
 }
 
 type Server struct {
-	Addr string
+	Addr    string
+	Timeout time.Duration
 }
 
 type Logger struct {
@@ -27,30 +34,34 @@ type Handler struct {
 	GinMode string
 }
 
-func New() *Config {
+func New(pathEnvFile string) *Config {
 	vip := viper.New()
 
-	return &Config{
+	cfg := &Config{
 		vip: vip,
+		App: &App{
+			DelayBeforeClosing: 5 * time.Second,
+		},
+		Server: &Server{
+			Timeout: 5 * time.Second,
+		},
 	}
-}
 
-func (c *Config) Load(pathEnvFile string) error {
 	_ = godotenv.Load(pathEnvFile)
 
 	pflag.StringP("server.addr", "a", "localhost:5470", "Server address")
-	pflag.StringP("logging.level", "l", "info", "Logging level")
+	pflag.StringP("logging.level", "l", "debug", "Logging level")
 	pflag.StringP("gin.mode", "m", "release", "Gin mode")
 	pflag.Parse()
 
-	c.vip.BindPFlags(pflag.CommandLine)
+	cfg.vip.BindPFlags(pflag.CommandLine)
 
-	c.vip.AutomaticEnv()
-	c.vip.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	cfg.vip.AutomaticEnv()
+	cfg.vip.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
-	c.Server.Addr = c.vip.GetString("server.addr")
-	c.Logger.LogLevel = c.vip.GetString("logging.level")
-	c.Handler.GinMode = c.vip.GetString("gin.mode")
+	cfg.Server.Addr = cfg.vip.GetString("server.addr")
+	cfg.Logger.LogLevel = cfg.vip.GetString("logging.level")
+	cfg.Handler.GinMode = cfg.vip.GetString("gin.mode")
 
-	return nil
+	return cfg
 }

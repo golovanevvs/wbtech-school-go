@@ -20,6 +20,14 @@ func Init() {
 		})
 }
 
-func ParseLogLevel(level string) (zerolog.Level, error) {
-	return zerolog.ParseLevel(level)
+func SetLevel(logLevelStr string) error {
+	logLevel, err := zerolog.ParseLevel(logLevelStr)
+	if err != nil {
+		return err
+	}
+
+	Logger.Info().Str("logLevel", logLevel.String()).Msg("logging level")
+	Logger = Logger.Level(logLevel)
+
+	return nil
 }
