@@ -7,6 +7,14 @@ import (
 	"github.com/rs/zerolog"
 )
 
+const (
+	errContentType = "content type must be application/json"
+	errEmptyUserID = "user_id must not be empty"
+	errEmptyID     = "id must not be empty"
+	errEmptyTitle  = "title must not be empty"
+	errEmptyDate   = "date must not be empty"
+)
+
 type Handler struct {
 	Router     *gin.Engine
 	logger     *zerolog.Logger
