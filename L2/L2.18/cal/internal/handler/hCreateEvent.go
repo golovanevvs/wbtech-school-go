@@ -10,23 +10,31 @@ import (
 
 func (h *Handler) createEvent(c *gin.Context) {
 	if !strings.Contains(c.ContentType(), "application/json") {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "content type must be application/json",
+		c.JSON(http.StatusBadRequest, model.Resp{
+			Error: "content type must be application/json",
 		})
 		return
 	}
 
 	var event model.Event
 	if err := c.ShouldBindJSON(&event); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "invalid json: " + err.Error(),
+		c.JSON(http.StatusBadRequest, model.Resp{
+			Error: "invalid json: " + err.Error(),
 		})
 		return
 	}
 
-	h.repository.Create(event)
+	if strings.TrimSpace(event.UserId) == "" {
+		c.JSON(http.StatusBadRequest, model.Resp{
+			Error: "user_id must be not empty",
+		})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"result": "event created successfully",
+	id := h.repository.Create(event)
+
+	c.JSON(http.StatusOK, model.Resp{
+		Id:     id,
+		Result: "event created successfully",
 	})
 }

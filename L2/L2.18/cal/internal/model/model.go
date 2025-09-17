@@ -15,6 +15,12 @@ type Event struct {
 	Date    dateOnly `json:"date"`
 }
 
+type Resp struct {
+	Id     string `json:"id,omitempty"`
+	Result string `json:"result,omitempty"`
+	Error  string `json:"error,omitempty"`
+}
+
 func (d *dateOnly) UnmarshalJSON(b []byte) error {
 	s := string(b)
 	s = s[1 : len(s)-1]
