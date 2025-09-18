@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-type dateOnly time.Time
+type DateOnly time.Time
 
 type Event struct {
 	UserId  string   `json:"user_id"`
 	Id      string   `json:"id"`
 	Title   string   `json:"title"`
 	Comment string   `json:"comment"`
-	Date    dateOnly `json:"date"`
+	Date    DateOnly `json:"date"`
 }
 
 type Resp struct {
@@ -22,17 +22,17 @@ type Resp struct {
 	Error  string  `json:"error,omitempty"`
 }
 
-func (d *dateOnly) UnmarshalJSON(b []byte) error {
+func (d *DateOnly) UnmarshalJSON(b []byte) error {
 	s := string(b)
 	s = s[1 : len(s)-1]
 	t, err := time.Parse("2006-01-02", s)
 	if err != nil {
 		return err
 	}
-	*d = dateOnly(t)
+	*d = DateOnly(t)
 	return nil
 }
 
-func (d dateOnly) MarshalJSON() ([]byte, error) {
+func (d DateOnly) MarshalJSON() ([]byte, error) {
 	return json.Marshal(time.Time(d).Format("2006-01-02"))
 }
