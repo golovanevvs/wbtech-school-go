@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golovanevvs/wbtech-school-go/L2/L2.18/cal/internal/customerrors"
 	"github.com/golovanevvs/wbtech-school-go/L2/L2.18/cal/internal/model"
 )
 
@@ -12,11 +14,12 @@ func (h *Handler) deleteEvent(c *gin.Context) {
 	log := h.logger.With().Str("handler", "deleteEvent").Logger()
 
 	log.Debug().Msg("start handling delete event request")
+	defer log.Debug().Msg("start handling delete event request")
 
 	if !strings.Contains(c.ContentType(), "application/json") {
-		log.Error().Msg(errContentType)
+		log.Error().Msg(customerrors.ErrContentTypeAJ.Error())
 		c.JSON(http.StatusBadRequest, model.Resp{
-			Error: errContentType,
+			Error: customerrors.ErrContentTypeAJ.Error(),
 		})
 		return
 	}
@@ -31,17 +34,17 @@ func (h *Handler) deleteEvent(c *gin.Context) {
 	}
 
 	if strings.TrimSpace(event.UserId) == "" {
-		log.Error().Msg(errEmptyUserID)
+		log.Error().Msg(customerrors.ErrEmptyUserID.Error())
 		c.JSON(http.StatusBadRequest, model.Resp{
-			Error: "validation failed: " + errEmptyUserID,
+			Error: "validation failed: " + customerrors.ErrEmptyUserID.Error(),
 		})
 		return
 	}
 
 	if strings.TrimSpace(event.Id) == "" {
-		log.Error().Msg(errEmptyID)
+		log.Error().Msg(customerrors.ErrEmptyID.Error())
 		c.JSON(http.StatusBadRequest, model.Resp{
-			Error: "validation failed: " + errEmptyID,
+			Error: "validation failed: " + customerrors.ErrEmptyID.Error(),
 		})
 		return
 	}
@@ -49,7 +52,11 @@ func (h *Handler) deleteEvent(c *gin.Context) {
 	err := h.repository.Delete(event)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to delete event")
-		c.JSON(http.StatusBadRequest, model.Resp{
+		statusCode := http.StatusBadRequest
+		if errors.Is(err, customerrors.ErrUserIDNotFound) || errors.Is(err, customerrors.ErrEventIDNotFound) {
+			statusCode = http.StatusServiceUnavailable
+		}
+		c.JSON(statusCode, model.Resp{
 			Error: err.Error(),
 		})
 		return

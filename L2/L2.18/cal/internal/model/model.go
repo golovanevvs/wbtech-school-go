@@ -16,9 +16,10 @@ type Event struct {
 }
 
 type Resp struct {
-	Id     string `json:"id,omitempty"`
-	Result string `json:"result,omitempty"`
-	Error  string `json:"error,omitempty"`
+	Id     string  `json:"id,omitempty"`
+	Events []Event `json:"events,omitempty"`
+	Result string  `json:"result,omitempty"`
+	Error  string  `json:"error,omitempty"`
 }
 
 func (d *dateOnly) UnmarshalJSON(b []byte) error {

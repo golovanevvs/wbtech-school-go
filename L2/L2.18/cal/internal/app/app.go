@@ -23,7 +23,7 @@ func Run() {
 		os.Exit(1)
 	}
 
-	rp := repository.New()
+	rp := repository.New(&zlog.Logger)
 
 	hd := handler.New(&cfg.Handler, &zlog.Logger, rp)
 	hd.InitRoutes()
