@@ -1,69 +1,289 @@
 MAKEFLAGS += --no-print-directory
 
-.PHONY: up down clean list-db list-tables show-table logs
+.PHONY: up down clean list-db list-tables show-table logs \
+        up-master up-slave1 up-slave2 down-master down-slave1 down-slave2 \
+        list-containers init-replication setup-replication
 
 include .env
 
 POSTGRES_IMAGE ?= postgres:latest
-POSTGRES_CONTAINER_NAME := postgres-order-service
-STARTUP_TIMEOUT := 30
-PGDATA_VOLUME ?= pgdata
+STARTUP_TIMEOUT := 60
 
-up:
-	@if docker ps -a --filter "name=$(POSTGRES_CONTAINER_NAME)" --format '{{.Status}}' | grep -q "Exited"; then \
-		echo "Restarting existing stopped PostgreSQL container..."; \
-		docker start $(POSTGRES_CONTAINER_NAME); \
-	elif ! docker ps -a --filter "name=$(POSTGRES_CONTAINER_NAME)" | grep -q $(POSTGRES_CONTAINER_NAME); then \
-		echo "Starting new PostgreSQL container..."; \
+# Configuration
+MASTER_CONTAINER_NAME ?= postgres-master
+MASTER_PORT ?= $(POSTGRES_MASTER_PORT)
+MASTER_PGDATA_VOLUME ?= pgdata-master
+
+SLAVE1_CONTAINER_NAME ?= postgres-slave1
+SLAVE1_PORT ?= $(POSTGRES_SLAVE1_PORT)
+SLAVE1_PGDATA_VOLUME ?= pgdata-slave1
+
+SLAVE2_CONTAINER_NAME ?= postgres-slave2
+SLAVE2_PORT ?= $(POSTGRES_SLAVE2_PORT)
+SLAVE2_PGDATA_VOLUME ?= pgdata-slave2
+
+POSTGRES_USER ?= postgres
+POSTGRES_PASSWORD ?= postgres
+POSTGRES_DB ?= postgres
+
+# Function to start master container
+define start_master_container
+	@if docker ps -a --filter "name=$(1)" --format '{{.Status}}' | grep -q "Exited"; then \
+		echo "Restarting existing stopped master container $(1)..."; \
+		docker start $(1); \
+	elif ! docker ps -a --filter "name=$(1)" | grep -q $(1); then \
+		echo "Starting master PostgreSQL container $(1)..."; \
 		docker run -d \
-			--name $(POSTGRES_CONTAINER_NAME) \
-			-p $(POSTGRES_PORT):5432 \
+			--name $(1) \
+			-p $(2):5432 \
 			-e POSTGRES_USER=$(POSTGRES_USER) \
 			-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
 			-e POSTGRES_DB=$(POSTGRES_DB) \
-			-v $(PGDATA_VOLUME):/var/lib/postgresql/data \
+			-v $(3):/var/lib/postgresql/data \
+			-e POSTGRES_INITDB_ARGS="--auth-host=scram-sha-256" \
+			-e POSTGRES_HOST_AUTH_METHOD=trust \
 			--health-cmd="pg_isready -U $(POSTGRES_USER) -d $(POSTGRES_DB)" \
 			--health-interval=10s \
 			--health-timeout=5s \
 			--health-retries=5 \
 			--health-start-period=15s \
-			$(POSTGRES_IMAGE); \
+			$(POSTGRES_IMAGE) \
+			-c 'max_wal_senders=10' \
+			-c 'wal_level=replica' \
+			-c 'archive_mode=on' \
+			-c 'archive_command=cp %p /var/lib/postgresql/data/archive/%f' \
+			-c 'max_replication_slots=10'; \
 	else \
-		echo "PostgreSQL container is already running"; \
+		echo "Master container $(1) is already running"; \
 		exit 0; \
 	fi
 
-	@echo "Waiting for database system to start (timeout: $(STARTUP_TIMEOUT)s...)"
+	@echo "Waiting for master database system to start (timeout: $(STARTUP_TIMEOUT)s)..."
 	@timeout $(STARTUP_TIMEOUT) sh -c \
-	  'until docker logs $(POSTGRES_CONTAINER_NAME) 2>&1 | grep -q "database system is ready to accept connections"; do \
+	  'until docker logs $(1) 2>&1 | grep -q "database system is ready to accept connections"; do \
 	    sleep 1; \
 	  done' || \
-	  (echo "Database system failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
+	  (echo "Master database system failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
+endef
 
-down:
-	@echo "Stopping PostgreSQL container..."
-	@-docker stop $(POSTGRES_CONTAINER_NAME)
-	@echo "PostgreSQL container stopped"
+# Function to start slave container (without initial data)
+define start_slave_container
+	@if docker ps -a --filter "name=$(1)" --format '{{.Status}}' | grep -q "Exited"; then \
+		echo "Restarting existing stopped slave container $(1)..."; \
+		docker start $(1); \
+	elif ! docker ps -a --filter "name=$(1)" | grep -q $(1); then \
+		echo "Starting slave PostgreSQL container $(1)..."; \
+		docker run -d \
+			--name $(1) \
+			-p $(2):5432 \
+			-e POSTGRES_USER=$(POSTGRES_USER) \
+			-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+			-v $(3):/var/lib/postgresql/data \
+			--health-cmd="pg_isready -U $(POSTGRES_USER)" \
+			--health-interval=10s \
+			--health-timeout=5s \
+			--health-retries=5 \
+			--health-start-period=15s \
+			$(POSTGRES_IMAGE) \
+			-c 'hot_standby=on' \
+			-c 'max_standby_streaming_delay=30s' \
+			-c 'wal_receiver_status_interval=10s' \
+			-c 'hot_standby_feedback=on'; \
+	else \
+		echo "Slave container $(1) is already running"; \
+		exit 0; \
+	fi
 
-clean:
-	@echo "Performing full cleanup PostgreSQL..."
-	@-docker stop $(POSTGRES_CONTAINER_NAME) 2>/dev/null
-	@-docker rm -f $(POSTGRES_CONTAINER_NAME) 2>/dev/null || true
-	@docker volume rm pgdata 2>/dev/null || true
-	@echo "Cleanup PostgreSQL completed"
+	@echo "Waiting for slave database system to start (timeout: $(STARTUP_TIMEOUT)s)..."
+	@timeout $(STARTUP_TIMEOUT) sh -c \
+	  'until docker logs $(1) 2>&1 | grep -q "database system is ready to accept connections"; do \
+	    sleep 1; \
+	  done' || \
+	  (echo "Slave database system failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
+endef
 
-logs:
-	@docker logs -f $(POSTGRES_CONTAINER_NAME)
+# Master container commands
+up-master:
+	$(call start_master_container,$(MASTER_CONTAINER_NAME),$(MASTER_PORT),$(MASTER_PGDATA_VOLUME))
+
+down-master:
+	@echo "Stopping PostgreSQL master container..."
+	@-docker stop $(MASTER_CONTAINER_NAME)
+	@echo "PostgreSQL master container stopped"
+
+# Slave container commands
+up-slave1:
+	$(call start_slave_container,$(SLAVE1_CONTAINER_NAME),$(SLAVE1_PORT),$(SLAVE1_PGDATA_VOLUME))
+
+down-slave1:
+	@echo "Stopping PostgreSQL slave1 container..."
+	@-docker stop $(SLAVE1_CONTAINER_NAME)
+	@echo "PostgreSQL slave1 container stopped"
+
+up-slave2:
+	$(call start_slave_container,$(SLAVE2_CONTAINER_NAME),$(SLAVE2_PORT),$(SLAVE2_PGDATA_VOLUME))
+
+down-slave2:
+	@echo "Stopping PostgreSQL slave2 container..."
+	@-docker stop $(SLAVE2_CONTAINER_NAME)
+	@echo "PostgreSQL slave2 container stopped"
+
+# Combined commands
+up-all: up-master up-slave1 up-slave2
+
+down-all: down-master down-slave1 down-slave2
+
+# Setup replication (this is the key part)
+setup-replication:
+	setup-replication:
+	@echo "Setting up PostgreSQL master-slave replication..."
+
+	# --- Создаем сеть, если не существует ---
+	@docker network inspect pg-network >/dev/null 2>&1 || \
+		docker network create pg-network
+
+	# --- Подготовка master ---
+	@echo "Waiting for master to be ready..."
+	@timeout 60 sh -c 'until docker exec $(MASTER_CONTAINER_NAME) pg_isready > /dev/null 2>&1; do sleep 1; done' || \
+		(echo "Master not ready"; exit 1)
+
+	@echo "Creating replication user on master..."
+	@docker exec $(MASTER_CONTAINER_NAME) psql -U $(POSTGRES_USER) -c \
+		"CREATE USER replicator WITH REPLICATION ENCRYPTED PASSWORD 'replicator';" 2>/dev/null || true
+
+	@echo "Adding replication entry to pg_hba.conf..."
+	@docker exec $(MASTER_CONTAINER_NAME) bash -c \
+		"echo 'host replication replicator 0.0.0.0/0 md5' >> /var/lib/postgresql/data/pg_hba.conf"
+
+	@echo "Restarting master to apply configuration..."
+	@docker restart $(MASTER_CONTAINER_NAME)
+	@sleep 15
+
+	@echo "Waiting for master to be ready again..."
+	@timeout 60 sh -c 'until docker exec $(MASTER_CONTAINER_NAME) pg_isready > /dev/null 2>&1; do sleep 1; done' || \
+		(echo "Master not ready after restart"; exit 1)
+
+	# --- Функция для настройки slave ---
+define setup_slave
+	@echo "Setting up $(1)..."
+	@docker stop $(1) 2>/dev/null || true
+	@docker rm $(1) 2>/dev/null || true
+
+	@echo "Cleaning $(1) data directory..."
+	@docker run --rm \
+		-v $(2):/var/lib/postgresql/data \
+		$(POSTGRES_IMAGE) \
+		bash -c "rm -rf /var/lib/postgresql/data/* && chown -R postgres:postgres /var/lib/postgresql/data"
+
+	@echo "Creating base backup for $(1)..."
+	@docker run --rm \
+		--network pg-network \
+		-v $(2):/var/lib/postgresql/data \
+		-e PGPASSWORD=replicator \
+		$(POSTGRES_IMAGE) \
+		bash -c "pg_basebackup -h $(MASTER_CONTAINER_NAME) -D /var/lib/postgresql/data -U replicator -v -P -R"
+
+	@echo "Starting $(1)..."
+	@docker run -d \
+		--name $(1) \
+		--network pg-network \
+		-p $(3):5432 \
+		-v $(2):/var/lib/postgresql/data \
+		-e POSTGRES_USER=$(POSTGRES_USER) \
+		-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+		$(POSTGRES_IMAGE) \
+		-c 'hot_standby=on' \
+		-c 'max_standby_streaming_delay=30s' \
+		-c 'wal_receiver_status_interval=10s' \
+		-c 'hot_standby_feedback=on'
+	@sleep 10
+endef
+
+	# --- Настройка slave1 и slave2 ---
+	$(call setup_slave,$(SLAVE1_CONTAINER_NAME),$(SLAVE1_PGDATA_VOLUME),$(SLAVE1_PORT))
+	$(call setup_slave,$(SLAVE2_CONTAINER_NAME),$(SLAVE2_PGDATA_VOLUME),$(SLAVE2_PORT))
+
+	@echo "Replication setup completed! Slaves should now sync with master."
+
+
+# Check replication status
+check-replication:
+	@echo "Checking replication status..."
+	@echo "Master replication slots:"
+	@docker exec $(MASTER_CONTAINER_NAME) psql -U $(POSTGRES_USER) -c \
+		"SELECT slot_name, active, restart_lsn FROM pg_replication_slots;"
+	@echo ""
+	@echo "Master replication connections:"
+	@docker exec $(MASTER_CONTAINER_NAME) psql -U $(POSTGRES_USER) -c \
+		"SELECT client_addr, state, sync_state FROM pg_stat_replication;"
+
+# Clean commands
+clean-master:
+	@echo "Performing cleanup PostgreSQL master..."
+	@-docker stop $(MASTER_CONTAINER_NAME) 2>/dev/null
+	@-docker rm -f $(MASTER_CONTAINER_NAME) 2>/dev/null || true
+	@docker volume rm $(MASTER_PGDATA_VOLUME) 2>/dev/null || true
+	@echo "Cleanup PostgreSQL master completed"
+
+clean-slave1:
+	@echo "Performing cleanup PostgreSQL slave1..."
+	@-docker stop $(SLAVE1_CONTAINER_NAME) 2>/dev/null
+	@-docker rm -f $(SLAVE1_CONTAINER_NAME) 2>/dev/null || true
+	@docker volume rm $(SLAVE1_PGDATA_VOLUME) 2>/dev/null || true
+	@echo "Cleanup PostgreSQL slave1 completed"
+
+clean-slave2:
+	@echo "Performing cleanup PostgreSQL slave2..."
+	@-docker stop $(SLAVE2_CONTAINER_NAME) 2>/dev/null
+	@-docker rm -f $(SLAVE2_CONTAINER_NAME) 2>/dev/null || true
+	@docker volume rm $(SLAVE2_PGDATA_VOLUME) 2>/dev/null || true
+	@echo "Cleanup PostgreSQL slave2 completed"
+
+clean-all: clean-master clean-slave1 clean-slave2
+
+# Logs commands
+logs-master:
+	@docker logs -f $(MASTER_CONTAINER_NAME)
+
+logs-slave1:
+	@docker logs -f $(SLAVE1_CONTAINER_NAME)
+
+logs-slave2:
+	@docker logs -f $(SLAVE2_CONTAINER_NAME)
+
+# Database operations with container selection
+CONTAINER ?= $(MASTER_CONTAINER_NAME)
 
 list-db:
-	@echo "Listing databases..."
-	@docker exec -it $(POSTGRES_CONTAINER_NAME) psql -U $(POSTGRES_USER) -l
+	@echo "Listing databases in container $(CONTAINER)..."
+	@docker exec -it $(CONTAINER) psql -U $(POSTGRES_USER) -l
 
 list-tables:
-	@echo "Listing tables in database \"$(POSTGRES_DB)\"..."
-	@docker exec -it $(POSTGRES_CONTAINER_NAME) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\dt"
+	@echo "Listing tables in database \"$(POSTGRES_DB)\" in container $(CONTAINER)..."
+	@docker exec -it $(CONTAINER) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\dt"
 
 show-table:
-	@echo "Showing 10 rows of table \"$(TABLE)\"..."
-	@docker exec -it $(POSTGRES_CONTAINER_NAME) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) \
+	@if [ -z "$(TABLE)" ]; then \
+		echo "Error: TABLE variable is required. Usage: make show-table TABLE=table_name CONTAINER=container_name"; \
+		exit 1; \
+	fi
+	@echo "Showing 10 rows of table \"$(TABLE)\" in container $(CONTAINER)..."
+	@docker exec -it $(CONTAINER) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) \
 	-c "SELECT * FROM $(TABLE) LIMIT 10"
+
+# Quick commands for specific containers
+list-db-master:
+	@$(MAKE) list-db CONTAINER=$(MASTER_CONTAINER_NAME)
+
+list-db-slave1:
+	@$(MAKE) list-db CONTAINER=$(SLAVE1_CONTAINER_NAME)
+
+list-db-slave2:
+	@$(MAKE) list-db CONTAINER=$(SLAVE2_CONTAINER_NAME)
+
+check-replication-status:
+	@$(MAKE) check-replication
+
+list-containers:
+	@echo "Running PostgreSQL containers:"
+	@docker ps --filter "name=postgres-" --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
