@@ -12,14 +12,14 @@ type appConfig struct {
 }
 
 type serverConfig struct {
-	addr string
+	port int
 }
 
 type loggerConfig struct {
 	logLevel string
 }
 
-func NewAppConfig(configFilePath, envFilePath, envPrefix string) (*appConfig, error) {
+func newAppConfig(configFilePath, envFilePath, envPrefix string) (*appConfig, error) {
 	appConfig := &appConfig{}
 
 	cfg := config.New()
@@ -33,8 +33,21 @@ func NewAppConfig(configFilePath, envFilePath, envPrefix string) (*appConfig, er
 		return appConfig, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	appConfig.serverConfig.addr = cfg.GetString("server.addr")
+	appConfig.serverConfig.port = cfg.GetInt("server.port")
 	appConfig.loggerConfig.logLevel = cfg.GetString("logger.level")
 
+	err = appConfig.validate()
+	if err != nil {
+		return appConfig, fmt.Errorf("failed to validation config: %w", err)
+	}
+
 	return appConfig, nil
+}
+
+func (ap *appConfig) validate() error {
+	if ap.serverConfig.port <= 0 || ap.serverConfig.port > 65535 {
+		return fmt.Errorf("invalid HTTP port: %d", ap.serverConfig.port)
+	}
+
+	return nil
 }

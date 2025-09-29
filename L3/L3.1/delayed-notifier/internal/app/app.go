@@ -11,16 +11,21 @@ import (
 func Run() {
 	zlog.InitConsole()
 
-	log := zlog.Logger.With().Str("component", "app").Logger()
+	zlog.Logger.Info().Str("component", "app").Msg("delayed-notifier app started")
 
-	log.Info().Msg("delayed-notifier app started")
-
-	appConfig, err := NewAppConfig("./config/config.yaml", "./.env", "")
+	appConfig, err := newAppConfig("./config/config.yaml", "./.env", "")
 	if err != nil {
-		log.Error().Err(err).Msg("error creating configuration")
+		zlog.Logger.Error().Err(err).Str("component", "app").Msg("error creating configuration")
+		os.Exit(1)
 	}
 
-	fmt.Printf("addr: %s\n", appConfig.serverConfig.addr)
+	err = zlog.SetLevel(appConfig.loggerConfig.logLevel)
+	if err != nil {
+		zlog.Logger.Error().Err(err).Str("component", "logger").Msg("error set level")
+	}
+
+	// ------------------------- TEMP -------------------------
+	fmt.Printf("addr: %s\n", appConfig.serverConfig.port)
 	fmt.Printf("logLevel: %s\n", appConfig.loggerConfig.logLevel)
 
 	fmt.Println("Press Enter to exit…")

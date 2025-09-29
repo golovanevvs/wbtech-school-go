@@ -4,7 +4,7 @@ go 1.25.1
 
 require github.com/wb-go/wbf v0.0.4
 
-replace github.com/wb-go/wbf => github.com/golovanevvs/wbf v0.0.5-golovanevvs
+replace github.com/wb-go/wbf => github.com/golovanevvs/wbf v0.0.6-golovanevvs
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
