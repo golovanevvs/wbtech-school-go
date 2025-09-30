@@ -4,7 +4,7 @@ go 1.25.1
 
 require github.com/wb-go/wbf v0.0.5
 
-replace github.com/wb-go/wbf => github.com/golovanevvs/wbf v0.0.9-golovanevvs
+replace github.com/wb-go/wbf => github.com/golovanevvs/wbf v0.0.10-golovanevvs
 
 require (
 	github.com/bytedance/sonic v1.9.1 // indirect
