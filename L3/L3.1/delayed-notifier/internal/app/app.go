@@ -1,34 +1,37 @@
 package app
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 
 	"github.com/wb-go/wbf/zlog"
 )
 
-func Run() {
-	zlog.InitConsole()
+type App struct {
+	cfg  *appConfig
+	deps *dependencies
+}
 
-	zlog.Logger.Info().Str("component", "app").Msg("delayed-notifier app started")
-
-	appConfig, err := newAppConfig("./config/config.yaml", "./.env", "")
+func New() (*App, error) {
+	cfg, err := newAppConfig("./config/config.yaml", "./.env", "")
 	if err != nil {
 		zlog.Logger.Error().Err(err).Str("component", "app").Msg("error creating configuration")
-		os.Exit(1)
+		return nil, fmt.Errorf("error creating configuration: %w", err)
 	}
 
-	err = zlog.SetLevel(appConfig.loggerConfig.logLevel)
+	err = zlog.SetLevel(cfg.lg.Level)
 	if err != nil {
 		zlog.Logger.Error().Err(err).Str("component", "logger").Msg("error set level")
+		return nil, fmt.Errorf("error set log level: %w", err)
 	}
 
-	// ------------------------- TEMP -------------------------
-	fmt.Printf("addr: %s\n", appConfig.serverConfig.port)
-	fmt.Printf("logLevel: %s\n", appConfig.loggerConfig.logLevel)
+	return &App{
+		cfg: cfg,
+	}, nil
+}
 
-	fmt.Println("Press Enter to exit…")
-	reader := bufio.NewReader(os.Stdin)
-	_, _ = reader.ReadString('\n')
+func (a *App) Run() error {
+	// ------------------------- TEMP -------------------------
+	fmt.Printf("port: %d\n", a.cfg.tr.TrHTTP.Srv.Port)
+	fmt.Printf("logLevel: %s\n", a.cfg.lg.Level)
+	return nil
 }

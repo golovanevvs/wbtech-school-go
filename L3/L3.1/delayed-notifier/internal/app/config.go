@@ -3,51 +3,41 @@ package app
 import (
 	"fmt"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/pkg/logger"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/repository"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/transport"
 	"github.com/wb-go/wbf/config"
 )
 
 type appConfig struct {
-	serverConfig serverConfig
-	loggerConfig loggerConfig
-}
-
-type serverConfig struct {
-	port int
-}
-
-type loggerConfig struct {
-	logLevel string
+	lg *logger.Config
+	tr *transport.Config
+	rp *repository.Config
 }
 
 func newAppConfig(configFilePath, envFilePath, envPrefix string) (*appConfig, error) {
-	appConfig := &appConfig{}
+	appConfig := &appConfig{
+		tr: transport.NewConfig(),
+		rp: repository.NewConfig(),
+		lg: logger.NewConfig(),
+	}
 
 	cfg := config.New()
 
-	cfg.DefineFlag("a", "addr", "server.addr", ":7777", "Server address")
+	if err := cfg.DefineFlag("p", "srvport", "server.port", "7777", "HTTP server port"); err != nil {
+		return nil, fmt.Errorf("failed to define flags: %w", err)
+	}
 
 	cfg.ParseFlags()
 
 	err := cfg.Load(configFilePath, envFilePath, envPrefix)
 	if err != nil {
-		return appConfig, fmt.Errorf("failed to load config: %w", err)
+		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	appConfig.serverConfig.port = cfg.GetInt("server.port")
-	appConfig.loggerConfig.logLevel = cfg.GetString("logger.level")
-
-	err = appConfig.validate()
-	if err != nil {
-		return appConfig, fmt.Errorf("failed to validation config: %w", err)
-	}
+	appConfig.rp.Postgres.Master.Host = cfg.GetString("postgres.host")
+	appConfig.tr.TrHTTP.Srv.Port = cfg.GetInt("server.port")
+	appConfig.lg.Level = cfg.GetString("logger.level")
 
 	return appConfig, nil
-}
-
-func (ap *appConfig) validate() error {
-	if ap.serverConfig.port <= 0 || ap.serverConfig.port > 65535 {
-		return fmt.Errorf("invalid HTTP port: %d", ap.serverConfig.port)
-	}
-
-	return nil
 }
