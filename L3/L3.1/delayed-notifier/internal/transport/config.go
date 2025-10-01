@@ -1,13 +1,13 @@
 package transport
 
-import transporthttp "github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/transport/trhttp"
+import "github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/transport/trhttp"
 
 type Config struct {
-	TrHTTP *transporthttp.Config
+	TrHTTP *trhttp.Config
 }
 
 func NewConfig() *Config {
 	return &Config{
-		TrHTTP: transporthttp.NewConfig(),
+		TrHTTP: trhttp.NewConfig(),
 	}
 }
