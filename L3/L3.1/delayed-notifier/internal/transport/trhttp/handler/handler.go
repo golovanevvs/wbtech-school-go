@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/wb-go/wbf/ginext"
 )
 
@@ -10,8 +9,7 @@ type Handler struct {
 }
 
 func New(cfg *Config) *Handler {
-	gin.SetMode(cfg.GinMode)
-	rt := ginext.New()
+	rt := ginext.New(cfg.GinMode)
 	hd := &Handler{
 		Router: rt,
 	}

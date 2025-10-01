@@ -25,7 +25,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := app.Run(); err != nil {
+	if err := app.Run(cancel); err != nil {
 		zlog.Logger.Info().Str("component", "main").Msg("delayed-notifier application stopped with error")
 		wait()
 		os.Exit(1)

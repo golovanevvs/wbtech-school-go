@@ -26,14 +26,14 @@ func New(cfg *Config) *HTTP {
 	}
 }
 
-func (h *HTTP) RunServer() error {
-	h.lg.Info().Str("addr", h.httpsrv.Addr).Msg("http server started")
-	if err := h.httpsrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		h.lg.Error().Err(err).Msg("error http server start")
-		return fmt.Errorf("error http server start: %w", err)
-	}
-
-	return nil
+func (h *HTTP) RunServer(cancel context.CancelFunc) {
+	go func() {
+		h.lg.Info().Str("addr", h.httpsrv.Addr).Msg("http server started")
+		if err := h.httpsrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			h.lg.Error().Err(err).Msg("error http server start")
+			cancel()
+		}
+	}()
 }
 
 func (h *HTTP) ShutdownServer(ctx context.Context) error {
