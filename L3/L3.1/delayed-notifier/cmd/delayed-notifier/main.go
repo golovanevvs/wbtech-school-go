@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 
@@ -14,23 +15,29 @@ func main() {
 
 	zlog.Logger.Info().Str("component", "main").Msg("delayed-notifier application started")
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	app, err := app.New()
 	if err != nil {
+		zlog.Logger.Info().Str("component", "main").Msg("delayed-notifier application stopped with error")
 		wait()
 		os.Exit(1)
 	}
 
 	if err := app.Run(); err != nil {
+		zlog.Logger.Info().Str("component", "main").Msg("delayed-notifier application stopped with error")
 		wait()
 		os.Exit(1)
 	}
 
-	wait()
+	app.GracefullShutdown(ctx, cancel)
 	zlog.Logger.Info().Str("component", "main").Msg("delayed-notifier application stopped")
+	wait()
 }
 
 func wait() {
-	fmt.Println("Press Enter to exit…")
+	fmt.Println("Press Enter to close…")
 	reader := bufio.NewReader(os.Stdin)
 	_, _ = reader.ReadString('\n')
 }

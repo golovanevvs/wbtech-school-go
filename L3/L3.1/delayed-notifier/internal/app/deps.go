@@ -1,20 +1,62 @@
 package app
 
 import (
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/repository"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/service"
+	"fmt"
+
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/transport"
+	"github.com/wb-go/wbf/zlog"
 )
 
 type dependencies struct {
-	rm *resourceManager
-
+	lg *zlog.Zerolog
 	tr *transport.Transport
-	rp *repository.Repository
-	sv *service.Service
+	// rp *repository.Repository
+	// sv *service.Service
 }
 
-func newDependenies(cfg *appConfig) *dependencies {
-	tr := transport.New
-	return &dependencies{}
+type dependencyBuilder struct {
+	cfg  *appConfig
+	rm   *resourceManager
+	deps *dependencies
+}
+
+func newDependencyBuilder(cfg *appConfig) *dependencyBuilder {
+	return &dependencyBuilder{
+		cfg:  cfg,
+		rm:   &resourceManager{},
+		deps: &dependencies{},
+	}
+}
+
+func (b dependencyBuilder) withLogger() error {
+	err := zlog.SetLevel(b.cfg.lg.Level)
+
+	lg := &zlog.Logger
+
+	if err != nil {
+		zlog.Logger.Error().Err(err).Str("component", "logger").Msg("error set log level")
+		return fmt.Errorf("error set log level: %w", err)
+	}
+
+	lg.Info().
+		Str("component", "logger").
+		Str("log_level", lg.GetLevel().String()).
+		Msg("logging level has been configure")
+
+	b.deps.lg = lg
+
+	return nil
+}
+
+func (b dependencyBuilder) withTransport() {
+	b.deps.tr = transport.New(b.cfg.tr)
+}
+
+func (b *dependencyBuilder) build() (*dependencies, error) {
+	if err := b.withLogger(); err != nil {
+		return nil, err
+	}
+	b.withTransport()
+
+	return b.deps, nil
 }

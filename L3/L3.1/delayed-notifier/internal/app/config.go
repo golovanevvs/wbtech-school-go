@@ -15,7 +15,7 @@ type appConfig struct {
 	rp *repository.Config
 }
 
-func newAppConfig(configFilePath, envFilePath, envPrefix string) (*appConfig, error) {
+func newConfig(configFilePath, envFilePath, envPrefix string) (*appConfig, error) {
 	appConfig := &appConfig{
 		tr: transport.NewConfig(),
 		rp: repository.NewConfig(),
@@ -36,7 +36,8 @@ func newAppConfig(configFilePath, envFilePath, envPrefix string) (*appConfig, er
 	}
 
 	appConfig.rp.Postgres.Master.Host = cfg.GetString("postgres.host")
-	appConfig.tr.TrHTTP.Srv.Port = cfg.GetInt("server.port")
+	appConfig.tr.TrHTTP.Port = cfg.GetInt("server.port")
+	appConfig.tr.TrHTTP.Handler.GinMode = cfg.GetString("gin.mode")
 	appConfig.lg.Level = cfg.GetString("logger.level")
 
 	return appConfig, nil
