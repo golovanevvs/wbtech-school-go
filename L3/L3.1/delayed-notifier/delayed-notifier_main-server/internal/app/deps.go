@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/transport"
 	"github.com/wb-go/wbf/zlog"
 )
@@ -10,7 +11,7 @@ import (
 type dependencies struct {
 	lg *zlog.Zerolog
 	tr *transport.Transport
-	// rp *repository.Repository
+	rp *repository.Repository
 	// sv *service.Service
 }
 
@@ -28,7 +29,7 @@ func newDependencyBuilder(cfg *appConfig) *dependencyBuilder {
 	}
 }
 
-func (b dependencyBuilder) withLogger() error {
+func (b *dependencyBuilder) withLogger() error {
 	err := zlog.SetLevel(b.cfg.lg.Level)
 
 	lg := &zlog.Logger
@@ -48,7 +49,19 @@ func (b dependencyBuilder) withLogger() error {
 	return nil
 }
 
-func (b dependencyBuilder) withTransport() {
+func (b *dependencyBuilder) withRepository() error {
+	rp, err := repository.New(b.cfg.rp)
+	if err != nil {
+		b.deps.lg.Error().Err(err).Str("component", "repository").Msg("error create repository")
+		return fmt.Errorf("error create repository: %w", err)
+	}
+	b.deps.lg.Info().Str("component", "repository").Msg("repository has been create")
+	b.deps.rp = rp
+
+	return nil
+}
+
+func (b *dependencyBuilder) withTransport() {
 	b.deps.tr = transport.New(b.cfg.tr)
 }
 
@@ -56,7 +69,12 @@ func (b *dependencyBuilder) build() (*dependencies, error) {
 	if err := b.withLogger(); err != nil {
 		return nil, err
 	}
+
 	b.withTransport()
+
+	if err := b.withRepository(); err != nil {
+		return nil, err
+	}
 
 	return b.deps, nil
 }

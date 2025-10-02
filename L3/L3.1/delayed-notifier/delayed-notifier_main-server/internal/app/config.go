@@ -35,10 +35,32 @@ func newConfig(configFilePath, envFilePath, envPrefix string) (*appConfig, error
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
+	appConfig.lg.Level = cfg.GetString("logger.level")
+
 	appConfig.rp.Postgres.Master.Host = cfg.GetString("postgres.host")
+	appConfig.rp.Postgres.Master.Port = cfg.GetInt("postgres.master.port")
+	appConfig.rp.Postgres.Master.User = cfg.GetString("postgres.user")
+	appConfig.rp.Postgres.Master.Password = cfg.GetString("postgres.password")
+	appConfig.rp.Postgres.Master.DBName = cfg.GetString("postgres.db")
+
+	appConfig.rp.Postgres.Slave1.Host = cfg.GetString("postgres.host")
+	appConfig.rp.Postgres.Slave1.Port = cfg.GetInt("postgres.slave1.port")
+	appConfig.rp.Postgres.Slave1.User = cfg.GetString("postgres.user")
+	appConfig.rp.Postgres.Slave1.Password = cfg.GetString("postgres.password")
+	appConfig.rp.Postgres.Slave1.DBName = cfg.GetString("postgres.db")
+
+	appConfig.rp.Postgres.Slave2.Host = cfg.GetString("postgres.host")
+	appConfig.rp.Postgres.Slave2.Port = cfg.GetInt("postgres.slave2.port")
+	appConfig.rp.Postgres.Slave2.User = cfg.GetString("postgres.user")
+	appConfig.rp.Postgres.Slave2.Password = cfg.GetString("postgres.password")
+	appConfig.rp.Postgres.Slave2.DBName = cfg.GetString("postgres.db")
+
+	appConfig.rp.Postgres.MaxOpenConns = cfg.GetInt("postgres.max_open_conns")
+	appConfig.rp.Postgres.MaxIdleConns = cfg.GetInt("postgres.max_idle_conns")
+	appConfig.rp.Postgres.ConnMaxLifetime = cfg.GetDuration("postgres.conn_max_lifetime")
+
 	appConfig.tr.TrHTTP.Port = cfg.GetInt("server.port")
 	appConfig.tr.TrHTTP.Handler.GinMode = cfg.GetString("gin.mode")
-	appConfig.lg.Level = cfg.GetString("logger.level")
 
 	return appConfig, nil
 }
