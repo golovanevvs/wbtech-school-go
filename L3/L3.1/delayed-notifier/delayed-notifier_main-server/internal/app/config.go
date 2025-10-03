@@ -35,8 +35,10 @@ func newConfig(configFilePath, envFilePath, envPrefix string) (*appConfig, error
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
+	// ------------- Logger -------------
 	appConfig.lg.Level = cfg.GetString("logger.level")
 
+	// ------------- Repository -------------
 	appConfig.rp.Postgres.Master.Host = cfg.GetString("postgres.host")
 	appConfig.rp.Postgres.Master.Port = cfg.GetInt("postgres.master.port")
 	appConfig.rp.Postgres.Master.User = cfg.GetString("postgres.user")
@@ -59,6 +61,7 @@ func newConfig(configFilePath, envFilePath, envPrefix string) (*appConfig, error
 	appConfig.rp.Postgres.MaxIdleConns = cfg.GetInt("postgres.max_idle_conns")
 	appConfig.rp.Postgres.ConnMaxLifetime = cfg.GetDuration("postgres.conn_max_lifetime")
 
+	// ------------- Transport -------------
 	appConfig.tr.TrHTTP.Port = cfg.GetInt("server.port")
 	appConfig.tr.TrHTTP.Handler.GinMode = cfg.GetString("gin.mode")
 

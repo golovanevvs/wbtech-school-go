@@ -1,0 +1,101 @@
+
+services:
+  postgres-master:
+    image: postgres:latest
+    container_name: postgres-master
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "${POSTGRES_MASTER_PORT}:5432"
+    volumes:
+      - postgres-master-data:/var/lib/postgresql/data
+      - ./master-init.sql:/docker-entrypoint-initdb.d/01-replication.sql
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c synchronous_commit=on
+      -c synchronous_standby_names=''
+      -c max_replication_slots=10
+      -c hot_standby=on
+      -c archive_mode=on
+      -c archive_command=/bin/true
+    networks:
+      - postgres-replication
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  postgres-slave-1:
+    image: postgres:latest
+    container_name: postgres-slave-1
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_SLAVE1_PORT}:5432"
+    volumes:
+      - postgres-slave-1-data:/var/lib/postgresql/data
+    command: >
+      postgres
+      -c hot_standby=on
+      -c max_standby_streaming_delay=30s
+      -c max_standby_archive_delay=30s
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    networks:
+      - postgres-replication
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  postgres-slave-2:
+    image: postgres:latest
+    container_name: postgres-slave-2
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_SLAVE2_PORT}:5432"
+    volumes:
+      - postgres-slave-2-data:/var/lib/postgresql/data
+    command: >
+      postgres
+      -c hot_standby=on
+      -c max_standby_streaming_delay=30s
+      -c max_standby_archive_delay=30s
+    depends_on:
+      postgres-master:
+        condition: service_healthy
+    networks:
+      - postgres-replication
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    
+volumes:
+  postgres-master-data:
+    driver: local
+  postgres-slave-1-data:
+    driver: local
+  postgres-slave-2-data:
+    driver: local
+
+networks:
+  postgres-replication:
+    driver: bridge

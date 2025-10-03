@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/repository"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/service"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/transport"
 	"github.com/wb-go/wbf/zlog"
 )
@@ -12,7 +13,7 @@ type dependencies struct {
 	lg *zlog.Zerolog
 	tr *transport.Transport
 	rp *repository.Repository
-	// sv *service.Service
+	sv *service.Service
 }
 
 type dependencyBuilder struct {
@@ -61,6 +62,11 @@ func (b *dependencyBuilder) withRepository() error {
 	return nil
 }
 
+func (b *dependencyBuilder) withService() {
+	sv := service.New(b.deps.rp)
+	b.deps.sv = sv
+}
+
 func (b *dependencyBuilder) withTransport() {
 	b.deps.tr = transport.New(b.cfg.tr)
 }
@@ -75,6 +81,8 @@ func (b *dependencyBuilder) build() (*dependencies, error) {
 	if err := b.withRepository(); err != nil {
 		return nil, err
 	}
+
+	b.withService()
 
 	return b.deps, nil
 }

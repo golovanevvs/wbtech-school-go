@@ -1,289 +1,268 @@
-MAKEFLAGS += --no-print-directory
+# Load environment variables
+ENV_FILE ?= .env
+ifneq (,$(wildcard $(ENV_FILE)))
+include $(ENV_FILE)
+export
+endif
 
-.PHONY: up down clean list-db list-tables show-table logs \
-        up-master up-slave1 up-slave2 down-master down-slave1 down-slave2 \
-        list-containers init-replication setup-replication
+# Project paths (используем формат Windows)
+POSTGRES_DIR = resources/postgres-replication
 
-include .env
+.PHONY: help up down restart status logs setup check clean purge test backup monitor failover promote-slave1 promote-slave2 check-lag pgauto-up pgauto-down pgauto-status
 
-POSTGRES_IMAGE ?= postgres:latest
-STARTUP_TIMEOUT := 60
-
-# Configuration
-MASTER_CONTAINER_NAME ?= postgres-master
-MASTER_PORT ?= $(POSTGRES_MASTER_PORT)
-MASTER_PGDATA_VOLUME ?= pgdata-master
-
-SLAVE1_CONTAINER_NAME ?= postgres-slave1
-SLAVE1_PORT ?= $(POSTGRES_SLAVE1_PORT)
-SLAVE1_PGDATA_VOLUME ?= pgdata-slave1
-
-SLAVE2_CONTAINER_NAME ?= postgres-slave2
-SLAVE2_PORT ?= $(POSTGRES_SLAVE2_PORT)
-SLAVE2_PGDATA_VOLUME ?= pgdata-slave2
-
-POSTGRES_USER ?= postgres
-POSTGRES_PASSWORD ?= postgres
-POSTGRES_DB ?= postgres
-
-# Function to start master container
-define start_master_container
-	@if docker ps -a --filter "name=$(1)" --format '{{.Status}}' | grep -q "Exited"; then \
-		echo "Restarting existing stopped master container $(1)..."; \
-		docker start $(1); \
-	elif ! docker ps -a --filter "name=$(1)" | grep -q $(1); then \
-		echo "Starting master PostgreSQL container $(1)..."; \
-		docker run -d \
-			--name $(1) \
-			-p $(2):5432 \
-			-e POSTGRES_USER=$(POSTGRES_USER) \
-			-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
-			-e POSTGRES_DB=$(POSTGRES_DB) \
-			-v $(3):/var/lib/postgresql/data \
-			-e POSTGRES_INITDB_ARGS="--auth-host=scram-sha-256" \
-			-e POSTGRES_HOST_AUTH_METHOD=trust \
-			--health-cmd="pg_isready -U $(POSTGRES_USER) -d $(POSTGRES_DB)" \
-			--health-interval=10s \
-			--health-timeout=5s \
-			--health-retries=5 \
-			--health-start-period=15s \
-			$(POSTGRES_IMAGE) \
-			-c 'max_wal_senders=10' \
-			-c 'wal_level=replica' \
-			-c 'archive_mode=on' \
-			-c 'archive_command=cp %p /var/lib/postgresql/data/archive/%f' \
-			-c 'max_replication_slots=10'; \
-	else \
-		echo "Master container $(1) is already running"; \
-		exit 0; \
-	fi
-
-	@echo "Waiting for master database system to start (timeout: $(STARTUP_TIMEOUT)s)..."
-	@timeout $(STARTUP_TIMEOUT) sh -c \
-	  'until docker logs $(1) 2>&1 | grep -q "database system is ready to accept connections"; do \
-	    sleep 1; \
-	  done' || \
-	  (echo "Master database system failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
-endef
-
-# Function to start slave container (without initial data)
-define start_slave_container
-	@if docker ps -a --filter "name=$(1)" --format '{{.Status}}' | grep -q "Exited"; then \
-		echo "Restarting existing stopped slave container $(1)..."; \
-		docker start $(1); \
-	elif ! docker ps -a --filter "name=$(1)" | grep -q $(1); then \
-		echo "Starting slave PostgreSQL container $(1)..."; \
-		docker run -d \
-			--name $(1) \
-			-p $(2):5432 \
-			-e POSTGRES_USER=$(POSTGRES_USER) \
-			-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
-			-v $(3):/var/lib/postgresql/data \
-			--health-cmd="pg_isready -U $(POSTGRES_USER)" \
-			--health-interval=10s \
-			--health-timeout=5s \
-			--health-retries=5 \
-			--health-start-period=15s \
-			$(POSTGRES_IMAGE) \
-			-c 'hot_standby=on' \
-			-c 'max_standby_streaming_delay=30s' \
-			-c 'wal_receiver_status_interval=10s' \
-			-c 'hot_standby_feedback=on'; \
-	else \
-		echo "Slave container $(1) is already running"; \
-		exit 0; \
-	fi
-
-	@echo "Waiting for slave database system to start (timeout: $(STARTUP_TIMEOUT)s)..."
-	@timeout $(STARTUP_TIMEOUT) sh -c \
-	  'until docker logs $(1) 2>&1 | grep -q "database system is ready to accept connections"; do \
-	    sleep 1; \
-	  done' || \
-	  (echo "Slave database system failed to start within $(STARTUP_TIMEOUT) seconds"; exit 1)
-endef
-
-# Master container commands
-up-master:
-	$(call start_master_container,$(MASTER_CONTAINER_NAME),$(MASTER_PORT),$(MASTER_PGDATA_VOLUME))
-
-down-master:
-	@echo "Stopping PostgreSQL master container..."
-	@-docker stop $(MASTER_CONTAINER_NAME)
-	@echo "PostgreSQL master container stopped"
-
-# Slave container commands
-up-slave1:
-	$(call start_slave_container,$(SLAVE1_CONTAINER_NAME),$(SLAVE1_PORT),$(SLAVE1_PGDATA_VOLUME))
-
-down-slave1:
-	@echo "Stopping PostgreSQL slave1 container..."
-	@-docker stop $(SLAVE1_CONTAINER_NAME)
-	@echo "PostgreSQL slave1 container stopped"
-
-up-slave2:
-	$(call start_slave_container,$(SLAVE2_CONTAINER_NAME),$(SLAVE2_PORT),$(SLAVE2_PGDATA_VOLUME))
-
-down-slave2:
-	@echo "Stopping PostgreSQL slave2 container..."
-	@-docker stop $(SLAVE2_CONTAINER_NAME)
-	@echo "PostgreSQL slave2 container stopped"
-
-# Combined commands
-up-all: up-master up-slave1 up-slave2
-
-down-all: down-master down-slave1 down-slave2
-
-# Setup replication (this is the key part)
-setup-replication:
-	setup-replication:
-	@echo "Setting up PostgreSQL master-slave replication..."
-
-	# --- Создаем сеть, если не существует ---
-	@docker network inspect pg-network >/dev/null 2>&1 || \
-		docker network create pg-network
-
-	# --- Подготовка master ---
-	@echo "Waiting for master to be ready..."
-	@timeout 60 sh -c 'until docker exec $(MASTER_CONTAINER_NAME) pg_isready > /dev/null 2>&1; do sleep 1; done' || \
-		(echo "Master not ready"; exit 1)
-
-	@echo "Creating replication user on master..."
-	@docker exec $(MASTER_CONTAINER_NAME) psql -U $(POSTGRES_USER) -c \
-		"CREATE USER replicator WITH REPLICATION ENCRYPTED PASSWORD 'replicator';" 2>/dev/null || true
-
-	@echo "Adding replication entry to pg_hba.conf..."
-	@docker exec $(MASTER_CONTAINER_NAME) bash -c \
-		"echo 'host replication replicator 0.0.0.0/0 md5' >> /var/lib/postgresql/data/pg_hba.conf"
-
-	@echo "Restarting master to apply configuration..."
-	@docker restart $(MASTER_CONTAINER_NAME)
-	@sleep 15
-
-	@echo "Waiting for master to be ready again..."
-	@timeout 60 sh -c 'until docker exec $(MASTER_CONTAINER_NAME) pg_isready > /dev/null 2>&1; do sleep 1; done' || \
-		(echo "Master not ready after restart"; exit 1)
-
-	# --- Функция для настройки slave ---
-define setup_slave
-	@echo "Setting up $(1)..."
-	@docker stop $(1) 2>/dev/null || true
-	@docker rm $(1) 2>/dev/null || true
-
-	@echo "Cleaning $(1) data directory..."
-	@docker run --rm \
-		-v $(2):/var/lib/postgresql/data \
-		$(POSTGRES_IMAGE) \
-		bash -c "rm -rf /var/lib/postgresql/data/* && chown -R postgres:postgres /var/lib/postgresql/data"
-
-	@echo "Creating base backup for $(1)..."
-	@docker run --rm \
-		--network pg-network \
-		-v $(2):/var/lib/postgresql/data \
-		-e PGPASSWORD=replicator \
-		$(POSTGRES_IMAGE) \
-		bash -c "pg_basebackup -h $(MASTER_CONTAINER_NAME) -D /var/lib/postgresql/data -U replicator -v -P -R"
-
-	@echo "Starting $(1)..."
-	@docker run -d \
-		--name $(1) \
-		--network pg-network \
-		-p $(3):5432 \
-		-v $(2):/var/lib/postgresql/data \
-		-e POSTGRES_USER=$(POSTGRES_USER) \
-		-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
-		$(POSTGRES_IMAGE) \
-		-c 'hot_standby=on' \
-		-c 'max_standby_streaming_delay=30s' \
-		-c 'wal_receiver_status_interval=10s' \
-		-c 'hot_standby_feedback=on'
-	@sleep 10
-endef
-
-	# --- Настройка slave1 и slave2 ---
-	$(call setup_slave,$(SLAVE1_CONTAINER_NAME),$(SLAVE1_PGDATA_VOLUME),$(SLAVE1_PORT))
-	$(call setup_slave,$(SLAVE2_CONTAINER_NAME),$(SLAVE2_PGDATA_VOLUME),$(SLAVE2_PORT))
-
-	@echo "Replication setup completed! Slaves should now sync with master."
-
-
-# Check replication status
-check-replication:
-	@echo "Checking replication status..."
-	@echo "Master replication slots:"
-	@docker exec $(MASTER_CONTAINER_NAME) psql -U $(POSTGRES_USER) -c \
-		"SELECT slot_name, active, restart_lsn FROM pg_replication_slots;"
+# Default target
+help:
+	@echo "PostgreSQL Replication Management"
+	@echo "Using env file: $(ENV_FILE)"
 	@echo ""
-	@echo "Master replication connections:"
-	@docker exec $(MASTER_CONTAINER_NAME) psql -U $(POSTGRES_USER) -c \
-		"SELECT client_addr, state, sync_state FROM pg_stat_replication;"
+	@echo "Available commands:"
+	@echo "  make up       - Start PostgreSQL cluster (master + 2 slaves)"
+	@echo "  make down     - Stop PostgreSQL cluster"
+	@echo "  make restart  - Restart PostgreSQL cluster"
+	@echo "  make status   - Show replication status"
+	@echo "  make logs     - Show logs from all containers"
+	@echo "  make setup    - Setup replication (run after first start)"
+	@echo "  make check    - Check replication health"
+	@echo "  make clean    - Remove containers and networks"
+	@echo "  make purge    - Remove containers, networks and volumes"
+	@echo "  make test     - Test replication with sample data"
+	@echo "  make backup   - Create backup from master"
+	@echo "  make monitor  - Real-time replication monitoring"
 
-# Clean commands
-clean-master:
-	@echo "Performing cleanup PostgreSQL master..."
-	@-docker stop $(MASTER_CONTAINER_NAME) 2>/dev/null
-	@-docker rm -f $(MASTER_CONTAINER_NAME) 2>/dev/null || true
-	@docker volume rm $(MASTER_PGDATA_VOLUME) 2>/dev/null || true
-	@echo "Cleanup PostgreSQL master completed"
+# Start the cluster
+up:
+	@echo "Starting PostgreSQL replication cluster..."
+	@echo "Using env file: $(ENV_FILE)"
+	@# Ensure script is executable (для Windows используем более простой подход)
+	@if exist "$(POSTGRES_DIR)/setup-replication.sh" echo "Script found" else echo "Script not found" && exit 1
+	docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose-postgres.yml up -d
+	@echo "Cluster started. Run 'make setup' to configure replication."
 
-clean-slave1:
-	@echo "Performing cleanup PostgreSQL slave1..."
-	@-docker stop $(SLAVE1_CONTAINER_NAME) 2>/dev/null
-	@-docker rm -f $(SLAVE1_CONTAINER_NAME) 2>/dev/null || true
-	@docker volume rm $(SLAVE1_PGDATA_VOLUME) 2>/dev/null || true
-	@echo "Cleanup PostgreSQL slave1 completed"
+# Stop the cluster
+down:
+	@echo "Stopping PostgreSQL replication cluster..."
+	docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose-postgres.yml down
 
-clean-slave2:
-	@echo "Performing cleanup PostgreSQL slave2..."
-	@-docker stop $(SLAVE2_CONTAINER_NAME) 2>/dev/null
-	@-docker rm -f $(SLAVE2_CONTAINER_NAME) 2>/dev/null || true
-	@docker volume rm $(SLAVE2_PGDATA_VOLUME) 2>/dev/null || true
-	@echo "Cleanup PostgreSQL slave2 completed"
+# Restart the cluster
+restart: down up
 
-clean-all: clean-master clean-slave1 clean-slave2
+# Show cluster status
+status:
+	@echo "=== Container Status ==="
+	docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose-postgres.yml ps
+	@echo ""
+	@echo "=== Master Replication Status ==="
+	@docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT client_addr, application_name, state, sync_state FROM pg_stat_replication;" 2>/dev/null || echo "Master not ready or no replicas connected"
+	@echo ""
+	@echo "=== Slave Status ==="
+	@for slave in postgres-slave-1 postgres-slave-2; do \
+		echo "$$slave:"; \
+		docker exec $$slave psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT pg_is_in_recovery(), pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn();" 2>/dev/null || echo "  Not ready"; \
+		echo ""; \
+	done
 
-# Logs commands
-logs-master:
-	@docker logs -f $(MASTER_CONTAINER_NAME)
+# Show logs
+logs:
+	docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose-postgres.yml logs -f
 
-logs-slave1:
-	@docker logs -f $(SLAVE1_CONTAINER_NAME)
+# Setup replication (run after first start)
+setup:
+	@echo "Setting up replication..."
+	@cd $(POSTGRES_DIR) && bash setup-replication.sh ../$(ENV_FILE)
+	@echo "Replication setup completed!"
 
-logs-slave2:
-	@docker logs -f $(SLAVE2_CONTAINER_NAME)
+# Check replication health
+check:
+	@echo "=== Replication Health Check ==="
+	@echo "Master:"
+	@docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT count(*) as connected_slaves FROM pg_stat_replication;" 2>/dev/null || echo "Master not ready"
+	@echo ""
+	@echo "Slaves:"
+	@for slave in postgres-slave-1 postgres-slave-2; do \
+		echo "$$slave:"; \
+		docker exec $$slave psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT now() - pg_last_xact_replay_timestamp() as replication_lag;" 2>/dev/null || echo "  Not ready"; \
+	done
 
-# Database operations with container selection
-CONTAINER ?= $(MASTER_CONTAINER_NAME)
+# Clean up containers and networks
+clean:
+	docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose-postgres.yml down
 
-list-db:
-	@echo "Listing databases in container $(CONTAINER)..."
-	@docker exec -it $(CONTAINER) psql -U $(POSTGRES_USER) -l
-
-list-tables:
-	@echo "Listing tables in database \"$(POSTGRES_DB)\" in container $(CONTAINER)..."
-	@docker exec -it $(CONTAINER) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -c "\dt"
-
-show-table:
-	@if [ -z "$(TABLE)" ]; then \
-		echo "Error: TABLE variable is required. Usage: make show-table TABLE=table_name CONTAINER=container_name"; \
-		exit 1; \
+# Remove everything including volumes
+purge:
+	@echo "WARNING: This will remove ALL data including databases!"
+	@read -p "Are you sure? (y/N) " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose-postgres.yml down -v; \
+		echo "All data removed."; \
+	else \
+		echo "Purge cancelled."; \
 	fi
-	@echo "Showing 10 rows of table \"$(TABLE)\" in container $(CONTAINER)..."
-	@docker exec -it $(CONTAINER) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) \
-	-c "SELECT * FROM $(TABLE) LIMIT 10"
 
-# Quick commands for specific containers
-list-db-master:
-	@$(MAKE) list-db CONTAINER=$(MASTER_CONTAINER_NAME)
+# Test replication with sample data
+test:
+	@echo "Testing replication..."
+	@echo "Creating test data on master..."
+	@docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c " \
+		CREATE TABLE IF NOT EXISTS replication_test ( \
+			id serial PRIMARY KEY, \
+			data text, \
+			created_at timestamptz DEFAULT now() \
+		); \
+		INSERT INTO replication_test (data) VALUES ('test_data_' || generate_series(1,5)); \
+		SELECT count(*) as records_created FROM replication_test;" 2>/dev/null || echo "Master not ready"
+	@echo ""
+	@echo "Checking data on slaves:"
+	@for slave in postgres-slave-1 postgres-slave-2; do \
+		echo "$$slave:"; \
+		docker exec $$slave psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT count(*) as records_replicated FROM replication_test;" 2>/dev/null || echo "  Not ready"; \
+	done
 
-list-db-slave1:
-	@$(MAKE) list-db CONTAINER=$(SLAVE1_CONTAINER_NAME)
+# Create backup from master
+backup:
+	@echo "Creating backup from master..."
+	@mkdir -p backups
+	@docker exec postgres-master pg_dump -U ${POSTGRES_USER} -d ${POSTGRES_DB} -F c -f /tmp/backup.dump
+	@docker cp postgres-master:/tmp/backup.dump backups/backup_$(shell date +%Y%m%d_%H%M%S).dump
+	@docker exec postgres-master rm -f /tmp/backup.dump
+	@echo "Backup created in backups/ directory"
 
-list-db-slave2:
-	@$(MAKE) list-db CONTAINER=$(SLAVE2_CONTAINER_NAME)
+# Аварийное переключение - продвижение slave1 до мастера
+promote-slave1:
+	@echo "EMERGENCY: Promoting slave1 to master..."
+	@docker exec postgres-slave-1 pg_ctl promote -D /var/lib/postgresql/data
+	@echo "Slave1 promoted to master."
+	@echo "Update your applications to connect to slave1 (port 5433) for writes."
 
-check-replication-status:
-	@$(MAKE) check-replication
+# Аварийное переключение - продвижение slave2 до мастера  
+promote-slave2:
+	@echo "EMERGENCY: Promoting slave2 to master..."
+	@docker exec postgres-slave-2 pg_ctl promote -D /var/lib/postgresql/data
+	@echo "Slave2 promoted to master."
+	@echo "Update your applications to connect to slave2 (port 5434) for writes."
 
-list-containers:
-	@echo "Running PostgreSQL containers:"
-	@docker ps --filter "name=postgres-" --format "table {{.Names}}\t{{.Ports}}\t{{.Status}}"
+# Проверка кто сейчас мастер
+check-master:
+	@echo "Checking which nodes are in recovery mode (slaves)..."
+	@for node in postgres-master postgres-slave-1 postgres-slave-2; do \
+		echo -n "$$node: "; \
+		docker exec $$node psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -t -c "SELECT pg_is_in_recovery();" 2>/dev/null | tr -d '[:space:]' && echo " (in recovery = slave)" || echo " (not in recovery = master)"; \
+	done
+
+# Добавьте в Makefile
+check-lag:
+	@echo "Replication lag check:"
+	@for slave in postgres-slave-1 postgres-slave-2; do \
+		echo -n "$$slave: "; \
+		docker exec $$slave psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -t -c "SELECT now() - pg_last_xact_replay_timestamp() AS replication_lag;" 2>/dev/null | tr -d '[:space:]' || echo "unavailable"; \
+	done
+
+# ========================
+# Auto Failover
+# ========================
+pgauto-up:
+	@echo "Starting PG_AUTO_FAILOVER cluster..."
+	@mkdir -p $(PGAUTO_DIR)
+	@if [ ! -f "$(PGAUTO_DIR)/docker-compose-pgauto.yml" ]; then \
+		echo "Creating pg_auto_failover compose file..."; \
+		cat > $(PGAUTO_DIR)/docker-compose-pgauto.yml << 'EOF' \
+services:\n\
+  pgauto-monitor:\n\
+    image: citusdata/pg_auto_failover:latest\n\
+    container_name: pgauto-monitor\n\
+    environment:\n\
+      PG_AUTOCTL_DEBUG: 1\n\
+    ports:\n\
+      - "3000:3000"\n\
+    command: >\n\
+      pg_autoctl create monitor\n\
+      --pgdata /var/lib/postgresql/monitor\n\
+      --pgport 5432\n\
+      --nodename pgauto-monitor\n\
+      --hostname pgauto-monitor\n\
+    networks:\n\
+      - pgauto-network\n\
+    volumes:\n\
+      - pgauto-monitor-data:/var/lib/postgresql/monitor\n\
+\n\
+  pgauto-primary:\n\
+    image: citusdata/pg_auto_failover:latest\n\
+    container_name: pgauto-primary\n\
+    environment:\n\
+      PG_AUTOCTL_DEBUG: 1\n\
+      PG_AUTOCTL_MONITOR: "postgres://autoctl_node@pgauto-monitor:5432/pg_auto_failover"\n\
+    ports:\n\
+      - "5432:5432"\n\
+    command: >\n\
+      pg_autoctl create postgres\n\
+      --pgdata /var/lib/postgresql/primary\n\
+      --pgport 5432\n\
+      --nodename pgauto-primary\n\
+      --hostname pgauto-primary\n\
+      --name primary\n\
+    depends_on:\n\
+      - pgauto-monitor\n\
+    networks:\n\
+      - pgauto-network\n\
+    volumes:\n\
+      - pgauto-primary-data:/var/lib/postgresql/primary\n\
+\n\
+  pgauto-secondary:\n\
+    image: citusdata/pg_auto_failover:latest\n\
+    container_name: pgauto-secondary\n\
+    environment:\n\
+      PG_AUTOCTL_DEBUG: 1\n\
+      PG_AUTOCTL_MONITOR: "postgres://autoctl_node@pgauto-monitor:5432/pg_auto_failover"\n\
+    ports:\n\
+      - "5433:5432"\n\
+    command: >\n\
+      pg_autoctl create postgres\n\
+      --pgdata /var/lib/postgresql/secondary\n\
+      --pgport 5432\n\
+      --nodename pgauto-secondary\n\
+      --hostname pgauto-secondary\n\
+      --name secondary\n\
+    depends_on:\n\
+      - pgauto-monitor\n\
+    networks:\n\
+      - pgauto-network\n\
+    volumes:\n\
+      - pgauto-secondary-data:/var/lib/postgresql/secondary\n\
+\n\
+volumes:\n\
+  pgauto-monitor-data:\n\
+  pgauto-primary-data:\n\
+  pgauto-secondary-data:\n\
+\n\
+networks:\n\
+  pgauto-network:\n\
+    driver: bridge\n\
+EOF\
+	fi
+	docker-compose -f $(PGAUTO_DIR)/docker-compose-pgauto.yml up -d
+	@echo "pg_auto_failover cluster starting..."
+	@echo "Monitor UI: http://localhost:3000"
+	@echo "Wait 30 seconds for full initialization"
+
+pgauto-down:
+	@echo "Stopping pg_auto_failover cluster..."
+	docker-compose -f $(PGAUTO_DIR)/docker-compose-pgauto.yml down
+
+pgauto-status:
+	@echo "=== pg_auto_failover Status ==="
+	@docker exec pgauto-monitor pg_autoctl show state 2>/dev/null || echo "pg_auto_failover not running"
+
+pgauto-monitor:
+	@echo "=== pg_auto_failover Real-time Monitor ==="
+	@echo "Web UI: http://localhost:3000"
+	@while true; do \
+		clear; \
+		echo "Time: $$(date)"; \
+		docker exec pgauto-monitor pg_autoctl show state 2>/dev/null || echo "pg_auto_failover not available"; \
+		sleep 5; \
+	done
+
+# Clean everything
+clean-all:
+	@echo "Cleaning ALL PostgreSQL clusters..."
+	@$(MAKE) down
+	@$(MAKE) pgauto-down

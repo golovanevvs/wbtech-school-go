@@ -7,7 +7,7 @@ import (
 )
 
 type Repository struct {
-	*dbpg.DB
+	Postgres *dbpg.DB
 }
 
 func New(cfg *Config) (*Repository, error) {
@@ -32,6 +32,6 @@ func New(cfg *Config) (*Repository, error) {
 	}
 
 	return &Repository{
-		DB: db,
+		Postgres: db,
 	}, nil
 }
