@@ -1,75 +1,70 @@
 #!/bin/bash
+set -e
 
-# Get env file path from argument or use default
-ENV_FILE="../../.env"
-
-echo "Looking for env file at: $ENV_FILE"
-echo "Current directory: $(pwd)"
-
-# Load environment variables
-if [ -f "$ENV_FILE" ]; then
-    echo "Loading environment from: $ENV_FILE"
-    set -a
-    source "$ENV_FILE"
-    set +a
-else
-    echo "Error: Environment file $ENV_FILE not found!"
-    echo "Available files in current directory:"
-    ls -la
-    echo "Available files in parent directory:"
-    ls -la ../
-    exit 1
-fi
+# Загружаем переменные
+export $(cat .env | grep -v '^#' | xargs)
 
 echo "Starting replication setup..."
 
-# Wait for master to be ready
+# Ждем готовности мастера
 echo "Waiting for master to be ready..."
 until docker exec postgres-master pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} > /dev/null 2>&1; do
-    echo "Waiting for master..."
-    sleep 2
+    sleep 5
 done
 
-# Wait a bit more for full initialization
-sleep 5
+# Создаем пользователя и слоты репликации
+echo "Creating replication user and slots..."
+docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "
+DO \$\$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${POSTGRES_REPLICATION_USER}') THEN
+        CREATE USER ${POSTGRES_REPLICATION_USER} WITH REPLICATION ENCRYPTED PASSWORD '${POSTGRES_REPLICATION_PASSWORD}';
+    END IF;
+END
+\$\$;"
 
-# Setup slaves
-for SLAVE in postgres-slave-1 postgres-slave-2; do
-    echo "Setting up ${SLAVE}..."
+docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "
+SELECT pg_create_physical_replication_slot('${POSTGRES_REPLICATION_SLOT_SLAVE1}', true) 
+WHERE NOT EXISTS (SELECT 1 FROM pg_replication_slots WHERE slot_name = '${POSTGRES_REPLICATION_SLOT_SLAVE1}');"
+
+docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "
+SELECT pg_create_physical_replication_slot('${POSTGRES_REPLICATION_SLOT_SLAVE2}', true) 
+WHERE NOT EXISTS (SELECT 1 FROM pg_replication_slots WHERE slot_name = '${POSTGRES_REPLICATION_SLOT_SLAVE2}');"
+
+# Настраиваем pg_hba.conf
+echo "Configuring replication access..."
+docker exec postgres-master bash -c "
+echo 'host replication ${POSTGRES_REPLICATION_USER} 0.0.0.0/0 scram-sha-256' >> /var/lib/postgresql/data/pg_hba.conf"
+docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT pg_reload_conf();"
+sleep 3
+
+# Настраиваем слейвы
+for SLAVE_NUM in 1 2; do
+    SLAVE_NAME="postgres-slave-${SLAVE_NUM}"
+    VOLUME_NAME="postgres-replication_postgres-slave-${SLAVE_NUM}-data"
+    SLOT_NAME="replication_slot_slave${SLAVE_NUM}"
     
-    # Stop the slave container
-    docker-compose --env-file ${ENV_FILE} -f docker-compose-postgres.yml stop ${SLAVE}
+    echo "Setting up ${SLAVE_NAME}..."
     
-    # Remove existing data
-    docker exec ${SLAVE} rm -rf /var/lib/postgresql/data/*
+    # Останавливаем слейв
+    docker-compose -f docker-compose-postgres.yml stop ${SLAVE_NAME}
     
-    # Create base backup
-    echo "Creating base backup for ${SLAVE}..."
-    docker exec postgres-master pg_basebackup -D /tmp/${SLAVE} -U ${POSTGRES_USER} -P -v -R -X stream -c fast
+    # Удаляем старые данные
+    docker volume rm -f ${VOLUME_NAME} || true
+    docker volume create ${VOLUME_NAME}
     
-    # Copy backup to slave
-    echo "Copying backup to ${SLAVE}..."
-    docker cp postgres-master:/tmp/${SLAVE}/. ${SLAVE}:/var/lib/postgresql/data/
+    # Создаем бэкап
+    echo "Creating base backup for ${SLAVE_NAME}..."
+    docker run --rm --network postgres-replication_postgres-replication \
+      -v ${VOLUME_NAME}:/backup_data \
+      -e PGPASSWORD=${POSTGRES_REPLICATION_PASSWORD} \
+      postgres:latest \
+      pg_basebackup -h postgres-master -U ${POSTGRES_REPLICATION_USER} -D /backup_data -P -v -R -X stream -c fast
     
-    # Set proper replication slot name
-    if [ "${SLAVE}" = "postgres-slave-1" ]; then
-        SLOT_NAME="${POSTGRES_REPLICATION_SLOT_SLAVE1}"
-    else
-        SLOT_NAME="${POSTGRES_REPLICATION_SLOT_SLAVE2}"
-    fi
+    # Запускаем слейв
+    docker-compose -f docker-compose-postgres.yml start ${SLAVE_NAME}
     
-    # Update postgresql.conf with correct slot name
-    echo "Setting replication slot to: ${SLOT_NAME}"
-    docker exec ${SLAVE} bash -c "echo \"primary_slot_name = '${SLOT_NAME}'\" >> /var/lib/postgresql/data/postgresql.conf"
-    
-    # Cleanup
-    docker exec postgres-master rm -rf /tmp/${SLAVE}
-    
-    # Start the slave
-    docker-compose --env-file ${ENV_FILE} -f docker-compose-postgres.yml start ${SLAVE}
-    
-    echo "${SLAVE} setup completed with slot: ${SLOT_NAME}"
+    echo "${SLAVE_NAME} setup completed"
 done
 
-echo "Replication setup completed!"
-echo "Run 'make status' to check replication status"
+echo "Replication setup completed successfully!"

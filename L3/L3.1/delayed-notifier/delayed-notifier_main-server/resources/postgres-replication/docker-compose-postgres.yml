@@ -30,7 +30,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 60s
 
   postgres-slave-1:
     image: postgres:latest
@@ -48,17 +48,13 @@ services:
       -c hot_standby=on
       -c max_standby_streaming_delay=30s
       -c max_standby_archive_delay=30s
+      -c primary_conninfo=user=${POSTGRES_REPLICATION_USER} password=${POSTGRES_REPLICATION_PASSWORD} host=postgres-master port=5432 sslmode=prefer
+      -c primary_slot_name=replication_slot_slave1
     depends_on:
       postgres-master:
         condition: service_healthy
     networks:
       - postgres-replication
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
 
   postgres-slave-2:
     image: postgres:latest
@@ -76,17 +72,13 @@ services:
       -c hot_standby=on
       -c max_standby_streaming_delay=30s
       -c max_standby_archive_delay=30s
+      -c primary_conninfo=user=${POSTGRES_REPLICATION_USER} password=${POSTGRES_REPLICATION_PASSWORD} host=postgres-master port=5432 sslmode=prefer
+      -c primary_slot_name=replication_slot_slave1
     depends_on:
       postgres-master:
         condition: service_healthy
     networks:
       - postgres-replication
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
     
 volumes:
   postgres-master-data:
