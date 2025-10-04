@@ -1,4 +1,3 @@
-
 services:
   postgres-master:
     image: postgres:latest
@@ -17,8 +16,6 @@ services:
       postgres
       -c wal_level=replica
       -c max_wal_senders=10
-      -c synchronous_commit=on
-      -c synchronous_standby_names=''
       -c max_replication_slots=10
       -c hot_standby=on
       -c archive_mode=on
@@ -48,8 +45,7 @@ services:
       -c hot_standby=on
       -c max_standby_streaming_delay=30s
       -c max_standby_archive_delay=30s
-      -c primary_conninfo=user=${POSTGRES_REPLICATION_USER} password=${POSTGRES_REPLICATION_PASSWORD} host=postgres-master port=5432 sslmode=prefer
-      -c primary_slot_name=replication_slot_slave1
+      -c application_name=slave1
     depends_on:
       postgres-master:
         condition: service_healthy
@@ -72,8 +68,7 @@ services:
       -c hot_standby=on
       -c max_standby_streaming_delay=30s
       -c max_standby_archive_delay=30s
-      -c primary_conninfo=user=${POSTGRES_REPLICATION_USER} password=${POSTGRES_REPLICATION_PASSWORD} host=postgres-master port=5432 sslmode=prefer
-      -c primary_slot_name=replication_slot_slave1
+      -c application_name=slave2
     depends_on:
       postgres-master:
         condition: service_healthy
