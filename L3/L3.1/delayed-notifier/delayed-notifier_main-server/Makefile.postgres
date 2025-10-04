@@ -15,7 +15,7 @@ MODE ?= async
 .PHONY: help up down restart status status-sync logs setup check clean purge test backup monitor \
         promote-slave1 promote-slave2 check-master check-lag \
         pgauto-up pgauto-down pgauto-status pgauto-monitor clean-all \
-        mode-async mode-sync-all mode-sync-one mode-status setup-with-mode
+        mode-async mode-sync-all mode-sync-one mode-status setup-with-mode pgauto-status-sync pgauto-purge
 
 # Default target
 help:
@@ -274,84 +274,7 @@ check-lag:
 
 pgauto-up:
 	@echo "Starting PG_AUTO_FAILOVER cluster..."
-	@mkdir -p $(PGAUTO_DIR)
-	@if [ ! -f "$(PGAUTO_DIR)/docker-compose-pgauto.yml" ]; then \
-		echo "Creating pg_auto_failover compose file..."; \
-		cat > $(PGAUTO_DIR)/docker-compose-pgauto.yml << 'EOF' ;\
-services:\
-  pgauto-monitor:\
-    image: citusdata/pg_auto_failover:latest\
-    container_name: pgauto-monitor\
-    environment:\
-      PG_AUTOCTL_DEBUG: 1\
-    ports:\
-      - "3000:3000"\
-    command: >\
-      pg_autoctl create monitor\
-      --pgdata /var/lib/postgresql/monitor\
-      --pgport 5432\
-      --nodename pgauto-monitor\
-      --hostname pgauto-monitor\
-    networks:\
-      - pgauto-network\
-    volumes:\
-      - pgauto-monitor-data:/var/lib/postgresql/monitor\
-\
-  pgauto-primary:\
-    image: citusdata/pg_auto_failover:latest\
-    container_name: pgauto-primary\
-    environment:\
-      PG_AUTOCTL_DEBUG: 1\
-      PG_AUTOCTL_MONITOR: "postgres://autoctl_node@pgauto-monitor:5432/pg_auto_failover"\
-    ports:\
-      - "5432:5432"\
-    command: >\
-      pg_autoctl create postgres\
-      --pgdata /var/lib/postgresql/primary\
-      --pgport 5432\
-      --nodename pgauto-primary\
-      --hostname pgauto-primary\
-      --name primary\
-    depends_on:\
-      - pgauto-monitor\
-    networks:\
-      - pgauto-network\
-    volumes:\
-      - pgauto-primary-data:/var/lib/postgresql/primary\
-\
-  pgauto-secondary:\
-    image: citusdata/pg_auto_failover:latest\
-    container_name: pgauto-secondary\
-    environment:\
-      PG_AUTOCTL_DEBUG: 1\
-      PG_AUTOCTL_MONITOR: "postgres://autoctl_node@pgauto-monitor:5432/pg_auto_failover"\
-    ports:\
-      - "5433:5432"\
-    command: >\
-      pg_autoctl create postgres\
-      --pgdata /var/lib/postgresql/secondary\
-      --pgport 5432\
-      --nodename pgauto-secondary\
-      --hostname pgauto-secondary\
-      --name secondary\
-    depends_on:\
-      - pgauto-monitor\
-    networks:\
-      - pgauto-network\
-    volumes:\
-      - pgauto-secondary-data:/var/lib/postgresql/secondary\
-\
-volumes:\
-  pgauto-monitor-data:\
-  pgauto-primary-data:\
-  pgauto-secondary-data:\
-\
-networks:\
-  pgauto-network:\
-    driver: bridge\
-EOF\
-	fi
-	docker-compose -f $(PGAUTO_DIR)/docker-compose-pgauto.yml up -d
+	docker-compose --env-file $(ENV_FILE) -f $(PGAUTO_DIR)/docker-compose-pgauto.yml up -d
 	@echo "pg_auto_failover cluster starting..."
 	@echo "Monitor UI: http://localhost:3000"
 	@echo "Wait 30 seconds for full initialization"
@@ -364,6 +287,12 @@ pgauto-status:
 	@echo "=== pg_auto_failover Status ==="
 	@docker exec pgauto-monitor pg_autoctl show state 2>/dev/null || echo "pg_auto_failover not running"
 
+pgauto-status-sync:
+	@echo "=== PG_AUTO_FAILOVER Replication Status ==="
+	@docker exec -it pgauto-primary psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) \
+		-c "SELECT application_name, state, sync_state FROM pg_stat_replication;" 2>/dev/null || \
+		echo "Primary not ready or no replicas connected"
+
 pgauto-monitor:
 	@echo "=== pg_auto_failover Real-time Monitor ==="
 	@echo "Web UI: http://localhost:3000"
@@ -373,6 +302,21 @@ pgauto-monitor:
 		docker exec pgauto-monitor pg_autoctl show state 2>/dev/null || echo "pg_auto_failover not available"; \
 		sleep 5; \
 	done
+
+pgauto-purge:
+	@echo "WARNING: This will remove ALL pg_auto_failover data!"
+	@read -p "Are you sure? (y/N) " confirm; \
+	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
+		echo "Stopping and removing pg_auto_failover containers..."; \
+		docker-compose --env-file $(ENV_FILE) -f $(PGAUTO_DIR)/docker-compose-pgauto.yml down; \
+		echo "Removing pg_auto_failover volumes..."; \
+		docker volume rm -f pg-auto-failover_pgauto-monitor-data pg-auto-failover_pgauto-primary-data pg-auto-failover_pgauto-secondary-data 2>/dev/null || true; \
+		echo "Removing pg_auto_failover network..."; \
+		docker network rm pg-auto-failover_pgauto-network 2>/dev/null || true; \
+		echo "All pg_auto_failover data removed."; \
+	else \
+		echo "Purge cancelled."; \
+	fi
 
 # Clean everything
 clean-all:
