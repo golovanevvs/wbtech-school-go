@@ -13,26 +13,28 @@ import (
 func main() {
 	zlog.InitConsole()
 
-	zlog.Logger.Info().Str("component", "main").Msg("delayed-notifier application started")
+	lg := zlog.Logger.With().Str("component", "main").Logger()
+
+	lg.Info().Msg("delayed-notifier application started")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	app, err := app.New()
 	if err != nil {
-		zlog.Logger.Info().Str("component", "main").Msg("delayed-notifier application stopped with error")
+		lg.Error().Msg("delayed-notifier application stopped with error")
 		wait()
 		os.Exit(1)
 	}
 
 	if err := app.Run(cancel); err != nil {
-		zlog.Logger.Info().Str("component", "main").Msg("delayed-notifier application stopped with error")
+		lg.Error().Msg("delayed-notifier application stopped with error")
 		wait()
 		os.Exit(1)
 	}
 
 	app.GracefullShutdown(ctx, cancel)
-	zlog.Logger.Info().Str("component", "main").Msg("delayed-notifier application stopped")
+	lg.Info().Msg("delayed-notifier application stopped")
 	wait()
 }
 

@@ -2,9 +2,11 @@ package handler
 
 import (
 	"github.com/wb-go/wbf/ginext"
+	"github.com/wb-go/wbf/zlog"
 )
 
 type Handler struct {
+	lg     zlog.Zerolog
 	Router *ginext.Engine
 }
 
@@ -14,11 +16,7 @@ func New(cfg *Config) *Handler {
 		Router: rt,
 	}
 
-	hd.Router.GET("/create", hd.create)
+	hd.Router.GET("/notify", hd.createNotice)
 
 	return hd
-}
-
-func (hd *Handler) create(c *ginext.Context) {
-
 }

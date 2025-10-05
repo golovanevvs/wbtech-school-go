@@ -5,10 +5,12 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/wb-go/wbf/zlog"
 )
 
 func (a *App) GracefullShutdown(ctx context.Context, cancel context.CancelFunc) {
-	lg := a.deps.lg.With().Str("component", "app").Logger()
+	lg := zlog.Logger.With().Str("component", "app").Logger()
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 

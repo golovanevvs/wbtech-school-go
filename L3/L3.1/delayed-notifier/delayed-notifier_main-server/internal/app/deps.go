@@ -10,7 +10,6 @@ import (
 )
 
 type dependencies struct {
-	lg *zlog.Zerolog
 	tr *transport.Transport
 	rp *repository.Repository
 	sv *service.Service
@@ -33,19 +32,15 @@ func newDependencyBuilder(cfg *appConfig) *dependencyBuilder {
 func (b *dependencyBuilder) withLogger() error {
 	err := zlog.SetLevel(b.cfg.lg.Level)
 
-	lg := &zlog.Logger
-
 	if err != nil {
 		zlog.Logger.Error().Err(err).Str("component", "logger").Msg("error set log level")
 		return fmt.Errorf("error set log level: %w", err)
 	}
 
-	lg.Info().
+	zlog.Logger.Info().
 		Str("component", "logger").
-		Str("log_level", lg.GetLevel().String()).
+		Str("log_level", zlog.Logger.GetLevel().String()).
 		Msg("logging level has been configure")
-
-	b.deps.lg = lg
 
 	return nil
 }
@@ -53,10 +48,10 @@ func (b *dependencyBuilder) withLogger() error {
 func (b *dependencyBuilder) withRepository() error {
 	rp, err := repository.New(b.cfg.rp)
 	if err != nil {
-		b.deps.lg.Error().Err(err).Str("component", "repository").Msg("error create repository")
+		zlog.Logger.Error().Err(err).Str("component", "repository").Msg("error create repository")
 		return fmt.Errorf("error create repository: %w", err)
 	}
-	b.deps.lg.Info().Str("component", "repository").Msg("repository has been create")
+	zlog.Logger.Info().Str("component", "repository").Msg("repository has been create")
 	b.deps.rp = rp
 
 	return nil
