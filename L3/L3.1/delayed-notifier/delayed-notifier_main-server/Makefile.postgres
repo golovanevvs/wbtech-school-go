@@ -12,10 +12,11 @@ PGAUTO_DIR = resources/pg-auto-failover
 # Replication mode (async, sync-all, sync-one)
 MODE ?= async
 
-.PHONY: help up down restart status status-sync logs setup check clean purge test backup monitor \
+.PHONY: help up up-async up-sync-all up-sync-one down restart status status-sync logs-cont setup check clean purge test backup monitor \
+        list-db list-tables show-table \
         promote-slave1 promote-slave2 check-master check-lag \
-        pgauto-up pgauto-down pgauto-status pgauto-monitor clean-all \
-        mode-async mode-sync-all mode-sync-one mode-status setup-with-mode pgauto-status-sync pgauto-purge
+        pgauto-up pgauto-down pgauto-status pgauto-status-sync pgauto-monitor pgauto-purge \
+        clean-all mode-async mode-sync-all mode-sync-one mode-status setup-with-mode
 
 # Default target
 help:
@@ -24,39 +25,48 @@ help:
 	@echo "Current mode: $(MODE)"
 	@echo ""
 	@echo "Available commands:"
-	@echo "  make up       - Start PostgreSQL cluster (master + 2 slaves)"
-	@echo "  make down     - Stop PostgreSQL cluster"
-	@echo "  make restart  - Restart PostgreSQL cluster"
-	@echo "  make status   - Show replication status"
-	@echo "  make status-sync - Show detailed sync status on master"
-	@echo "  make logs     - Show logs from all containers"
-	@echo "  make setup    - Setup replication (run after first start)"
-	@echo "  make check    - Check replication health"
-	@echo "  make clean    - Remove containers and networks"
-	@echo "  make purge    - Remove containers, networks and volumes"
-	@echo "  make test     - Test replication with sample data"
-	@echo "  make backup   - Create backup from master"
-	@echo "  make monitor  - Real-time replication monitoring"
+	@echo "  make up           - Start PostgreSQL cluster (master + 2 slaves)"
+	@echo "  make up-async     - Start cluster in ASYNC mode"
+	@echo "  make up-sync-all  - Start cluster in SYNC-ALL mode"
+	@echo "  make up-sync-one  - Start cluster in SYNC-ONE mode"
+	@echo "  make down         - Stop PostgreSQL cluster"
+	@echo "  make restart      - Restart PostgreSQL cluster"
+	@echo "  make status       - Show replication status"
+	@echo "  make status-sync  - Show detailed sync status on master"
+	@echo "  make logs-cont    - Show logs for a specific container (set NAME=<container>)"
+	@echo "  make setup        - Setup replication (run after first start)"
+	@echo "  make check        - Check replication health"
+	@echo "  make clean        - Remove containers and networks"
+	@echo "  make purge        - Remove containers, networks and volumes"
+	@echo "  make test         - Test replication with sample data"
+	@echo "  make backup       - Create backup from master"
+	@echo "  make monitor      - Real-time replication monitoring"
+	@echo "  make list-db      - List databases in container (set NAME=<container>)"
+	@echo "  make list-tables  - List tables in database (set NAME=<container> DB=<database>)"
+	@echo "  make show-table   - Show first 10 rows of a table (set NAME=<container> DB=<database> TABLE=<table>)"
 	@echo ""
 	@echo "Replication Modes:"
-	@echo "  make mode-async     - Switch to ASYNC replication"
-	@echo "  make mode-sync-all  - Switch to SYNC replication (both slaves)"
-	@echo "  make mode-sync-one  - Switch to SYNC replication (slave1 only)"
-	@echo "  make mode-status    - Show current replication mode"
+	@echo "  make mode-async           - Switch to ASYNC replication"
+	@echo "  make mode-sync-all        - Switch to SYNC replication (both slaves)"
+	@echo "  make mode-sync-one        - Switch to SYNC replication (slave1 only)"
+	@echo "  make mode-status          - Show current replication mode"
 	@echo "  make setup-with-mode MODE=<mode> - Setup with specific mode"
 	@echo ""
 	@echo "Emergency Operations:"
-	@echo "  make promote-slave1 - Promote slave1 to master (emergency)"
-	@echo "  make promote-slave2 - Promote slave2 to master (emergency)"
-	@echo "  make check-master   - Check which node is master"
-	@echo "  make check-lag      - Check replication lag"
+	@echo "  make promote-slave1       - Promote slave1 to master (emergency)"
+	@echo "  make promote-slave2       - Promote slave2 to master (emergency)"
+	@echo "  make check-master         - Check which node is master"
+	@echo "  make check-lag            - Check replication lag"
 	@echo ""
 	@echo "Auto Failover:"
-	@echo "  make pgauto-up      - Start pg_auto_failover cluster"
-	@echo "  make pgauto-down    - Stop pg_auto_failover cluster"
-	@echo "  make pgauto-status  - Show pg_auto_failover status"
-	@echo "  make pgauto-monitor - Real-time pg_auto_failover monitor"
-	@echo "  make clean-all      - Stop all clusters"
+	@echo "  make pgauto-up            - Start pg_auto_failover cluster"
+	@echo "  make pgauto-down          - Stop pg_auto_failover cluster"
+	@echo "  make pgauto-status        - Show pg_auto_failover status"
+	@echo "  make pgauto-status-sync   - Show replication status of pg_auto_failover"
+	@echo "  make pgauto-monitor       - Real-time pg_auto_failover monitor"
+	@echo "  make pgauto-purge         - Remove all pg_auto_failover data"
+	@echo "  make clean-all            - Stop all clusters"
+
 
 # ========================
 # Basic Cluster Operations
@@ -69,6 +79,15 @@ up:
 	@echo "Mode: $(MODE)"
 	docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose.yml up -d
 	@echo "Cluster started. Run 'make setup' to configure replication."
+
+up-async: up setup mode-async
+	@echo "Starting PostgreSQL replication cluster in ASYNC mode..."
+
+up-sync-all: up setup mode-sync-all
+	@echo "Starting PostgreSQL replication cluster in SYNC-ALL mode..."
+
+up-sync-one: up setup mode-sync-one
+	@echo "Starting PostgreSQL replication cluster in SYNC-ONE mode..."
 
 # Stop the cluster
 down:
@@ -237,6 +256,23 @@ monitor:
 		done; \
 		sleep 5; \
 	done
+
+logs-cont:
+	@echo "Showing logs for container \"$(NAME)\"..."
+	@docker logs -f $(NAME)
+
+list-db:
+	@echo "Listing databases of container \"$(NAME)\"..."
+	@docker exec -it $(NAME) psql -U $(POSTGRES_USER) -l
+
+list-tables:
+	@echo "Listing tables in database \"$(DB)\" of container \"$(NAME)\"..."
+	@docker exec -it $(NAME) psql -U $(POSTGRES_USER) -d $(DB) -c "\dt"
+
+show-table:
+	@echo "Showing 10 rows of table \"$(TABLE)\" of database \"$(DB)\" of container \"$(NAME)\"..."
+	@docker exec -it $(NAME) psql -U $(POSTGRES_USER) -d $(DB) \
+	-c "SELECT * FROM $(TABLE) LIMIT 10"
 
 # ========================
 # Emergency Operations
