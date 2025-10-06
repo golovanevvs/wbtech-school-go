@@ -3,7 +3,7 @@ set -e
 
 # Определяем корневую директорию проекта
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 ENV_FILE="$PROJECT_ROOT/.env"
 DOCKER_COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
 
@@ -94,7 +94,7 @@ sleep 3
 for SLAVE_NUM in 1 2; do
     SLAVE_NAME="postgres-slave-${SLAVE_NUM}"       # имя контейнера
     SYNC_NAME="slave${SLAVE_NUM}"                  # имя для synchronous_standby_names
-    VOLUME_NAME="postgres-replication_postgres-slave-${SLAVE_NUM}-data"
+    VOLUME_NAME="replication_postgres-slave-${SLAVE_NUM}-data"
 
     echo "Setting up ${SLAVE_NAME} with application_name=${SYNC_NAME}..."
 
@@ -104,7 +104,7 @@ for SLAVE_NUM in 1 2; do
     docker volume create ${VOLUME_NAME} 2>/dev/null || true
 
     # Создаем базовый бэкап с правильным application_name
-    docker run --rm --network postgres-replication_postgres-replication \
+    docker run --rm --network replication_postgres-replication \
       -v ${VOLUME_NAME}:/var/lib/postgresql/data \
       -e PGPASSWORD=${POSTGRES_REPLICATION_PASSWORD} \
       postgres:latest \

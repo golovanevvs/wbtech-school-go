@@ -6,7 +6,7 @@ services:
       args:
         MIGRATE_VERSION: v4.19.0
     volumes:
-      - ./sqlfiles:/migrations
+      - ../sqlfiles:/migrations
     entrypoint: [
       "migrate",
       "-path", "/migrations",

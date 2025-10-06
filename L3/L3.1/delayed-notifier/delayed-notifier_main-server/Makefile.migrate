@@ -11,12 +11,12 @@ endif
 
 create:
 	@echo "Creating new migration files..."
-	docker compose -f resources/migrations/postgres/docker-compose.yml run --rm migrate create -ext sql -dir /migrations -seq tables
+	docker compose -f resources/postgres/migrations/migrate/docker-compose.yml run --rm migrate create -ext sql -dir /migrations -seq tables
 
 up:
 	@echo "Applying migrations..."
-	docker compose -f resources/migrations/postgres/docker-compose.yml run --rm migrate up
+	docker compose -f resources/postgres/migrations/migrate/docker-compose.yml run --rm migrate up
 
 down:
 	@echo "Rollback all migrations..."
-	docker compose -f resources/migrations/postgres/docker-compose.yml run --rm migrate down
+	docker compose -f resources/postgres/migrations/migrate/docker-compose.yml run --rm migrate down

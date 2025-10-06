@@ -6,8 +6,8 @@ export
 endif
 
 # Project paths
-POSTGRES_DIR = resources/postgres-replication
-PGAUTO_DIR = resources/pg-auto-failover
+POSTGRES_DIR = resources/postgres/replication
+PGAUTO_DIR = resources/postgres/pg-auto-failover
 
 # Replication mode (async, sync-all, sync-one)
 MODE ?= async
