@@ -24,3 +24,16 @@ up:
 	@echo "Running app #$(APP_NAME) completed"
 
 build-up: build up
+
+#============================================================
+
+# ========================
+# APP
+# ========================
+
+# app-build:
+# 	mingw32-make -C $(APP) build
+# app-up:
+# 	mingw32-make -C $(APP) up
+# app-build-up:
+# 	mingw32-make -C $(APP) build-up

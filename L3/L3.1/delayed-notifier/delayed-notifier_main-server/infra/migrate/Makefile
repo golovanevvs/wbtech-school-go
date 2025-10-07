@@ -29,3 +29,16 @@ down:
 	@echo "Rollback all migrations..."
 	docker compose -f $(COMPOSE_FILE) run --rm migrate down
 	@docker network rm $(NETWORK_NAME) 2>/dev/null || true
+
+#============================================================
+
+# ========================
+# MIGRATE
+# ========================
+
+# migrate-create:
+# 	mingw32-make -C $(MIGRATE) create
+# migrate-up:
+# 	mingw32-make -C $(MIGRATE) up
+# migrate-down:
+# 	mingw32-make -C $(MIGRATE) down
