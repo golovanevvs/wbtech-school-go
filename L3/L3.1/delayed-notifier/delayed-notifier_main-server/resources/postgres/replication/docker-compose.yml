@@ -1,3 +1,4 @@
+name: ${POSTGRES_REPLICATION_PROJECT_NAME}
 services:
   postgres-master:
     image: postgres:latest
