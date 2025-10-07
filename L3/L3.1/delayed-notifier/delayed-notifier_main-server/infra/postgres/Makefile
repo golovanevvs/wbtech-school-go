@@ -1,13 +1,17 @@
+MAKEFLAGS += --no-print-directory
+
+PROJECT_DIR := $(abspath ../..)
+
 # Load environment variables
-ENV_FILE ?= .env
+ENV_FILE ?= $(PROJECT_DIR)/.env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
 export
 endif
 
 # Project paths
-POSTGRES_DIR = resources/postgres/replication
-PGAUTO_DIR = resources/postgres/pg-auto-failover
+POSTGRES_DIR = replication
+PGAUTO_DIR = pg-auto-failover
 
 # Replication mode (async, sync-all, sync-one)
 MODE ?= async
@@ -16,7 +20,7 @@ MODE ?= async
         list-db list-tables show-table \
         promote-slave1 promote-slave2 check-master check-lag \
         pgauto-up pgauto-down pgauto-status pgauto-status-sync pgauto-monitor pgauto-purge \
-        clean-all mode-async mode-sync-all mode-sync-one mode-status setup-with-mode
+        clean-all mode-async mode-sync-all mode-sync-one mode-status
 
 # Default target
 help:
@@ -173,7 +177,7 @@ mode-async:
 	@docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose.yml -f $(POSTGRES_DIR)/docker-compose-async.yml up -d postgres-master
 	@sleep 3
 	@echo "Async mode activated"
-	@$(MAKE) -f $(MAKEFILE_LIST) mode-status
+	mingw32-make mode-status
 
 # Switch to SYNC-ALL replication mode (both slaves)
 mode-sync-all:
@@ -181,7 +185,7 @@ mode-sync-all:
 	@docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose.yml -f $(POSTGRES_DIR)/docker-compose-sync-all.yml up -d postgres-master
 	@sleep 3
 	@echo "Sync-all mode activated"
-	@$(MAKE) -f $(MAKEFILE_LIST) mode-status
+	mingw32-make mode-status
 
 # Switch to SYNC-ONE replication mode (slave1 only)
 mode-sync-one:
@@ -189,19 +193,12 @@ mode-sync-one:
 	@docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose.yml -f $(POSTGRES_DIR)/docker-compose-sync-one.yml up -d postgres-master
 	@sleep 3
 	@echo "Sync-one mode activated"
-	@$(MAKE) -f $(MAKEFILE_LIST) mode-status
+	mingw32-make mode-status
 
 # Show current replication mode
 mode-status:
 	@echo "=== Current Replication Mode ==="
 	@docker exec $(POSTGRES_MASTER_CONTAINER) psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SHOW synchronous_standby_names;" 2>/dev/null || echo "Master not ready"
-
-# Setup with selected mode
-setup-with-mode:
-	@echo "Setting up replication in $(MODE) mode..."
-	@$(MAKE) -f $(MAKEFILE_LIST) mode-$(MODE)
-	@$(MAKE) -f $(MAKEFILE_LIST) setup
-	@echo "Replication setup completed in $(MODE) mode"
 
 # ========================
 # Testing and Monitoring
@@ -357,6 +354,6 @@ pgauto-purge:
 # Clean everything
 clean-all:
 	@echo "Cleaning ALL PostgreSQL clusters..."
-	@$(MAKE) -f $(MAKEFILE_LIST) down
-	@$(MAKE) -f $(MAKEFILE_LIST) pgauto-down
+	mingw32-make down
+	mingw32-make pgauto-down
 	@echo "All clusters stopped"

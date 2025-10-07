@@ -12,7 +12,7 @@ type App struct {
 }
 
 func New() (*App, error) {
-	cfg, err := newConfig("./config/config.yaml", "./.env", "")
+	cfg, err := newConfig("./resources/config/config.yaml", "./.env", "")
 	if err != nil {
 		zlog.Logger.Error().Err(err).Str("component", "app").Msg("error creating configuration")
 		return nil, fmt.Errorf("error creating configuration: %w", err)

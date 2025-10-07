@@ -1,13 +1,15 @@
 MAKEFLAGS += --no-print-directory
 
+PROJECT_DIR := $(abspath ../..)
+
 # Load environment variables
-ENV_FILE ?= .env
+ENV_FILE ?= $(PROJECT_DIR)/.env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
 export
 endif
 
-COMPOSE_FILE = resources/postgres/migrations/migrate/docker-compose.yml
+COMPOSE_FILE = docker-compose.yml
 NETWORK_NAME = migrate_default
 
 .PHONY: create up down
