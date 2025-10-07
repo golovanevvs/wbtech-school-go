@@ -80,7 +80,7 @@ up:
 	docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose.yml up -d
 	@echo "Cluster started. Run 'make setup' to configure replication."
 
-up-async: up setup mode-async
+up-async: up setup
 	@echo "Starting PostgreSQL replication cluster in ASYNC mode..."
 
 up-sync-all: up setup mode-sync-all
@@ -103,13 +103,13 @@ status:
 	docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose.yml ps
 	@echo ""
 	@echo "=== Master Replication Status ==="
-	@docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT client_addr, application_name, state, sync_state FROM pg_stat_replication;" 2>/dev/null || echo "Master not ready or no replicas connected"
+	@docker exec $(POSTGRES_MASTER_CONTAINER) psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT client_addr, application_name, state, sync_state FROM pg_stat_replication;" 2>/dev/null || echo "Master not ready or no replicas connected"
 	@echo ""
 	@echo "=== Replication Mode ==="
-	@docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SHOW synchronous_standby_names;" 2>/dev/null || echo "Master not ready"
+	@docker exec $(POSTGRES_MASTER_CONTAINER) psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SHOW synchronous_standby_names;" 2>/dev/null || echo "Master not ready"
 	@echo ""
 	@echo "=== Slave Status ==="
-	@for slave in postgres-slave-1 postgres-slave-2; do \
+	@for slave in $(POSTGRES_SLAVE1_CONTAINER) $(POSTGRES_SLAVE2_CONTAINER); do \
 		echo "$$slave:"; \
 		docker exec $$slave psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT pg_is_in_recovery(), pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn();" 2>/dev/null || echo "  Not ready"; \
 		echo ""; \
@@ -117,7 +117,7 @@ status:
 
 status-sync:
 	@echo "=== Replication Sync Status ==="
-	@docker exec -it postgres-master \
+	@docker exec -it $(POSTGRES_MASTER_CONTAINER) \
 		psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) \
 		-c "SELECT application_name, state, sync_state FROM pg_stat_replication;"
 
@@ -135,10 +135,10 @@ setup:
 check:
 	@echo "=== Replication Health Check ==="
 	@echo "Master:"
-	@docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT count(*) as connected_slaves FROM pg_stat_replication;" 2>/dev/null || echo "Master not ready"
+	@docker exec $(POSTGRES_MASTER_CONTAINER) psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT count(*) as connected_slaves FROM pg_stat_replication;" 2>/dev/null || echo "Master not ready"
 	@echo ""
 	@echo "Slaves:"
-	@for slave in postgres-slave-1 postgres-slave-2; do \
+	@for slave in $(POSTGRES_SLAVE1_CONTAINER) $(POSTGRES_SLAVE2_CONTAINER); do \
 		echo "$$slave:"; \
 		docker exec $$slave psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT now() - pg_last_xact_replay_timestamp() as replication_lag;" 2>/dev/null || echo "  Not ready"; \
 	done
@@ -155,9 +155,9 @@ purge:
 		echo "Stopping and removing containers..."; \
 		docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose.yml down; \
 		echo "Removing volumes..."; \
-		docker volume rm -f postgres-replication_postgres-master-data postgres-replication_postgres-slave-1-data postgres-replication_postgres-slave-2-data 2>/dev/null || true; \
+		docker volume rm -f $(POSTGRES_REPLICATION_PROJECT_NAME)_master-data $(POSTGRES_REPLICATION_PROJECT_NAME)_slave-1-data $(POSTGRES_REPLICATION_PROJECT_NAME)_slave-2-data 2>/dev/null || true; \
 		echo "Removing network..."; \
-		docker network rm postgres-replication_postgres-replication 2>/dev/null || true; \
+		docker network rm $(POSTGRES_REPLICATION_PROJECT_NAME)_network 2>/dev/null || true; \
 		echo "All data removed."; \
 	else \
 		echo "Purge cancelled."; \
@@ -194,7 +194,7 @@ mode-sync-one:
 # Show current replication mode
 mode-status:
 	@echo "=== Current Replication Mode ==="
-	@docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SHOW synchronous_standby_names;" 2>/dev/null || echo "Master not ready"
+	@docker exec $(POSTGRES_MASTER_CONTAINER) psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SHOW synchronous_standby_names;" 2>/dev/null || echo "Master not ready"
 
 # Setup with selected mode
 setup-with-mode:
@@ -211,7 +211,7 @@ setup-with-mode:
 test:
 	@echo "Testing replication..."
 	@echo "Creating test data on master..."
-	@docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c " \
+	@docker exec $(POSTGRES_MASTER_CONTAINER) psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c " \
 		CREATE TABLE IF NOT EXISTS replication_test ( \
 			id serial PRIMARY KEY, \
 			data text, \
@@ -221,7 +221,7 @@ test:
 		SELECT count(*) as records_created FROM replication_test;" 2>/dev/null || echo "Master not ready"
 	@echo ""
 	@echo "Checking data on slaves:"
-	@for slave in postgres-slave-1 postgres-slave-2; do \
+	@for slave in $(POSTGRES_SLAVE1_CONTAINER) $(POSTGRES_SLAVE2_CONTAINER); do \
 		echo "$$slave:"; \
 		docker exec $$slave psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT count(*) as records_replicated FROM replication_test;" 2>/dev/null || echo "  Not ready"; \
 	done
@@ -230,9 +230,9 @@ test:
 backup:
 	@echo "Creating backup from master..."
 	@mkdir -p backups
-	@docker exec postgres-master pg_dump -U ${POSTGRES_USER} -d ${POSTGRES_DB} -F c -f /tmp/backup.dump
-	@docker cp postgres-master:/tmp/backup.dump backups/backup_$$(date +%Y%m%d_%H%M%S).dump
-	@docker exec postgres-master rm -f /tmp/backup.dump
+	@docker exec $(POSTGRES_MASTER_CONTAINER) pg_dump -U ${POSTGRES_USER} -d ${POSTGRES_DB} -F c -f /tmp/backup.dump
+	@docker cp $(POSTGRES_MASTER_CONTAINER):/tmp/backup.dump backups/backup_$$(date +%Y%m%d_%H%M%S).dump
+	@docker exec $(POSTGRES_MASTER_CONTAINER) rm -f /tmp/backup.dump
 	@echo "Backup created in backups/ directory"
 
 # Monitor replication in real-time
@@ -244,13 +244,13 @@ monitor:
 		echo "Time: $$(date)"; \
 		echo ""; \
 		echo "Replication Mode:"; \
-		docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SHOW synchronous_standby_names;" 2>/dev/null | head -3 | tail -1 || echo "  Master not ready"; \
+		docker exec $(POSTGRES_MASTER_CONTAINER) psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SHOW synchronous_standby_names;" 2>/dev/null | head -3 | tail -1 || echo "  Master not ready"; \
 		echo ""; \
 		echo "Active Slaves:"; \
-		docker exec postgres-master psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT count(*) as active_slaves FROM pg_stat_replication;" 2>/dev/null | head -3 | tail -1 || echo "  Master not ready"; \
+		docker exec $(POSTGRES_MASTER_CONTAINER) psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT count(*) as active_slaves FROM pg_stat_replication;" 2>/dev/null | head -3 | tail -1 || echo "  Master not ready"; \
 		echo ""; \
 		echo "Slave Status:"; \
-		for slave in postgres-slave-1 postgres-slave-2; do \
+		for slave in $(POSTGRES_SLAVE1_CONTAINER) $(POSTGRES_SLAVE2_CONTAINER); do \
 			echo "$$slave:"; \
 			docker exec $$slave psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c "SELECT pg_is_in_recovery(), now() - pg_last_xact_replay_timestamp() as lag;" 2>/dev/null | grep -v row | grep -v "-" | head -1 || echo "  Not ready"; \
 		done; \
@@ -280,26 +280,26 @@ show-table:
 
 promote-slave1:
 	@echo "EMERGENCY: Promoting slave1 to master..."
-	@docker exec postgres-slave-1 pg_ctl promote -D /var/lib/postgresql/data
+	@docker exec $(POSTGRES_SLAVE1_CONTAINER) pg_ctl promote -D /var/lib/postgresql/data
 	@echo "Slave1 promoted to master."
 	@echo "Update your applications to connect to slave1 (port ${POSTGRES_SLAVE1_PORT}) for writes."
 
 promote-slave2:
 	@echo "EMERGENCY: Promoting slave2 to master..."
-	@docker exec postgres-slave-2 pg_ctl promote -D /var/lib/postgresql/data
+	@docker exec $(POSTGRES_SLAVE2_CONTAINER) pg_ctl promote -D /var/lib/postgresql/data
 	@echo "Slave2 promoted to master."
 	@echo "Update your applications to connect to slave2 (port ${POSTGRES_SLAVE2_PORT}) for writes."
 
 check-master:
 	@echo "Checking which nodes are in recovery mode (slaves)..."
-	@for node in postgres-master postgres-slave-1 postgres-slave-2; do \
+	@for node in $(POSTGRES_MASTER_CONTAINER) $(POSTGRES_SLAVE1_CONTAINER) $(POSTGRES_SLAVE2_CONTAINER); do \
 		echo -n "$$node: "; \
 		docker exec $$node psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -t -c "SELECT pg_is_in_recovery();" 2>/dev/null | tr -d '[:space:]' && echo " (in recovery = slave)" || echo " (not in recovery = master)"; \
 	done
 
 check-lag:
 	@echo "Replication lag check:"
-	@for slave in postgres-slave-1 postgres-slave-2; do \
+	@for slave in $(POSTGRES_SLAVE1_CONTAINER) $(POSTGRES_SLAVE2_CONTAINER); do \
 		echo -n "$$slave: "; \
 		docker exec $$slave psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} -t -c "SELECT now() - pg_last_xact_replay_timestamp() AS replication_lag;" 2>/dev/null | tr -d '[:space:]' || echo "unavailable"; \
 	done

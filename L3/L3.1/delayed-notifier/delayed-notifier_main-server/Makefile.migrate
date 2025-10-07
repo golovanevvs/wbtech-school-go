@@ -7,16 +7,23 @@ include $(ENV_FILE)
 export
 endif
 
+COMPOSE_FILE = resources/postgres/migrations/migrate/docker-compose.yml
+NETWORK_NAME = migrate_default
+
 .PHONY: create up down
 
 create:
 	@echo "Creating new migration files..."
-	docker compose -f resources/postgres/migrations/migrate/docker-compose.yml run --rm migrate create -ext sql -dir /migrations -seq tables
+	docker compose -f $(COMPOSE_FILE) run --rm migrate create -ext sql -dir /migrations -seq tables
+	@echo "Cleaning up leftover Docker network..."
+	@docker network rm $(NETWORK_NAME) 2>/dev/null || true
 
 up:
 	@echo "Applying migrations..."
-	docker compose -f resources/postgres/migrations/migrate/docker-compose.yml run --rm migrate up
+	docker compose -f $(COMPOSE_FILE) run --rm migrate up
+	@docker network rm $(NETWORK_NAME) 2>/dev/null || true
 
 down:
 	@echo "Rollback all migrations..."
-	docker compose -f resources/postgres/migrations/migrate/docker-compose.yml run --rm migrate down
+	docker compose -f $(COMPOSE_FILE) run --rm migrate down
+	@docker network rm $(NETWORK_NAME) 2>/dev/null || true

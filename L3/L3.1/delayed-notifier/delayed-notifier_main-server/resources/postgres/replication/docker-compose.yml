@@ -2,7 +2,7 @@ name: ${POSTGRES_REPLICATION_PROJECT_NAME}
 services:
   postgres-master:
     image: postgres:latest
-    container_name: postgres-master
+    container_name: ${POSTGRES_MASTER_CONTAINER}
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -11,7 +11,7 @@ services:
     ports:
       - "${POSTGRES_MASTER_PORT}:5432"
     volumes:
-      - postgres-master-data:/var/lib/postgresql/data
+      - master-data:/var/lib/postgresql/data
       - ./master-init.sql:/docker-entrypoint-initdb.d/01-replication.sql
     command: >
       postgres
@@ -22,17 +22,17 @@ services:
       -c archive_mode=on
       -c archive_command=/bin/true
     networks:
-      - postgres-replication
+      - network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 60s
+      retries: 5
+      start_period: 30s
 
   postgres-slave-1:
     image: postgres:latest
-    container_name: postgres-slave-1
+    container_name: ${POSTGRES_SLAVE1_CONTAINER}
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -40,7 +40,7 @@ services:
     ports:
       - "${POSTGRES_SLAVE1_PORT}:5432"
     volumes:
-      - postgres-slave-1-data:/var/lib/postgresql/data
+      - slave-1-data:/var/lib/postgresql/data
     command: >
       postgres
       -c hot_standby=on
@@ -51,11 +51,11 @@ services:
       postgres-master:
         condition: service_healthy
     networks:
-      - postgres-replication
+      - network
 
   postgres-slave-2:
     image: postgres:latest
-    container_name: postgres-slave-2
+    container_name: ${POSTGRES_SLAVE2_CONTAINER}
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -63,7 +63,7 @@ services:
     ports:
       - "${POSTGRES_SLAVE2_PORT}:5432"
     volumes:
-      - postgres-slave-2-data:/var/lib/postgresql/data
+      - slave-2-data:/var/lib/postgresql/data
     command: >
       postgres
       -c hot_standby=on
@@ -74,16 +74,16 @@ services:
       postgres-master:
         condition: service_healthy
     networks:
-      - postgres-replication
+      - network
     
 volumes:
-  postgres-master-data:
+  master-data:
     driver: local
-  postgres-slave-1-data:
+  slave-1-data:
     driver: local
-  postgres-slave-2-data:
+  slave-2-data:
     driver: local
 
 networks:
-  postgres-replication:
+  network:
     driver: bridge
