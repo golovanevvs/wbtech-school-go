@@ -30,7 +30,12 @@ func newConfig(configFilePath, envFilePath, envPrefix string) (*appConfig, error
 
 	cfg.ParseFlags()
 
-	err := cfg.Load(configFilePath, envFilePath, envPrefix)
+	err := cfg.loadEnv(envFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	err = cfg.Load(configFilePath, envPrefix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
