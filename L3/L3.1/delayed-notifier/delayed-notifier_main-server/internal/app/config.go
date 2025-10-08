@@ -10,17 +10,12 @@ import (
 )
 
 type appConfig struct {
-	lg *logger.Config
-	tr *transport.Config
-	rp *repository.Config
+	Lg *logger.Config     `mapstructure:"logger"`
+	Tr *transport.Config  `mapstructure:"transport"`
+	Rp *repository.Config `mapstructure:"repository"`
 }
 
 func newConfig() (*appConfig, error) {
-	appConfig := &appConfig{
-		tr: transport.NewConfig(),
-		rp: repository.NewConfig(),
-		lg: logger.NewConfig(),
-	}
 
 	envFilePath := ".env"
 
@@ -28,10 +23,6 @@ func newConfig() (*appConfig, error) {
 	postgresConfigFilePath := "./infra/postgres/config.yaml"
 
 	cfg := config.New()
-
-	// -----------------------------------
-	// Define flags
-	// -----------------------------------
 
 	if err := cfg.DefineFlag("p", "srvport", "server.port", 7777, "HTTP server port"); err != nil {
 		return nil, fmt.Errorf("failed to define flags: %w", err)
@@ -50,46 +41,18 @@ func newConfig() (*appConfig, error) {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	if err := cfg.Unmarshal(&appConfig); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal config: %w", err)
+	appConfig := &appConfig{
+		Lg: logger.NewConfig(cfg),
+		Tr: transport.NewConfig(cfg),
+		Rp: repository.NewConfig(cfg),
 	}
 
-	// -----------------------------------
-	// Load config for app
-	// -----------------------------------
-
-	// ------------- Logger -------------
-	// appConfig.lg.Level = cfg.GetString("logger.level")
-
-	// ------------- Transport -------------
-	// appConfig.tr.TrHTTP.Port = cfg.GetInt("server.port")
-	// appConfig.tr.TrHTTP.Handler.GinMode = cfg.GetString("gin.mode")
-
-	// -----------------------------------
-	// Load config for postgres
-	// -----------------------------------
-
-	// appConfig.rp.Postgres.Master.Host = cfg.GetString("postgres.host")
-	// appConfig.rp.Postgres.Master.Port = cfg.GetInt("postgres.master.port")
-	// appConfig.rp.Postgres.Master.User = cfg.GetString("postgres.user")
-	// appConfig.rp.Postgres.Master.Password = cfg.GetString("postgres.password")
-	// appConfig.rp.Postgres.Master.DBName = cfg.GetString("postgres.db")
-
-	// appConfig.rp.Postgres.Slave1.Host = cfg.GetString("postgres.host")
-	// appConfig.rp.Postgres.Slave1.Port = cfg.GetInt("postgres.slave1.port")
-	// appConfig.rp.Postgres.Slave1.User = cfg.GetString("postgres.user")
-	// appConfig.rp.Postgres.Slave1.Password = cfg.GetString("postgres.password")
-	// appConfig.rp.Postgres.Slave1.DBName = cfg.GetString("postgres.db")
-
-	// appConfig.rp.Postgres.Slave2.Host = cfg.GetString("postgres.host")
-	// appConfig.rp.Postgres.Slave2.Port = cfg.GetInt("postgres.slave2.port")
-	// appConfig.rp.Postgres.Slave2.User = cfg.GetString("postgres.user")
-	// appConfig.rp.Postgres.Slave2.Password = cfg.GetString("postgres.password")
-	// appConfig.rp.Postgres.Slave2.DBName = cfg.GetString("postgres.db")
-
-	// appConfig.rp.Postgres.MaxOpenConns = cfg.GetInt("postgres.max_open_conns")
-	// appConfig.rp.Postgres.MaxIdleConns = cfg.GetInt("postgres.max_idle_conns")
-	// appConfig.rp.Postgres.ConnMaxLifetime = cfg.GetDuration("postgres.conn_max_lifetime")
-
 	return appConfig, nil
+}
+
+func (a *appConfig) String() string {
+	if a == nil {
+		return "appConfig: <nil>"
+	}
+	return fmt.Sprintf("Configuration:\n%s\n%s\n%s", a.Lg.String(), a.Tr.String(), a.Rp.String())
 }

@@ -1,8 +1,13 @@
-server:
-  addr: ":6000"
+# server:
+#   addr: ":6000"
   
 logger:
   level: "trace"
 
-gin:
-  mode: "release"
+# gin:
+#   mode: "release"
+
+transport:
+  http:
+    handler:
+      gin_mode: "release"

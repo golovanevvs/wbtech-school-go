@@ -4,17 +4,23 @@ import (
 	"fmt"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler"
+	"github.com/wb-go/wbf/config"
 )
 
 type Config struct {
-	Port    int `mapstructure:"port"`
+	Port    int
 	Handler *handler.Config
 }
 
-func NewConfig() *Config {
+func NewConfig(cfg *config.Config) *Config {
 	return &Config{
-		Handler: handler.NewConfig(),
+		Port:    cfg.GetInt("transport.http.port"),
+		Handler: handler.NewConfig(cfg),
 	}
+}
+
+func (c Config) String() string {
+	return fmt.Sprintf("http:\nport: %d\n%s", c.Port, c.Handler.String())
 }
 
 func (c *Config) Validate() error {

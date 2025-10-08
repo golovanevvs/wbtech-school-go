@@ -30,7 +30,7 @@ func newDependencyBuilder(cfg *appConfig) *dependencyBuilder {
 }
 
 func (b *dependencyBuilder) withLogger() error {
-	err := zlog.SetLevel(b.cfg.lg.Level)
+	err := zlog.SetLevel(b.cfg.Lg.Level)
 
 	if err != nil {
 		zlog.Logger.Error().Err(err).Str("component", "logger").Msg("error set log level")
@@ -46,7 +46,7 @@ func (b *dependencyBuilder) withLogger() error {
 }
 
 func (b *dependencyBuilder) withRepository() error {
-	rp, err := repository.New(b.cfg.rp)
+	rp, err := repository.New(b.cfg.Rp)
 	if err != nil {
 		zlog.Logger.Error().Err(err).Str("component", "repository").Msg("error create repository")
 		return fmt.Errorf("error create repository: %w", err)
@@ -63,7 +63,7 @@ func (b *dependencyBuilder) withService() {
 }
 
 func (b *dependencyBuilder) withTransport() {
-	b.deps.tr = transport.New(b.cfg.tr)
+	b.deps.tr = transport.New(b.cfg.Tr)
 }
 
 func (b *dependencyBuilder) build() (*dependencies, error) {
