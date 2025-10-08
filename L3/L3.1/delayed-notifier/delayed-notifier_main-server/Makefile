@@ -1,10 +1,8 @@
-APP = infra/app
-MIGRATE = infra/migrate
-POSTGRES = infra/postgres
-
 # ========================
 # APP
 # ========================
+
+APP = infra/app
 
 app-build:
 	mingw32-make -C $(APP) build
@@ -17,6 +15,8 @@ app-build-up:
 # MIGRATE
 # ========================
 
+MIGRATE = infra/migrate
+
 migrate-create:
 	mingw32-make -C $(MIGRATE) create
 migrate-up:
@@ -28,6 +28,8 @@ migrate-down:
 # ========================
 # POSTGRES
 # ========================
+
+POSTGRES = infra/postgres
 
 # Default target
 postgres-help:

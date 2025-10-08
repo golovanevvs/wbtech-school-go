@@ -360,11 +360,12 @@ clean-all:
 
 #============================================================
 
-# POSTGRES = infra/postgres
 
 # ========================
 # POSTGRES
 # ========================
+
+# POSTGRES = infra/postgres
 
 # # Default target
 # postgres-help:

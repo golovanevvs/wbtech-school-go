@@ -32,11 +32,12 @@ down:
 
 #============================================================
 
-# MIGRATE = infra/migrate
 
 # ========================
 # MIGRATE
 # ========================
+
+# MIGRATE = infra/migrate
 
 # migrate-create:
 # 	mingw32-make -C $(MIGRATE) create

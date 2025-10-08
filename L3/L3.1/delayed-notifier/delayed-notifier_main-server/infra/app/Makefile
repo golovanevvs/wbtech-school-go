@@ -27,11 +27,12 @@ build-up: build up
 
 #============================================================
 
-# APP = infra/app
 
 # ========================
 # APP
 # ========================
+
+# APP = infra/app
 
 # app-build:
 # 	mingw32-make -C $(APP) build
