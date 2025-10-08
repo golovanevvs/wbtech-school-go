@@ -4,7 +4,7 @@ go 1.25.1
 
 require (
 	github.com/go-playground/validator/v10 v10.14.0
-	github.com/wb-go/wbf v0.0.6
+	github.com/wb-go/wbf v0.0.7
 )
 
 // replace github.com/wb-go/wbf => github.com/golovanevvs/wbf v0.0.16
