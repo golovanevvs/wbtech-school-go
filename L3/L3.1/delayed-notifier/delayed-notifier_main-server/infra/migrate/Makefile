@@ -40,8 +40,8 @@ down:
 # MIGRATE = infra/migrate
 
 # migrate-create:
-# 	mingw32-make -C $(MIGRATE) create
+# 	$(MAKE_CMD) -C $(MIGRATE) create
 # migrate-up:
-# 	mingw32-make -C $(MIGRATE) up
+# 	$(MAKE_CMD) -C $(MIGRATE) up
 # migrate-down:
-# 	mingw32-make -C $(MIGRATE) down
+# 	$(MAKE_CMD) -C $(MIGRATE) down

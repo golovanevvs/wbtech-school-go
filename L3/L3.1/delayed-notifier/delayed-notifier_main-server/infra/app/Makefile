@@ -12,6 +12,19 @@ endif
 
 MAIN_DIR := ./cmd/$(APP_NAME)
 
+ifeq ($(OS),Windows_NT)
+    RUN_CMD = start "" "/C/Program Files/Git/git-bash.exe" -c
+else
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Darwin)
+        # macOS
+        RUN_CMD = open -a Terminal.app
+    else
+        # Linux (GNOME, KDE, etc.)
+        RUN_CMD = x-terminal-emulator -e
+    endif
+endif
+
 build:
 	@echo "Building app #$(APP_NAME)..."
 	@cd $(PROJECT_DIR) && go build $(MAIN_DIR)
@@ -19,7 +32,7 @@ build:
 
 up:
 	@echo "Running app #$(APP_NAME)..."
-	@cd $(PROJECT_DIR) && start "" "/C/Program Files/Git/git-bash.exe" -c "./$(APP_NAME)"
+	@cd $(PROJECT_DIR) && $(RUN_CMD) "./$(APP_NAME)"
 	@sleep 1
 	@echo "Running app #$(APP_NAME) completed"
 
@@ -35,8 +48,8 @@ build-up: build up
 # APP = infra/app
 
 # app-build:
-# 	mingw32-make -C $(APP) build
+# 	$(MAKE_CMD) -C $(APP) build
 # app-up:
-# 	mingw32-make -C $(APP) up
+# 	$(MAKE_CMD) -C $(APP) up
 # app-build-up:
-# 	mingw32-make -C $(APP) build-up
+# 	$(MAKE_CMD) -C $(APP) build-up

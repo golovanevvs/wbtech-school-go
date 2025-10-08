@@ -9,6 +9,12 @@ include $(ENV_FILE)
 export
 endif
 
+ifeq ($(OS),Windows_NT)
+	MAKE_CMD = mingw32-make
+else
+	MAKE_CMD = make
+endif
+
 # Project paths
 POSTGRES_DIR = replication
 PGAUTO_DIR = pg-auto-failover
@@ -177,7 +183,7 @@ mode-async:
 	@docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose.yml -f $(POSTGRES_DIR)/docker-compose-async.yml up -d postgres-master
 	@sleep 3
 	@echo "Async mode activated"
-	mingw32-make mode-status
+	$(MAKE_CMD) mode-status
 
 # Switch to SYNC-ALL replication mode (both slaves)
 mode-sync-all:
@@ -185,7 +191,7 @@ mode-sync-all:
 	@docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose.yml -f $(POSTGRES_DIR)/docker-compose-sync-all.yml up -d postgres-master
 	@sleep 3
 	@echo "Sync-all mode activated"
-	mingw32-make mode-status
+	$(MAKE_CMD) mode-status
 
 # Switch to SYNC-ONE replication mode (slave1 only)
 mode-sync-one:
@@ -193,7 +199,7 @@ mode-sync-one:
 	@docker-compose --env-file $(ENV_FILE) -f $(POSTGRES_DIR)/docker-compose.yml -f $(POSTGRES_DIR)/docker-compose-sync-one.yml up -d postgres-master
 	@sleep 3
 	@echo "Sync-one mode activated"
-	mingw32-make mode-status
+	$(MAKE_CMD) mode-status
 
 # Show current replication mode
 mode-status:
@@ -354,8 +360,8 @@ pgauto-purge:
 # Clean everything
 clean-all:
 	@echo "Cleaning ALL PostgreSQL clusters..."
-	mingw32-make down
-	mingw32-make pgauto-down
+	$(MAKE_CMD) down
+	$(MAKE_CMD) pgauto-down
 	@echo "All clusters stopped"
 
 #============================================================
@@ -369,79 +375,79 @@ clean-all:
 
 # # Default target
 # postgres-help:
-# 	mingw32-make -C $(POSTGRES) help
+# 	$(MAKE_CMD) -C $(POSTGRES) help
 # # Basic Cluster Operations
 # postgres-up:
-# 	mingw32-make -C $(POSTGRES) up
+# 	$(MAKE_CMD) -C $(POSTGRES) up
 # postgres-up-async:
-# 	mingw32-make -C $(POSTGRES) up-async
+# 	$(MAKE_CMD) -C $(POSTGRES) up-async
 # postgres-up-sync-all:
-# 	mingw32-make -C $(POSTGRES) up-sync-all
+# 	$(MAKE_CMD) -C $(POSTGRES) up-sync-all
 # postgres-up-sync-one:
-# 	mingw32-make -C $(POSTGRES) up-sync-one
+# 	$(MAKE_CMD) -C $(POSTGRES) up-sync-one
 # postgres-down:
-# 	mingw32-make -C $(POSTGRES) down
+# 	$(MAKE_CMD) -C $(POSTGRES) down
 # postgres-restart:
-# 	mingw32-make -C $(POSTGRES) restart
+# 	$(MAKE_CMD) -C $(POSTGRES) restart
 # postgres-status:
-# 	mingw32-make -C $(POSTGRES) status
+# 	$(MAKE_CMD) -C $(POSTGRES) status
 # postgres-status-sync:
-# 	mingw32-make -C $(POSTGRES) status-sync
+# 	$(MAKE_CMD) -C $(POSTGRES) status-sync
 # postgres-logs:
-# 	mingw32-make -C $(POSTGRES) logs
+# 	$(MAKE_CMD) -C $(POSTGRES) logs
 # postgres-setup:
-# 	mingw32-make -C $(POSTGRES) setup
+# 	$(MAKE_CMD) -C $(POSTGRES) setup
 # postgres-check:
-# 	mingw32-make -C $(POSTGRES) check
+# 	$(MAKE_CMD) -C $(POSTGRES) check
 # postgres-clean:
-# 	mingw32-make -C $(POSTGRES) clean
+# 	$(MAKE_CMD) -C $(POSTGRES) clean
 # postgres-purge:
-# 	mingw32-make -C $(POSTGRES) purge
+# 	$(MAKE_CMD) -C $(POSTGRES) purge
 # # Replication Mode Management
 # postgres-mode-async:
-# 	mingw32-make -C $(POSTGRES) mode-async
+# 	$(MAKE_CMD) -C $(POSTGRES) mode-async
 # postgres-mode-sync-all:
-# 	mingw32-make -C $(POSTGRES) mode-sync-all
+# 	$(MAKE_CMD) -C $(POSTGRES) mode-sync-all
 # postgres-mode-sync-one:
-# 	mingw32-make -C $(POSTGRES) mode-sync-one
+# 	$(MAKE_CMD) -C $(POSTGRES) mode-sync-one
 # postgres-mode-status:
-# 	mingw32-make -C $(POSTGRES) mode-status
+# 	$(MAKE_CMD) -C $(POSTGRES) mode-status
 # # Testing and Monitoring
 # postgres-test:
-# 	mingw32-make -C $(POSTGRES) test
+# 	$(MAKE_CMD) -C $(POSTGRES) test
 # postgres-backup:
-# 	mingw32-make -C $(POSTGRES) backup
+# 	$(MAKE_CMD) -C $(POSTGRES) backup
 # postgres-monitor:
-# 	mingw32-make -C $(POSTGRES) monitor
+# 	$(MAKE_CMD) -C $(POSTGRES) monitor
 # postgres-log-cont:
-# 	mingw32-make -C $(POSTGRES) log-cont
+# 	$(MAKE_CMD) -C $(POSTGRES) log-cont
 # postgres-list-db:
-# 	mingw32-make -C $(POSTGRES) list-db
+# 	$(MAKE_CMD) -C $(POSTGRES) list-db
 # postgres-list-tables:
-# 	mingw32-make -C $(POSTGRES) list-tables
+# 	$(MAKE_CMD) -C $(POSTGRES) list-tables
 # postgres-show-table:
-# 	mingw32-make -C $(POSTGRES) show-table
+# 	$(MAKE_CMD) -C $(POSTGRES) show-table
 # # Emergency Operations
 # postgres-promote-slave1:
-# 	mingw32-make -C $(POSTGRES) promote-slave1
+# 	$(MAKE_CMD) -C $(POSTGRES) promote-slave1
 # postgres-promote-slave2:
-# 	mingw32-make -C $(POSTGRES) promote-slave2
+# 	$(MAKE_CMD) -C $(POSTGRES) promote-slave2
 # postgres-check-master:
-# 	mingw32-make -C $(POSTGRES) check-master
+# 	$(MAKE_CMD) -C $(POSTGRES) check-master
 # postgres-check-lag:
-# 	mingw32-make -C $(POSTGRES) check-lag
+# 	$(MAKE_CMD) -C $(POSTGRES) check-lag
 # # Auto Failover
 # postgres-pgauto-up:
-# 	mingw32-make -C $(POSTGRES) pgauto-up
+# 	$(MAKE_CMD) -C $(POSTGRES) pgauto-up
 # postgres-pgauto-down:
-# 	mingw32-make -C $(POSTGRES) pgauto-down
+# 	$(MAKE_CMD) -C $(POSTGRES) pgauto-down
 # postgres-pgauto-status:
-# 	mingw32-make -C $(POSTGRES) pgauto-status
+# 	$(MAKE_CMD) -C $(POSTGRES) pgauto-status
 # postgres-pgauto-status-sync:
-# 	mingw32-make -C $(POSTGRES) pgauto-status-sync
+# 	$(MAKE_CMD) -C $(POSTGRES) pgauto-status-sync
 # postgres-pgauto-monitor:
-# 	mingw32-make -C $(POSTGRES) pgauto-monitor
+# 	$(MAKE_CMD) -C $(POSTGRES) pgauto-monitor
 # postgres-pgauto-purge:
-# 	mingw32-make -C $(POSTGRES) pgauto-purge
+# 	$(MAKE_CMD) -C $(POSTGRES) pgauto-purge
 # postgres-clean-all:
-# 	mingw32-make -C $(POSTGRES) clean-all
+# 	$(MAKE_CMD) -C $(POSTGRES) clean-all
