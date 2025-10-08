@@ -1,4 +1,4 @@
-module github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier
+module github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server
 
 go 1.25.1
 

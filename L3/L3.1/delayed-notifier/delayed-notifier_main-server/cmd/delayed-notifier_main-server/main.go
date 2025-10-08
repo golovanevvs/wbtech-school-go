@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/app"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/app"
 	"github.com/wb-go/wbf/zlog"
 )
 

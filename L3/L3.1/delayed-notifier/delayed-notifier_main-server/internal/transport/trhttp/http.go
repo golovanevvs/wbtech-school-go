@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/transport/trhttp/handler"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler"
 	"github.com/wb-go/wbf/zlog"
 )
 

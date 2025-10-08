@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/model"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/internal/pkg/customerrors"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/customerrors"
 	"github.com/wb-go/wbf/ginext"
 	"github.com/wb-go/wbf/zlog"
 )
