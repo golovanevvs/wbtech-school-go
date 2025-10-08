@@ -7,7 +7,7 @@ require (
 	github.com/wb-go/wbf v0.0.7
 )
 
-replace github.com/wb-go/wbf => github.com/golovanevvs/wbf v0.0.17
+replace github.com/wb-go/wbf => github.com/golovanevvs/wbf v0.0.20
 
 require (
 	github.com/bytedance/sonic v1.9.1 // indirect

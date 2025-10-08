@@ -1,7 +1,7 @@
 package handler
 
 type Config struct {
-	GinMode string
+	GinMode string `mapstructure:"gin.mode"`
 }
 
 func NewConfig() *Config {
