@@ -1,13 +1,8 @@
-# server:
-#   addr: ":6000"
-  
 logger:
   level: "trace"
 
-# gin:
-#   mode: "release"
-
 transport:
   http:
+    port: 7778
     handler:
       gin_mode: "release"

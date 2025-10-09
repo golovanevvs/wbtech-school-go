@@ -17,5 +17,5 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("handler:\nGinMode: %s", c.GinMode)
+	return fmt.Sprintf("\033[33m   GinMode: \033[0m\033[32m%s\033[0m", c.GinMode)
 }

@@ -20,7 +20,7 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("http:\nport: %d\n%s", c.Port, c.Handler.String())
+	return fmt.Sprintf(" http:\n\033[33m  port: \033[0m\033[32m%d\033[0m\n  handler:\n%s", c.Port, c.Handler.String())
 }
 
 func (c *Config) Validate() error {

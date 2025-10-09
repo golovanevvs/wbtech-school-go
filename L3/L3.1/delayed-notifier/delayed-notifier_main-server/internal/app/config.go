@@ -10,41 +10,38 @@ import (
 )
 
 type appConfig struct {
-	Lg *logger.Config     `mapstructure:"logger"`
-	Tr *transport.Config  `mapstructure:"transport"`
-	Rp *repository.Config `mapstructure:"repository"`
+	lg *logger.Config
+	tr *transport.Config
+	rp *repository.Config
 }
 
 func newConfig() (*appConfig, error) {
 
 	envFilePath := ".env"
-
 	appConfigFilePath := "./infra/app/config.yaml"
 	postgresConfigFilePath := "./infra/postgres/config.yaml"
 
 	cfg := config.New()
 
-	if err := cfg.DefineFlag("p", "srvport", "server.port", 7777, "HTTP server port"); err != nil {
-		return nil, fmt.Errorf("failed to define flags: %w", err)
+	if err := cfg.LoadEnvFiles(envFilePath); err != nil {
+		return nil, fmt.Errorf("failed to load env files: %w", err)
 	}
 
-	cfg.ParseFlags()
+	cfg.EnableEnv("")
 
-	if err := cfg.LoadEnv(envFilePath); err != nil {
-		return nil, fmt.Errorf("failed to load env file: %w", err)
+	if err := cfg.LoadConfigFiles(appConfigFilePath, postgresConfigFilePath); err != nil {
+		return nil, fmt.Errorf("failed to load config files: %w", err)
 	}
 
-	if err := cfg.Load(appConfigFilePath, ""); err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
-	}
-	if err := cfg.Load(postgresConfigFilePath, ""); err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
+	cfg.DefineFlag("p", "srvport", "transport.http.port", 7777, "HTTP server port")
+	if err := cfg.ParseFlags(); err != nil {
+		return nil, fmt.Errorf("failed to pars flags: %w", err)
 	}
 
 	appConfig := &appConfig{
-		Lg: logger.NewConfig(cfg),
-		Tr: transport.NewConfig(cfg),
-		Rp: repository.NewConfig(cfg),
+		lg: logger.NewConfig(cfg),
+		tr: transport.NewConfig(cfg),
+		rp: repository.NewConfig(cfg),
 	}
 
 	return appConfig, nil
@@ -54,5 +51,5 @@ func (a *appConfig) String() string {
 	if a == nil {
 		return "appConfig: <nil>"
 	}
-	return fmt.Sprintf("Configuration:\n%s\n%s\n%s", a.Lg.String(), a.Tr.String(), a.Rp.String())
+	return fmt.Sprintf("Configuration:\n%s\n%s\n%s", a.lg.String(), a.tr.String(), a.rp.String())
 }

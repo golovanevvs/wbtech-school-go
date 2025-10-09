@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	TrHTTP *trhttp.Config `mapstructure:"http"`
+	TrHTTP *trhttp.Config
 }
 
 func NewConfig(cfg *config.Config) *Config {

@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	Level string `mapstructure:"level"`
+	Level string
 }
 
 func NewConfig(cfg *config.Config) *Config {
@@ -17,5 +17,5 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("\nlogger:\nlevel: %s", c.Level)
+	return fmt.Sprintf("\nlogger:\n \033[33mlevel: \033[0m\033[32m%s\033[0m", c.Level)
 }

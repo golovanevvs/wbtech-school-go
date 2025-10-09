@@ -32,7 +32,7 @@ build:
 
 up:
 	@echo "Running app #$(APP_NAME)..."
-	@cd $(PROJECT_DIR) && $(RUN_CMD) "./$(APP_NAME)"
+	@cd $(PROJECT_DIR) && $(RUN_CMD) "./$(APP_NAME) $(ARGS)"
 	@sleep 1
 	@echo "Running app #$(APP_NAME) completed"
 

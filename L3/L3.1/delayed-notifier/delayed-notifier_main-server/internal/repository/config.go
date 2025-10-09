@@ -21,5 +21,5 @@ func (c *Config) String() string {
 	if c == nil {
 		return "Config: <nil>"
 	}
-	return fmt.Sprintf("\nrepository:\n%s", c.Postgres.String())
+	return fmt.Sprintf("\nrepository:\n %s", c.Postgres.String())
 }
