@@ -3,7 +3,12 @@ package model
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+)
+
+var (
+	ErrEmptyChannels   = errors.New("channels cannot be empty")
+	ErrInvalidTypeBase = errors.New("invalid channel type")
+	ErrEmptyValue      = errors.New("channel value cannot be empty")
 )
 
 type Channels []ChannelInfo
@@ -18,12 +23,6 @@ type ChannelType string
 const (
 	ChannelEmail    ChannelType = "email"
 	ChannelTelegram ChannelType = "telegram"
-)
-
-var (
-	ErrEmptyChannels   = errors.New("channels cannot be empty")
-	ErrInvalidTypeBase = errors.New("invalid channel type")
-	ErrEmptyValue      = errors.New("channel value cannot be empty")
 )
 
 func (t ChannelType) IsValid() bool {
@@ -57,15 +56,11 @@ func (c *Channels) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	for _, ch := range s {
-		if !ch.Type.IsValid() {
-			return fmt.Errorf("%w: %s", ErrInvalidTypeBase, ch.Type)
-		}
-		if ch.Value == "" {
-			return ErrEmptyValue
-		}
+	ch := Channels(s)
+	if err := ch.Validate(); err != nil {
+		return err
 	}
 
-	*c = Channels(s)
+	*c = ch
 	return nil
 }
