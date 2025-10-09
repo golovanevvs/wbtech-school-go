@@ -119,3 +119,24 @@ postgres-pgauto-purge:
 	$(MAKE_CMD) -C $(POSTGRES) pgauto-purge
 postgres-clean-all:
 	$(MAKE_CMD) -C $(POSTGRES) clean-all
+
+# ========================
+# RABBITMQ
+# ========================
+
+RABBITMQ = infra/rabbitmq
+
+rabbitmq-up:
+	$(MAKE_CMD) -C $(RABBITMQ) up
+rabbitmq-down:
+	$(MAKE_CMD) -C $(RABBITMQ) down
+rabbitmq-restart:
+	$(MAKE_CMD) -C $(RABBITMQ) restart
+rabbitmq-logs:
+	$(MAKE_CMD) -C $(RABBITMQ) logs
+rabbitmq-status:
+	$(MAKE_CMD) -C $(RABBITMQ) status
+rabbitmq-shell:
+	$(MAKE_CMD) -C $(RABBITMQ) shell
+rabbitmq-purge:
+	$(MAKE_CMD) -C $(RABBITMQ) purge

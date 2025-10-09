@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/logger"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport"
 	"github.com/wb-go/wbf/config"
@@ -13,6 +14,7 @@ type appConfig struct {
 	lg *logger.Config
 	tr *transport.Config
 	rp *repository.Config
+	rb *rabbitmq.Config
 }
 
 func newConfig() (*appConfig, error) {
@@ -42,6 +44,7 @@ func newConfig() (*appConfig, error) {
 		lg: logger.NewConfig(cfg),
 		tr: transport.NewConfig(cfg),
 		rp: repository.NewConfig(cfg),
+		rb: rabbitmq.NewConfig(cfg),
 	}
 
 	return appConfig, nil
@@ -51,5 +54,9 @@ func (a *appConfig) String() string {
 	if a == nil {
 		return "appConfig: <nil>"
 	}
-	return fmt.Sprintf("Configuration:\n%s\n%s\n%s", a.lg.String(), a.tr.String(), a.rp.String())
+	return fmt.Sprintf("Configuration:\n%s\n%s\n%s\n%s\n",
+		a.lg.String(),
+		a.tr.String(),
+		a.rp.String(),
+		a.rb.String())
 }

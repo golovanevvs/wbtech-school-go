@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport"
@@ -13,6 +14,7 @@ type dependencies struct {
 	tr *transport.Transport
 	rp *repository.Repository
 	sv *service.Service
+	rb *rabbitmq.Client
 }
 
 type dependencyBuilder struct {
@@ -66,6 +68,18 @@ func (b *dependencyBuilder) withTransport() {
 	b.deps.tr = transport.New(b.cfg.tr)
 }
 
+func (b *dependencyBuilder) withRabbitMQ() error {
+	rb, err := rabbitmq.NewClient(*b.cfg.rb)
+	if err != nil {
+		zlog.Logger.Error().Err(err).Str("component", "rabbitmq").Msg("error create RabbitMQ client")
+		return fmt.Errorf("error create RabbitMQ client: %w", err)
+	}
+	zlog.Logger.Info().Str("component", "rabbitmq").Msg("RabbitMQ client has been create")
+	b.deps.rb = rb
+
+	return nil
+}
+
 func (b *dependencyBuilder) build() (*dependencies, error) {
 	if err := b.withLogger(); err != nil {
 		return nil, err
@@ -78,6 +92,10 @@ func (b *dependencyBuilder) build() (*dependencies, error) {
 	}
 
 	b.withService()
+
+	if err := b.withRabbitMQ(); err != nil {
+		return nil, err
+	}
 
 	return b.deps, nil
 }
