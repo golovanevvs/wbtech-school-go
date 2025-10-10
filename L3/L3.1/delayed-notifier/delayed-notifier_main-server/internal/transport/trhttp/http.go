@@ -9,19 +9,22 @@ import (
 	"github.com/wb-go/wbf/zlog"
 )
 
+type IService interface {
+	handler.IService
+}
+
 type HTTP struct {
-	lg      *zlog.Zerolog
+	lg      zlog.Zerolog
 	httpsrv *http.Server
 }
 
-func New(cfg *Config) *HTTP {
+func New(cfg *Config, sv IService) *HTTP {
 	lg := zlog.Logger.With().Str("component", "transport-HTTP").Logger()
-
 	return &HTTP{
-		lg: &lg,
+		lg: lg,
 		httpsrv: &http.Server{
 			Addr:    fmt.Sprintf(":%d", cfg.Port),
-			Handler: handler.New(cfg.Handler).Router,
+			Handler: handler.New(cfg.Handler, sv).Rt,
 		},
 	}
 }

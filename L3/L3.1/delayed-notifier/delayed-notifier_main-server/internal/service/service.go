@@ -8,8 +8,9 @@ import (
 )
 
 type Service struct {
-	NoticeService *noticeservice.NoticeService
-	rp            *repository.Repository
+	AddNoticeService *noticeservice.NoticeService
+	DeleteNoticeService
+	rp *repository.Repository
 }
 
 func New(rp *repository.Repository, rb *rabbitmq.Client) *Service {

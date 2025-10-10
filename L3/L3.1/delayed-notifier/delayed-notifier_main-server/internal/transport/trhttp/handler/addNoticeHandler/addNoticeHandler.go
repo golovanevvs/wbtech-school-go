@@ -1,6 +1,7 @@
-package handler
+package addNoticeHandler
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -10,14 +11,37 @@ import (
 	"github.com/wb-go/wbf/zlog"
 )
 
+type IService interface {
+	AddNotice(ctx context.Context, reqNotice model.Notice) (id int, err error)
+}
+
+type Handler struct {
+	lg zlog.Zerolog
+	rt *ginext.Engine
+	sv IService
+}
+
 type reqNotice struct {
 	UserID   int            `json:"user_id" validate:"required"`
 	Message  string         `json:"message" validate:"required"`
 	Channels model.Channels `json:"channels"`
 }
 
-func (hd *Handler) createNotice(c *ginext.Context) {
-	lg := zlog.Logger.With().Str("handler", "createNotice").Logger()
+func New(rt *ginext.Engine, sv IService) *Handler {
+	lg := zlog.Logger.With().Str("component", "handler-addNoticeHandler").Logger()
+	return &Handler{
+		lg: lg,
+		rt: rt,
+		sv: sv,
+	}
+}
+
+func (hd *Handler) RegisterRoutes() {
+	hd.rt.GET("/notify", hd.CreateNotice)
+}
+
+func (hd *Handler) CreateNotice(c *ginext.Context) {
+	lg := hd.lg.With().Str("handler", "createNotice").Logger()
 
 	lg.Trace().Msg("handler is starting")
 
