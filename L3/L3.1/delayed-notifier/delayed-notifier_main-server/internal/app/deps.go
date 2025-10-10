@@ -35,14 +35,13 @@ func (b *dependencyBuilder) withLogger() error {
 	err := zlog.SetLevel(b.cfg.lg.Level)
 
 	if err != nil {
-		zlog.Logger.Error().Err(err).Str("component", "logger").Msg("error set log level")
 		return fmt.Errorf("error set log level: %w", err)
 	}
 
-	zlog.Logger.Info().
-		Str("component", "logger").
+	zlog.Logger.Debug().
+		Str("component", "app").
 		Str("log_level", zlog.Logger.GetLevel().String()).
-		Msg("logging level has been configure")
+		Msg("logging level has been configured")
 
 	return nil
 }
@@ -50,10 +49,9 @@ func (b *dependencyBuilder) withLogger() error {
 func (b *dependencyBuilder) withRepository() error {
 	rp, err := repository.New(b.cfg.rp)
 	if err != nil {
-		zlog.Logger.Error().Err(err).Str("component", "repository").Msg("error create repository")
-		return fmt.Errorf("error create repository: %w", err)
+		return fmt.Errorf("error initialize repository: %w", err)
 	}
-	zlog.Logger.Info().Str("component", "repository").Msg("repository has been create")
+	zlog.Logger.Debug().Str("component", "app").Msg("repository has been initialized")
 	b.deps.rp = rp
 
 	return nil
@@ -61,20 +59,21 @@ func (b *dependencyBuilder) withRepository() error {
 
 func (b *dependencyBuilder) withService() {
 	sv := service.New(b.deps.rp)
+	zlog.Logger.Debug().Str("component", "app").Msg("service has been initialized")
 	b.deps.sv = sv
 }
 
 func (b *dependencyBuilder) withTransport() {
+	zlog.Logger.Debug().Str("component", "app").Msg("transport has been initialized")
 	b.deps.tr = transport.New(b.cfg.tr)
 }
 
 func (b *dependencyBuilder) withRabbitMQ() error {
 	rb, err := rabbitmq.NewClient(*b.cfg.rb)
 	if err != nil {
-		zlog.Logger.Error().Err(err).Str("component", "rabbitmq").Msg("error create RabbitMQ client")
-		return fmt.Errorf("error create RabbitMQ client: %w", err)
+		return fmt.Errorf("error initialize RabbitMQ client: %w", err)
 	}
-	zlog.Logger.Info().Str("component", "rabbitmq").Msg("RabbitMQ client has been create")
+	zlog.Logger.Debug().Str("component", "app").Msg("RabbitMQ client has been initialized")
 	b.deps.rb = rb
 
 	return nil
@@ -85,7 +84,9 @@ func (b *dependencyBuilder) build() (*dependencies, error) {
 		return nil, err
 	}
 
-	b.withTransport()
+	if err := b.withRabbitMQ(); err != nil {
+		return nil, err
+	}
 
 	if err := b.withRepository(); err != nil {
 		return nil, err
@@ -93,9 +94,7 @@ func (b *dependencyBuilder) build() (*dependencies, error) {
 
 	b.withService()
 
-	if err := b.withRabbitMQ(); err != nil {
-		return nil, err
-	}
+	b.withTransport()
 
 	return b.deps, nil
 }
