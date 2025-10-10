@@ -1,6 +1,6 @@
 module github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server
 
-go 1.25.1
+go 1.25.2
 
 require (
 	github.com/go-playground/validator/v10 v10.14.0
