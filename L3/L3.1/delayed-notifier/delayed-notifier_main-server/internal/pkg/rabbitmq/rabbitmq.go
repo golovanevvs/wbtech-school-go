@@ -169,7 +169,7 @@ func (c *Client) Publish(msg Message) error {
 }
 
 // PublishStruct automatically serializes the structure to JSON and publishes the message.
-func (c *Client) PublishStruct(data interface{}, ttl time.Duration) error {
+func (c *Client) PublishStructWithTTL(data interface{}, ttl time.Duration) error {
 	body, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal struct: %w", err)
