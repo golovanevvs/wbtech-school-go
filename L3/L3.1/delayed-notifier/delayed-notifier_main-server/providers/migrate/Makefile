@@ -37,7 +37,7 @@ down:
 # MIGRATE
 # ========================
 
-# MIGRATE = infra/migrate
+# MIGRATE = providers/migrate
 
 # migrate-create:
 # 	$(MAKE_CMD) -C $(MIGRATE) create

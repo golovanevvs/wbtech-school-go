@@ -20,8 +20,8 @@ type appConfig struct {
 func newConfig() (*appConfig, error) {
 
 	envFilePath := ".env"
-	appConfigFilePath := "./infra/app/config.yaml"
-	postgresConfigFilePath := "./infra/postgres/config.yaml"
+	appConfigFilePath := "./providers/app/config.yaml"
+	postgresConfigFilePath := "./providers/postgres/config.yaml"
 
 	cfg := config.New()
 

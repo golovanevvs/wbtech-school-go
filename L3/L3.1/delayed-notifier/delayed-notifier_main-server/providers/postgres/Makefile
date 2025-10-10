@@ -371,7 +371,7 @@ clean-all:
 # POSTGRES
 # ========================
 
-# POSTGRES = infra/postgres
+# POSTGRES = providers/postgres
 
 # # Default target
 # postgres-help:

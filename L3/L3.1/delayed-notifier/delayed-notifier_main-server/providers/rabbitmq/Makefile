@@ -54,7 +54,7 @@ purge:
 # RABBITMQ
 # ========================
 
-# RABBITMQ = infra/rabbitmq
+# RABBITMQ = providers/rabbitmq
 
 # rabbitmq-up:
 # 	$(MAKE_CMD) -C $(RABBITMQ) up

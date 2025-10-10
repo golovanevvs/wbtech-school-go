@@ -12,7 +12,7 @@ endif
 # APP
 # ========================
 
-APP = infra/app
+APP = providers/app
 
 app-build:
 	$(MAKE_CMD) -C $(APP) build
@@ -25,7 +25,7 @@ app-build-up:
 # MIGRATE
 # ========================
 
-MIGRATE = infra/migrate
+MIGRATE = providers/migrate
 
 migrate-create:
 	$(MAKE_CMD) -C $(MIGRATE) create
@@ -39,7 +39,7 @@ migrate-down:
 # POSTGRES
 # ========================
 
-POSTGRES = infra/postgres
+POSTGRES = providers/postgres
 
 # Default target
 postgres-help:
@@ -124,7 +124,7 @@ postgres-clean-all:
 # RABBITMQ
 # ========================
 
-RABBITMQ = infra/rabbitmq
+RABBITMQ = providers/rabbitmq
 
 rabbitmq-up:
 	$(MAKE_CMD) -C $(RABBITMQ) up
