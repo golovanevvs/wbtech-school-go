@@ -65,7 +65,7 @@ func (b *dependencyBuilder) withService() {
 
 func (b *dependencyBuilder) withTransport() {
 	zlog.Logger.Debug().Str("component", "app").Msg("transport has been initialized")
-	b.deps.tr = transport.New(b.cfg.tr)
+	b.deps.tr = transport.New(b.cfg.tr, b.deps.sv)
 }
 
 func (b *dependencyBuilder) withRabbitMQ() error {

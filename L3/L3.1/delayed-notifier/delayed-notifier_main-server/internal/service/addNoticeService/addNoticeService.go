@@ -10,7 +10,7 @@ import (
 )
 
 type IRepository interface {
-	AddNotice(ctx context.Context, notice model.Notice) (id int, err error)
+	SaveNotice(ctx context.Context, notice model.Notice) (id int, err error)
 }
 
 type IRabbitMQ interface {
