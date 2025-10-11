@@ -14,8 +14,8 @@ var (
 type Channels []ChannelInfo
 
 type ChannelInfo struct {
-	Type  ChannelType `json:"type" validate:"required"`
-	Value string      `json:"value" validate:"required"`
+	Type  ChannelType `json:"type" validate:"required,oneof=email telegram" binding:"required,oneof=email telegram"`
+	Value string      `json:"value" validate:"required" binding:"required"`
 }
 
 type ChannelType string

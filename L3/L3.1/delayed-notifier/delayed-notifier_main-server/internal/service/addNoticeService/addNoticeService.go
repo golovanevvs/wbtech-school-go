@@ -32,7 +32,7 @@ func New(rp IRepository, rb IRabbitMQ) *AddNoticeService {
 	}
 }
 
-func (sv *AddNoticeService) AddNotice(ctx context.Context, reqNotice model.Notice) (id int, err error) {
+func (sv *AddNoticeService) AddNotice(ctx context.Context, reqNotice model.ReqNotice) (id int, err error) {
 	sv.lg.Trace().Msg("run AddNotice")
 	id = 1
 	createdAt := time.Now()

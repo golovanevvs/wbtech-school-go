@@ -15,12 +15,17 @@ type IService interface {
 }
 
 type Handler struct {
+	lg zlog.Zerolog
 	rt *ginext.Engine
 	sv IService
 }
 
 func New(rt *ginext.Engine, sv IService) *Handler {
+	lg := zlog.Logger.With().Str("component", "service-deleteNoticeHandler").Logger()
+
 	return &Handler{
+		lg: lg,
+		rt: rt,
 		sv: sv,
 	}
 }

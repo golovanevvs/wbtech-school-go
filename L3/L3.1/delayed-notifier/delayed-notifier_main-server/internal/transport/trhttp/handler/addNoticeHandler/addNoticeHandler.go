@@ -12,19 +12,13 @@ import (
 )
 
 type IService interface {
-	AddNotice(ctx context.Context, reqNotice model.Notice) (id int, err error)
+	AddNotice(ctx context.Context, reqNotice model.ReqNotice) (id int, err error)
 }
 
 type Handler struct {
 	lg zlog.Zerolog
 	rt *ginext.Engine
 	sv IService
-}
-
-type reqNotice struct {
-	UserID   int            `json:"user_id" validate:"required"`
-	Message  string         `json:"message" validate:"required"`
-	Channels model.Channels `json:"channels"`
 }
 
 func New(rt *ginext.Engine, sv IService) *Handler {
@@ -37,7 +31,7 @@ func New(rt *ginext.Engine, sv IService) *Handler {
 }
 
 func (hd *Handler) RegisterRoutes() {
-	hd.rt.GET("/notify", hd.CreateNotice)
+	hd.rt.POST("/notify", hd.CreateNotice)
 }
 
 func (hd *Handler) CreateNotice(c *ginext.Context) {
@@ -51,10 +45,19 @@ func (hd *Handler) CreateNotice(c *ginext.Context) {
 		return
 	}
 
-	var req reqNotice
+	var req model.ReqNotice
 	if err := c.ShouldBindJSON(&req); err != nil {
 		lg.Debug().Err(err).Msg("failed to bind json")
 		c.JSON(http.StatusBadRequest, ginext.H{"error": "failed to bind json: " + err.Error()})
 		return
 	}
+
+	id, err := hd.sv.AddNotice(c.Request.Context(), req)
+	if err != nil {
+		lg.Debug().Err(err).Msg("failed to add notice")
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": "failed to add notice: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, ginext.H{"id": id})
 }
