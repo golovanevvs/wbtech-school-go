@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/telegram"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport"
@@ -11,19 +12,20 @@ import (
 )
 
 type dependencies struct {
-	tr *transport.Transport
+	rb *rabbitmq.Client
+	tg *telegram.Client
 	rp *repository.Repository
 	sv *service.Service
-	rb *rabbitmq.Client
+	tr *transport.Transport
 }
 
 type dependencyBuilder struct {
-	cfg  *appConfig
+	cfg  *Config
 	rm   *resourceManager
 	deps *dependencies
 }
 
-func newDependencyBuilder(cfg *appConfig) *dependencyBuilder {
+func newDependencyBuilder(cfg *Config) *dependencyBuilder {
 	return &dependencyBuilder{
 		cfg:  cfg,
 		rm:   &resourceManager{},
@@ -69,7 +71,7 @@ func (b *dependencyBuilder) withTransport() {
 }
 
 func (b *dependencyBuilder) withRabbitMQ() error {
-	rb, err := rabbitmq.NewClient(*b.cfg.rb)
+	rb, err := rabbitmq.NewClient(b.cfg.rb)
 	if err != nil {
 		return fmt.Errorf("error initialize RabbitMQ client: %w", err)
 	}
@@ -79,22 +81,31 @@ func (b *dependencyBuilder) withRabbitMQ() error {
 	return nil
 }
 
+func (b *dependencyBuilder) WithTelegram() error {
+	tg, err := telegram.New(b.cfg.tg)
+	if err != nil {
+		return fmt.Errorf("error initialize telegram client: %w", err)
+	}
+	zlog.Logger.Debug().Str("component", "app").Msg("telegram client has been initialized")
+	b.deps.tg = tg
+
+	return nil
+}
+
 func (b *dependencyBuilder) build() (*dependencies, error) {
 	if err := b.withLogger(); err != nil {
 		return nil, err
 	}
-
 	if err := b.withRabbitMQ(); err != nil {
 		return nil, err
 	}
-
+	if err := b.WithTelegram(); err != nil {
+		return nil, err
+	}
 	if err := b.withRepository(); err != nil {
 		return nil, err
 	}
-
 	b.withService()
-
 	b.withTransport()
-
 	return b.deps, nil
 }

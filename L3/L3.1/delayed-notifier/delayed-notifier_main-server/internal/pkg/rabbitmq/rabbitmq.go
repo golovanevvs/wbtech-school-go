@@ -19,7 +19,7 @@ type Client struct {
 }
 
 // NewClient creates a new RabbitMQ client and sets up exchanges and queues.
-func NewClient(cfg Config) (*Client, error) {
+func NewClient(cfg *Config) (*Client, error) {
 	vhost := cfg.VHost
 	if vhost == "" {
 		vhost = "/"
@@ -55,7 +55,7 @@ func NewClient(cfg Config) (*Client, error) {
 		conn:            conn,
 		pubChannel:      pubCh,
 		consumerChannel: consumerCh,
-		config:          cfg,
+		config:          *cfg,
 	}
 
 	if err := client.setup(); err != nil {

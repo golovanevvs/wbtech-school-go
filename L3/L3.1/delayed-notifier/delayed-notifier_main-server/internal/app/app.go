@@ -7,7 +7,7 @@ import (
 )
 
 type App struct {
-	cfg  *appConfig
+	cfg  *Config
 	deps *dependencies
 }
 

@@ -3,21 +3,25 @@ package app
 import (
 	"fmt"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/email"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/logger"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/telegram"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport"
 	"github.com/wb-go/wbf/config"
 )
 
-type appConfig struct {
+type Config struct {
 	lg *logger.Config
 	tr *transport.Config
 	rp *repository.Config
 	rb *rabbitmq.Config
+	tg *telegram.Config
+	em *email.Config
 }
 
-func newConfig() (*appConfig, error) {
+func newConfig() (*Config, error) {
 
 	envFilePath := ".env"
 	appConfigFilePath := "./providers/app/config-example.yaml"
@@ -40,23 +44,26 @@ func newConfig() (*appConfig, error) {
 		return nil, fmt.Errorf("failed to pars flags: %w", err)
 	}
 
-	appConfig := &appConfig{
+	return &Config{
 		lg: logger.NewConfig(cfg),
 		tr: transport.NewConfig(cfg),
 		rp: repository.NewConfig(cfg),
 		rb: rabbitmq.NewConfig(cfg),
-	}
-
-	return appConfig, nil
+		tg: telegram.NewConfig(cfg),
+		em: email.NewConfig(cfg),
+	}, nil
 }
 
-func (a *appConfig) String() string {
+func (a *Config) String() string {
 	if a == nil {
 		return "appConfig: <nil>"
 	}
-	return fmt.Sprintf("Configuration:\n%s\n%s\n%s\n%s\n",
+	return fmt.Sprintf("Configuration:\n%s\n%s\n%s\n%s\n%s\n%s\n",
 		a.lg.String(),
 		a.tr.String(),
 		a.rp.String(),
-		a.rb.String())
+		a.rb.String(),
+		a.tg.String(),
+		a.em.String(),
+	)
 }

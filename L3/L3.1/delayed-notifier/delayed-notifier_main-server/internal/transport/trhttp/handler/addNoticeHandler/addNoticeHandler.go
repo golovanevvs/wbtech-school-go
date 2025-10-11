@@ -37,7 +37,8 @@ func (hd *Handler) RegisterRoutes() {
 func (hd *Handler) CreateNotice(c *ginext.Context) {
 	lg := hd.lg.With().Str("handler", "createNotice").Logger()
 
-	lg.Trace().Msg("handler is starting")
+	lg.Trace().Msg("-------------------- handler is starting --------------------")
+	defer lg.Trace().Msg("---------------- handler stopped ----------------")
 
 	if !strings.Contains(c.ContentType(), "application/json") {
 		lg.Debug().Str("content-type", c.ContentType()).Msg("invalid content-type")
