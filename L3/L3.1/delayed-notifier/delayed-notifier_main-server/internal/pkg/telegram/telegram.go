@@ -51,16 +51,6 @@ func (c *Client) SendToMany(chatIDs []int64, message string) error {
 	return nil
 }
 
-func (c *Client) ListenUpdates(handler func(update tgbotapi.Update)) {
-	u := tgbotapi.NewUpdate(0)
-	u.Timeout = 60
-
-	updates := c.bot.GetUpdatesChan(u)
-	for update := range updates {
-		handler(update)
-	}
-}
-
 /*
 tg, _ := telegram.New(&telegram.Config{Token: "YOUR_BOT_TOKEN"})
 
@@ -78,6 +68,42 @@ tg.ListenUpdates(func(update tgbotapi.Update) {
 		tg.SendTo(chatID, "✅ Telegram успешно привязан!")
 	}
 })
+*/
+
+func (c *Client) GetWebhookInfo() (*tgbotapi.WebhookInfo, error) {
+	info, err := c.bot.GetWebhookInfo()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get webhook info: %w", err)
+	}
+
+	log.Printf("Current webhook info:")
+	log.Printf("  URL: %s", info.URL)
+	log.Printf("  Has custom certificate: %v", info.HasCustomCertificate)
+	log.Printf("  Pending update count: %d", info.PendingUpdateCount)
+
+	if info.LastErrorDate != 0 {
+		log.Printf("  Last error date: %d", info.LastErrorDate)
+		log.Printf("  Last error message: %s", info.LastErrorMessage)
+	}
+
+	return &info, nil
+}
+
+/*
+tg, err := telegram.New(&telegram.Config{Token: "YOUR_BOT_TOKEN"})
+if err != nil {
+	log.Fatalf("failed to create telegram client: %v", err)
+}
+
+info, err := tg.GetWebhookInfo()
+if err != nil {
+	log.Printf("warning: cannot get webhook info: %v", err)
+} else if info.URL != "https://yourdomain.ru/telegram/webhook" {
+	log.Println("Webhook not set or different — resetting...")
+	if err := tg.SetWebhook("https://yourdomain.ru/telegram/webhook"); err != nil {
+		log.Fatalf("failed to set webhook: %v", err)
+	}
+}
 */
 
 func (c *Client) SetWebhook(url string) error {
