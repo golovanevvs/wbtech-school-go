@@ -39,7 +39,7 @@ func newConfig() (*Config, error) {
 		return nil, fmt.Errorf("failed to load config files: %w", err)
 	}
 
-	cfg.DefineFlag("p", "srvport", "transport.http.port", 7777, "HTTP server port")
+	cfg.DefineFlag("p", "srvport", "transport.http.port", 6000, "HTTP server port")
 	if err := cfg.ParseFlags(); err != nil {
 		return nil, fmt.Errorf("failed to pars flags: %w", err)
 	}
@@ -58,7 +58,7 @@ func (a *Config) String() string {
 	if a == nil {
 		return "appConfig: <nil>"
 	}
-	return fmt.Sprintf("Configuration:\n%s\n%s\n%s\n%s\n%s\n%s\n",
+	return fmt.Sprintf("Configuration:\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n",
 		a.lg.String(),
 		a.tr.String(),
 		a.rp.String(),

@@ -18,5 +18,5 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("\ntransport:\n%s", c.TrHTTP.String())
+	return fmt.Sprintf("transport:\n%s", c.TrHTTP.String())
 }

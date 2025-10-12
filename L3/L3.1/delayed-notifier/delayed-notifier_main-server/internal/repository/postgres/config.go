@@ -59,5 +59,5 @@ func (c dsnConfig) String() string {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("postgres:\n  Master: \033[32m%s\033[0m\n  Slave1: \033[32m%s\033[0m\n  Slave2: \033[32m%s\033[0m\n\033[33m  MaxOpenConns:\033[0m \033[32m%d\033[0m, \033[33mMaxIdleConns:\033[0m \033[32m%d\033[0m, \033[33mConnMaxLifetime:\033[0m \033[32m%s\033[0m\n", c.Master.String(), c.Slave1.String(), c.Slave2.String(), c.MaxOpenConns, c.MaxIdleConns, c.ConnMaxLifetime)
+	return fmt.Sprintf("postgres:\n  Master: \033[32m%s\033[0m\n  Slave1: \033[32m%s\033[0m\n  Slave2: \033[32m%s\033[0m\n\033[33m  MaxOpenConns:\033[0m \033[32m%d\033[0m, \033[33mMaxIdleConns:\033[0m \033[32m%d\033[0m, \033[33mConnMaxLifetime:\033[0m \033[32m%s\033[0m", c.Master.String(), c.Slave1.String(), c.Slave2.String(), c.MaxOpenConns, c.MaxIdleConns, c.ConnMaxLifetime)
 }

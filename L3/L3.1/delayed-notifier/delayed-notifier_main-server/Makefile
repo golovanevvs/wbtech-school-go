@@ -140,3 +140,20 @@ rabbitmq-shell:
 	$(MAKE_CMD) -C $(RABBITMQ) shell
 rabbitmq-purge:
 	$(MAKE_CMD) -C $(RABBITMQ) purge
+
+# ========================
+# Ngrok
+# ========================
+
+NGROK = providers/ngrok
+
+ngrok-build:
+	$(MAKE_CMD) -C $(NGROK) build
+ngrok-up:
+	$(MAKE_CMD) -C $(NGROK) up
+ngrok-url:
+	$(MAKE_CMD) -C $(NGROK) url
+ngrok-down:
+	$(MAKE_CMD) -C $(NGROK) down
+ngrok-webhook:
+	$(MAKE_CMD) -C $(NGROK) webhook

@@ -14,7 +14,7 @@ type Config struct {
 
 func NewConfig(cfg *config.Config) *Config {
 	return &Config{
-		Port:    cfg.GetInt("transport.http.port"),
+		Port:    cfg.GetInt("app.transport.http.port"),
 		Handler: handler.NewConfig(cfg),
 	}
 }

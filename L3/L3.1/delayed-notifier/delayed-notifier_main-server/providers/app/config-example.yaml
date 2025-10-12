@@ -1,8 +1,8 @@
 logger:
   level: "trace"
 
-transport:
-  http:
-    port: 7778
-    handler:
-      gin_mode: "release"
+app:
+  transport:
+    http:
+      handler:
+        gin_mode: "release"

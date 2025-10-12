@@ -12,7 +12,7 @@ type Config struct {
 
 func NewConfig(cfg *config.Config) *Config {
 	return &Config{
-		GinMode: cfg.GetString("transport.http.handler.gin_mode"),
+		GinMode: cfg.GetString("app.transport.http.handler.gin_mode"),
 	}
 }
 
