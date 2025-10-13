@@ -72,6 +72,7 @@ func (b *dependencyBuilder) withTransport() {
 
 func (b *dependencyBuilder) withRabbitMQ() error {
 	rb, err := rabbitmq.NewClient(b.cfg.rb)
+	// Добавить закрытие клиента!
 	if err != nil {
 		return fmt.Errorf("error initialize RabbitMQ client: %w", err)
 	}

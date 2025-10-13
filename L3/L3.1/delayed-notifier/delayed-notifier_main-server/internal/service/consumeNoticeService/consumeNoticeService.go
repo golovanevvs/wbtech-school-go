@@ -1,0 +1,60 @@
+package consumeNoticeService
+
+import (
+	"context"
+	"encoding/json"
+
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/telegram"
+	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/wb-go/wbf/zlog"
+)
+
+type ConsumeNoticeService struct {
+	lg zlog.Zerolog
+	rb *rabbitmq.Client
+	tg *telegram.Client
+}
+
+func New(rb *rabbitmq.Client, tg *telegram.Client) *ConsumeNoticeService {
+	lg := zlog.Logger.With().Str("component", "service-consumeNoticeService").Logger()
+	return &ConsumeNoticeService{
+		lg: lg,
+		rb: rb,
+		tg: tg,
+	}
+}
+
+func (sv *ConsumeNoticeService) Consume(ctx context.Context) error {
+	sv.lg.Debug().Msg("----- consumer starting...")
+
+	handler := func(message amqp.Delivery) {
+		sv.lg.Trace().Msg("--- consume handler started")
+		defer sv.lg.Trace().Msg("--- consume handler stopped")
+
+		var notice model.Notice
+		err := json.Unmarshal(message.Body, &notice)
+		if err != nil {
+			sv.lg.Error().Err(err).Msg("failed to unmarshal message")
+			return
+		}
+		sv.lg.Debug().Str("message", notice.Message).Msg("received message")
+
+		sv.tg.SendTo(929591673, notice.Message)
+
+		if err := sv.rb.Ack(message); err != nil {
+			sv.lg.Error().Err(err).Msg("failed to ack message")
+		}
+	}
+
+	if err := sv.rb.ConsumeDLQWithWorkers(ctx, 5, handler); err != nil {
+		sv.lg.Error().Err(err).Msg("failed to consume DLQ with workers")
+		return err
+	}
+
+	sv.lg.Info().Msg("----- consumer started")
+	defer sv.lg.Info().Msg("----- consumer stopped")
+
+	return nil
+}

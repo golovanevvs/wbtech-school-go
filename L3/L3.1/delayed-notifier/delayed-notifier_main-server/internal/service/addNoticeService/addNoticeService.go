@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
 	"github.com/wb-go/wbf/zlog"
 )
 
@@ -13,17 +14,13 @@ type IRepository interface {
 	SaveNotice(ctx context.Context, notice model.Notice) (id int, err error)
 }
 
-type IRabbitMQ interface {
-	PublishStructWithTTL(data any, ttl time.Duration) (err error)
-}
-
 type AddNoticeService struct {
 	lg zlog.Zerolog
 	rp IRepository
-	rb IRabbitMQ
+	rb *rabbitmq.Client
 }
 
-func New(rp IRepository, rb IRabbitMQ) *AddNoticeService {
+func New(rp IRepository, rb *rabbitmq.Client) *AddNoticeService {
 	lg := zlog.Logger.With().Str("component", "service-addNoticeService").Logger()
 	return &AddNoticeService{
 		lg: lg,
@@ -33,7 +30,8 @@ func New(rp IRepository, rb IRabbitMQ) *AddNoticeService {
 }
 
 func (sv *AddNoticeService) AddNotice(ctx context.Context, reqNotice model.ReqNotice) (id int, err error) {
-	sv.lg.Trace().Msg("run AddNotice")
+	sv.lg.Trace().Msg("AddNotice run...")
+	defer sv.lg.Trace().Msg("AddNotice stopped")
 	id = 1
 	createdAt := time.Now()
 	sentAt := reqNotice.SentAt
