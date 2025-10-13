@@ -4,6 +4,11 @@ logger:
 app:
   transport:
     http:
-      public_host: "https://insecurely-fond-shiner.cloudpub.ru"
+      public_host: ""
       handler:
         gin_mode: "release"
+
+redis:
+  addr: ":6379"
+  db: 0
+  ttl: 0s

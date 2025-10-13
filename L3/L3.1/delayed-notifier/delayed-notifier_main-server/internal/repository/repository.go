@@ -1,17 +1,20 @@
 package repository
 
 import (
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository/postgres"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository/rpRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/addNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/deleteNoticeService"
 )
 
 type Repository struct {
 	// Postgres *dbpg.DB
-	*postgres.Postgres
+	postgres *postgres.Postgres
+	redis    *rpRedis.RpRedis
 }
 
-func New(cfg *Config) (*Repository, error) {
+func New(cfg *Config, rd *pkgRedis.Client) (*Repository, error) {
 	// masterDSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 	// 	cfg.Postgres.Master.Host, cfg.Postgres.Master.Port, cfg.Postgres.Master.User, cfg.Postgres.Master.Password, cfg.Postgres.Master.DBName)
 
@@ -36,14 +39,15 @@ func New(cfg *Config) (*Repository, error) {
 	// 	Postgres: db,
 	// }, nil
 	return &Repository{
-		Postgres: postgres.New(),
+		postgres: postgres.New(),
+		redis:    rpRedis.New(rd),
 	}, nil
 }
 
 func (rp *Repository) SaveNotice() addNoticeService.IRepository {
-	return rp.Postgres.SaveNoticePostgres
+	return rp.postgres.SaveNoticePostgres
 }
 
 func (rp *Repository) DeleteNotice() deleteNoticeService.IRepository {
-	return rp.Postgres.DeleteNoticePostgres
+	return rp.postgres.DeleteNoticePostgres
 }

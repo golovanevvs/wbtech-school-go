@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	Postgres *postgres.Config `mapstructure:"postgres"`
+	Postgres *postgres.Config
 }
 
 func NewConfig(cfg *config.Config) *Config {

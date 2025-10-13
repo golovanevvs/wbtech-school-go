@@ -5,6 +5,7 @@ import (
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/email"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/logger"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/telegram"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository"
@@ -14,18 +15,19 @@ import (
 
 type Config struct {
 	lg *logger.Config
-	tr *transport.Config
-	rp *repository.Config
+	rd *pkgRedis.Config
 	rb *rabbitmq.Config
 	tg *telegram.Config
 	em *email.Config
+	rp *repository.Config
+	tr *transport.Config
 }
 
 func newConfig() (*Config, error) {
 
 	envFilePath := ".env"
-	appConfigFilePath := "./providers/app/config-example.yaml"
-	postgresConfigFilePath := "./providers/postgres/config-example.yaml"
+	appConfigFilePath := "./providers/app/config.yaml"
+	postgresConfigFilePath := "./providers/postgres/config.yaml"
 
 	cfg := config.New()
 
@@ -46,11 +48,12 @@ func newConfig() (*Config, error) {
 
 	return &Config{
 		lg: logger.NewConfig(cfg),
-		tr: transport.NewConfig(cfg),
-		rp: repository.NewConfig(cfg),
+		rd: pkgRedis.NewConfig(cfg),
 		rb: rabbitmq.NewConfig(cfg),
 		tg: telegram.NewConfig(cfg),
 		em: email.NewConfig(cfg),
+		rp: repository.NewConfig(cfg),
+		tr: transport.NewConfig(cfg),
 	}, nil
 }
 
@@ -58,12 +61,13 @@ func (a *Config) String() string {
 	if a == nil {
 		return "appConfig: <nil>"
 	}
-	return fmt.Sprintf("Configuration:\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n",
+	return fmt.Sprintf("Configuration:\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n",
 		a.lg.String(),
-		a.tr.String(),
-		a.rp.String(),
+		a.rd.String(),
 		a.rb.String(),
 		a.tg.String(),
 		a.em.String(),
+		a.rp.String(),
+		a.tr.String(),
 	)
 }

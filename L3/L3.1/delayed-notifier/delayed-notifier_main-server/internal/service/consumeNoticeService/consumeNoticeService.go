@@ -54,7 +54,6 @@ func (sv *ConsumeNoticeService) Consume(ctx context.Context) error {
 	}
 
 	sv.lg.Info().Msg("----- consumer started")
-	defer sv.lg.Info().Msg("----- consumer stopped")
 
 	return nil
 }

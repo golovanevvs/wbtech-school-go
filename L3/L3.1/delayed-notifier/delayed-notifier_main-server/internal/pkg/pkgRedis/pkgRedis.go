@@ -1,4 +1,4 @@
-package redis
+package pkgRedis
 
 import (
 	"context"
@@ -13,7 +13,6 @@ type Client struct {
 	ttl time.Duration
 }
 
-// New создаёт новый экземпляр клиента Redis.
 func New(cfg *Config) (*Client, error) {
 	addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
 	rdb := redis.NewClient(&redis.Options{
@@ -22,7 +21,7 @@ func New(cfg *Config) (*Client, error) {
 		DB:       cfg.DB,
 	})
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := rdb.Ping(ctx).Err(); err != nil {
@@ -42,6 +41,25 @@ func (c *Client) Set(ctx context.Context, key string, value interface{}, ttl ...
 		t = ttl[0]
 	}
 	return c.rdb.Set(ctx, key, value, t).Err()
+}
+
+func (c *Client) SetWithID(ctx context.Context, prefix string, value interface{}, ttl ...time.Duration) (string, error) {
+	id, err := c.rdb.Incr(ctx, prefix+":next_id").Result()
+	if err != nil {
+		return "", err
+	}
+
+	key := fmt.Sprintf("%s:%d", prefix, id)
+	t := c.ttl
+	if len(ttl) > 0 {
+		t = ttl[0]
+	}
+
+	if err := c.rdb.Set(ctx, key, value, t).Err(); err != nil {
+		return "", err
+	}
+
+	return key, nil
 }
 
 func (c *Client) Get(ctx context.Context, key string) (string, error) {

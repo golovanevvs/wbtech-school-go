@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/telegram"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository"
@@ -12,6 +13,7 @@ import (
 )
 
 type dependencies struct {
+	rd *pkgRedis.Client
 	rb *rabbitmq.Client
 	tg *telegram.Client
 	rp *repository.Repository
@@ -48,26 +50,15 @@ func (b *dependencyBuilder) withLogger() error {
 	return nil
 }
 
-func (b *dependencyBuilder) withRepository() error {
-	rp, err := repository.New(b.cfg.rp)
+func (b *dependencyBuilder) withRedis() error {
+	rd, err := pkgRedis.New(b.cfg.rd)
 	if err != nil {
-		return fmt.Errorf("error initialize repository: %w", err)
+		return fmt.Errorf("error initialize Redis: %w", err)
 	}
-	zlog.Logger.Debug().Str("component", "app").Msg("repository has been initialized")
-	b.deps.rp = rp
+	zlog.Logger.Debug().Str("component", "app").Msg("Redis has been initialized")
+	b.deps.rd = rd
 
 	return nil
-}
-
-func (b *dependencyBuilder) withService() {
-	sv := service.New(b.deps.rp, b.deps.rb, b.deps.tg)
-	zlog.Logger.Debug().Str("component", "app").Msg("service has been initialized")
-	b.deps.sv = sv
-}
-
-func (b *dependencyBuilder) withTransport() {
-	zlog.Logger.Debug().Str("component", "app").Msg("transport has been initialized")
-	b.deps.tr = transport.New(b.cfg.tr, b.deps.sv)
 }
 
 func (b *dependencyBuilder) withRabbitMQ() error {
@@ -94,8 +85,33 @@ func (b *dependencyBuilder) WithTelegram() error {
 	return nil
 }
 
+func (b *dependencyBuilder) withRepository() error {
+	rp, err := repository.New(b.cfg.rp, b.deps.rd)
+	if err != nil {
+		return fmt.Errorf("error initialize repository: %w", err)
+	}
+	zlog.Logger.Debug().Str("component", "app").Msg("repository has been initialized")
+	b.deps.rp = rp
+
+	return nil
+}
+
+func (b *dependencyBuilder) withService() {
+	sv := service.New(b.deps.rp, b.deps.rb, b.deps.tg)
+	zlog.Logger.Debug().Str("component", "app").Msg("service has been initialized")
+	b.deps.sv = sv
+}
+
+func (b *dependencyBuilder) withTransport() {
+	zlog.Logger.Debug().Str("component", "app").Msg("transport has been initialized")
+	b.deps.tr = transport.New(b.cfg.tr, b.deps.sv)
+}
+
 func (b *dependencyBuilder) build() (*dependencies, error) {
 	if err := b.withLogger(); err != nil {
+		return nil, err
+	}
+	if err := b.withRedis(); err != nil {
 		return nil, err
 	}
 	if err := b.withRabbitMQ(); err != nil {

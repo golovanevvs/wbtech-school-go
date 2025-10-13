@@ -9,6 +9,21 @@ else
 endif
 
 # ========================
+# ALL
+# ========================
+
+all-up:
+	$(MAKE_CMD) all-deps-up
+	@sleep 3
+	$(MAKE_CMD) app-build-up
+
+all-deps-up: rabbitmq-up redis-up
+
+all-down: rabbitmq-down redis-down
+
+all-purge: rabbitmq-purge redis-purge
+
+# ========================
 # APP
 # ========================
 
@@ -157,3 +172,20 @@ ngrok-down:
 	$(MAKE_CMD) -C $(NGROK) down
 ngrok-webhook:
 	$(MAKE_CMD) -C $(NGROK) webhook
+
+# ========================
+# REDIS
+# ========================
+
+REDIS = providers/redis
+
+redis-up:
+	$(MAKE_CMD) -C $(REDIS) up
+redis-stop:
+	$(MAKE_CMD) -C $(REDIS) stop
+redis-down:
+	$(MAKE_CMD) -C $(REDIS) down
+redis-purge:
+	$(MAKE_CMD) -C $(REDIS) purge
+redis-logs:
+	$(MAKE_CMD) -C $(REDIS) logs
