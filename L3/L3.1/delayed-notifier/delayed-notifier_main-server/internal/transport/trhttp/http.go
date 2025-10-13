@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler"
 	"github.com/wb-go/wbf/zlog"
@@ -50,4 +51,17 @@ func (h *HTTP) ShutdownServer(ctx context.Context) error {
 	h.lg.Info().Msg("http server stopped successfully")
 
 	return nil
+}
+
+func (h *HTTP) WaitForServer(url string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		resp, err := http.Get(url)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			return nil
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	h.lg.Error().Dur("timeout", timeout).Msg("http server not ready")
+	return fmt.Errorf("http server not ready after %s ms", timeout)
 }

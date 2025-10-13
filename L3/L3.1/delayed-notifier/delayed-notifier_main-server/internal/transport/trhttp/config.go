@@ -8,19 +8,21 @@ import (
 )
 
 type Config struct {
-	Port    int
-	Handler *handler.Config
+	Port       int
+	PublicHost string
+	Handler    *handler.Config
 }
 
 func NewConfig(cfg *config.Config) *Config {
 	return &Config{
-		Port:    cfg.GetInt("app.transport.http.port"),
-		Handler: handler.NewConfig(cfg),
+		Port:       cfg.GetInt("app.transport.http.port"),
+		PublicHost: cfg.GetString("app.transport.http.public_host"),
+		Handler:    handler.NewConfig(cfg),
 	}
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf(" http:\n\033[33m  port: \033[0m\033[32m%d\033[0m\n  handler:\n%s", c.Port, c.Handler.String())
+	return fmt.Sprintf(" http:\n\033[33m  public host: \033[0m\033[32m%s\033[0m\n\033[33m  port: \033[0m\033[32m%d\033[0m\n  handler:\n%s", c.PublicHost, c.Port, c.Handler.String())
 }
 
 func (c *Config) Validate() error {

@@ -32,14 +32,13 @@ func New(rt *ginext.Engine, sv IService) *Handler {
 
 func (hd *Handler) RegisterRoutes() {
 	hd.rt.POST("/notify", hd.CreateNotice)
-	hd.rt.GET("/telegram/webhook", hd.TelegramWebHook)
 }
 
 func (hd *Handler) CreateNotice(c *ginext.Context) {
 	lg := hd.lg.With().Str("handler", "createNotice").Logger()
 
-	lg.Trace().Msg("-------------------- handler is starting --------------------")
-	defer lg.Trace().Msg("---------------- handler stopped ----------------")
+	lg.Trace().Msg("----- handler is starting")
+	defer lg.Trace().Msg("----- handler stopped")
 
 	if !strings.Contains(c.ContentType(), "application/json") {
 		lg.Debug().Str("content-type", c.ContentType()).Msg("invalid content-type")
@@ -62,27 +61,4 @@ func (hd *Handler) CreateNotice(c *ginext.Context) {
 	}
 
 	c.JSON(http.StatusOK, ginext.H{"id": id})
-}
-
-func (hd *Handler) TelegramWebHook(c *ginext.Context) {
-	// var update tgbotapi.Update
-	// if err := c.ShouldBindJSON(&update); err != nil {
-	// 	c.Status(400)
-	// 	return
-	// }
-
-	// msg := tg.HandleUpdate(update)
-	// if msg != nil {
-	// 	if !tg.HandleStart(msg) {
-	// 		tg.SendTo(msg.ChatID, "Я понимаю только команду /start 🙂")
-	// 	}
-	// }
-	if c.Request.Method != http.MethodPost {
-		c.JSON(http.StatusOK, ginext.H{"message": "This endpoint is only for Telegram POST requests"})
-		return
-	}
-
-	c.JSON(http.StatusInternalServerError, ginext.H{"error": "failed to add notice"})
-
-	c.Status(200)
 }

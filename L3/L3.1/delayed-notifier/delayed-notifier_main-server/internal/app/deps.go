@@ -60,7 +60,7 @@ func (b *dependencyBuilder) withRepository() error {
 }
 
 func (b *dependencyBuilder) withService() {
-	sv := service.New(b.deps.rp, b.deps.rb)
+	sv := service.New(b.deps.rp, b.deps.rb, b.deps.tg)
 	zlog.Logger.Debug().Str("component", "app").Msg("service has been initialized")
 	b.deps.sv = sv
 }
@@ -86,6 +86,7 @@ func (b *dependencyBuilder) WithTelegram() error {
 	if err != nil {
 		return fmt.Errorf("error initialize telegram client: %w", err)
 	}
+
 	zlog.Logger.Debug().Str("component", "app").Msg("telegram client has been initialized")
 	b.deps.tg = tg
 

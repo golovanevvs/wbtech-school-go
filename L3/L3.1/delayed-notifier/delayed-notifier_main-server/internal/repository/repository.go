@@ -40,10 +40,10 @@ func New(cfg *Config) (*Repository, error) {
 	}, nil
 }
 
-func (r *Repository) SaveNotice() addNoticeService.IRepository {
-	return r.Postgres.SaveNoticePostgres
+func (rp *Repository) SaveNotice() addNoticeService.IRepository {
+	return rp.Postgres.SaveNoticePostgres
 }
 
-func (r *Repository) DeleteNotice() deleteNoticeService.IRepository {
-	return r.Postgres.DeleteNoticePostgres
+func (rp *Repository) DeleteNotice() deleteNoticeService.IRepository {
+	return rp.Postgres.DeleteNoticePostgres
 }
