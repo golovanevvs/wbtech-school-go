@@ -32,12 +32,10 @@ func New(rp IRepository, rb *rabbitmq.Client) *AddNoticeService {
 func (sv *AddNoticeService) AddNotice(ctx context.Context, reqNotice model.ReqNotice) (id int, err error) {
 	sv.lg.Trace().Msg("AddNotice run...")
 	defer sv.lg.Trace().Msg("AddNotice stopped")
-	id = 1
 	createdAt := time.Now()
 	sentAt := reqNotice.SentAt
 	ttl := sentAt.Sub(createdAt)
 	notice := model.Notice{
-		ID:        id,
 		UserID:    reqNotice.UserID,
 		Message:   reqNotice.Message,
 		Channels:  reqNotice.Channels,
@@ -46,12 +44,23 @@ func (sv *AddNoticeService) AddNotice(ctx context.Context, reqNotice model.ReqNo
 		Status:    model.StatusScheduled,
 	}
 
-	sv.lg.Trace().Msg("publish struct with TTL to RabbitMQ")
+	sv.lg.Trace().Msg("save notice to Redis")
+	id, err = sv.rp.SaveNotice(ctx, notice)
+	if err != nil {
+		sv.lg.Error().Err(err).Msg("error save notice")
+		return 0, err
+	}
+	sv.lg.Trace().Msg("notice saved to Redis successfully")
+
+	notice.ID = id
+
+	sv.lg.Trace().Msg("publish notice with TTL to RabbitMQ")
 	if err = sv.rb.PublishStructWithTTL(notice, ttl); err != nil {
+		// удалить из Redis
 		sv.lg.Error().Err(err).Msg("error publish struct with TTL to RabbitMQ")
 		return 0, fmt.Errorf("error publish struct with TTL to RabbitMQ")
 	}
-	sv.lg.Trace().Msg("struct with TTL published to RabbitMQ successfully")
+	sv.lg.Trace().Msg("notice with TTL published to RabbitMQ successfully")
 
 	return id, nil
 }

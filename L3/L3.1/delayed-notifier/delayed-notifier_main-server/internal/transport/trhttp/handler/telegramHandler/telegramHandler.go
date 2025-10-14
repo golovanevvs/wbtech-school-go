@@ -1,6 +1,8 @@
 package telegramHandler
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -11,7 +13,7 @@ import (
 )
 
 type IService interface {
-	HandleStart(chatID int64, message string) error
+	HandleStart(ctx context.Context, username string, chatID int64, message string) error
 }
 
 type Handler struct {
@@ -56,10 +58,13 @@ func (hd *Handler) WebHookHandler(c *ginext.Context) {
 		c.Status(http.StatusOK)
 		return
 	}
+
+	username := update.Message.From.UserName
+	fmt.Println("username:", username)
 	chatID := update.Message.Chat.ID
 	message := update.Message.Text
 
-	if err := hd.sv.HandleStart(chatID, message); err != nil {
+	if err := hd.sv.HandleStart(c.Request.Context(), username, chatID, message); err != nil {
 		lg.Warn().Int64("chatID", chatID).Str("message", message).Err(err).Msg("failed to handle message")
 		c.Status(http.StatusOK)
 		return

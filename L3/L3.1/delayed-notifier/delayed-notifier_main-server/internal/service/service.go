@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/telegram"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/addNoticeService"
@@ -24,12 +25,12 @@ type Service struct {
 	*consumeNoticeService.ConsumeNoticeService
 }
 
-func New(rp IRepository, rb *rabbitmq.Client, tg *telegram.Client) *Service {
+func New(rp IRepository, rb *rabbitmq.Client, tg *telegram.Client, rd *pkgRedis.Client) *Service {
 	return &Service{
 		AddNoticeService:     addNoticeService.New(rp.SaveNotice(), rb),
 		DeleteNoticeService:  deleteNoticeService.New(rp.DeleteNotice()),
-		TelegramService:      telegramService.New(tg),
-		ConsumeNoticeService: consumeNoticeService.New(rb, tg),
+		TelegramService:      telegramService.New(tg, rd),
+		ConsumeNoticeService: consumeNoticeService.New(rb, tg, rd),
 	}
 }
 
