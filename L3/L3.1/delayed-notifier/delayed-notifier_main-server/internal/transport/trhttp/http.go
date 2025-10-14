@@ -32,7 +32,7 @@ func New(cfg *Config, sv IService) *HTTP {
 
 func (h *HTTP) RunServer(cancel context.CancelFunc) {
 	go func() {
-		h.lg.Info().Str("addr", h.httpsrv.Addr).Msg("http server started")
+		h.lg.Info().Str("addr", h.httpsrv.Addr).Msg("http server starting...")
 		if err := h.httpsrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			h.lg.Error().Err(err).Msg("error http server start")
 			cancel()
@@ -58,6 +58,7 @@ func (h *HTTP) WaitForServer(url string, timeout time.Duration) error {
 	for time.Now().Before(deadline) {
 		resp, err := http.Get(url)
 		if err == nil && resp.StatusCode == http.StatusOK {
+			h.lg.Info().Str("addr", h.httpsrv.Addr).Msg("http server started")
 			return nil
 		}
 		time.Sleep(500 * time.Millisecond)

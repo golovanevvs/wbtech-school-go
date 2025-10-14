@@ -9,6 +9,7 @@ import (
 type App struct {
 	cfg  *Config
 	deps *dependencies
+	rm   *resourceManager
 }
 
 func New() (*App, error) {
@@ -21,7 +22,7 @@ func New() (*App, error) {
 	zlog.Logger.Info().Msg(cfg.String())
 
 	zlog.Logger.Info().Str("component", "app").Msg("starting dependency initialization...")
-	deps, err := newDependencyBuilder(cfg).build()
+	deps, rm, err := newDependencyBuilder(cfg).build()
 	if err != nil {
 		zlog.Logger.Error().Err(err).Str("component", "app").Msg("error dependencies initialization")
 		return nil, fmt.Errorf("error dependencies initialization: %w", err)
@@ -31,5 +32,6 @@ func New() (*App, error) {
 	return &App{
 		cfg:  cfg,
 		deps: deps,
+		rm:   rm,
 	}, nil
 }

@@ -35,6 +35,10 @@ func newDependencyBuilder(cfg *Config) *dependencyBuilder {
 	}
 }
 
+func (b *dependencyBuilder) Close() error {
+	return b.rm.closeAll()
+}
+
 func (b *dependencyBuilder) withLogger() error {
 	err := zlog.SetLevel(b.cfg.lg.Level)
 
@@ -57,18 +61,19 @@ func (b *dependencyBuilder) withRedis() error {
 	}
 	zlog.Logger.Debug().Str("component", "app").Msg("Redis has been initialized")
 	b.deps.rd = rd
+	b.rm.addResource(func() error { return b.deps.rd.Close() })
 
 	return nil
 }
 
 func (b *dependencyBuilder) withRabbitMQ() error {
 	rb, err := rabbitmq.NewClient(b.cfg.rb)
-	// Добавить закрытие клиента!
 	if err != nil {
 		return fmt.Errorf("error initialize RabbitMQ client: %w", err)
 	}
 	zlog.Logger.Debug().Str("component", "app").Msg("RabbitMQ client has been initialized")
 	b.deps.rb = rb
+	b.rm.addResource(func() error { return b.deps.rb.Close() })
 
 	return nil
 }
@@ -107,23 +112,23 @@ func (b *dependencyBuilder) withTransport() {
 	b.deps.tr = transport.New(b.cfg.tr, b.deps.sv)
 }
 
-func (b *dependencyBuilder) build() (*dependencies, error) {
+func (b *dependencyBuilder) build() (*dependencies, *resourceManager, error) {
 	if err := b.withLogger(); err != nil {
-		return nil, err
+		return nil, b.rm, err
 	}
 	if err := b.withRedis(); err != nil {
-		return nil, err
+		return nil, b.rm, err
 	}
 	if err := b.withRabbitMQ(); err != nil {
-		return nil, err
+		return nil, b.rm, err
 	}
 	if err := b.WithTelegram(); err != nil {
-		return nil, err
+		return nil, b.rm, err
 	}
 	if err := b.withRepository(); err != nil {
-		return nil, err
+		return nil, b.rm, err
 	}
 	b.withService()
 	b.withTransport()
-	return b.deps, nil
+	return b.deps, b.rm, nil
 }

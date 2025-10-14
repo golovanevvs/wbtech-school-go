@@ -2,7 +2,6 @@ package telegramHandler
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -60,7 +59,6 @@ func (hd *Handler) WebHookHandler(c *ginext.Context) {
 	}
 
 	username := update.Message.From.UserName
-	fmt.Println("username:", username)
 	chatID := update.Message.Chat.ID
 	message := update.Message.Text
 
