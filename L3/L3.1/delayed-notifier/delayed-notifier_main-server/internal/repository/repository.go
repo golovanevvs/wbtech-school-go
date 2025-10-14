@@ -4,8 +4,6 @@ import (
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository/postgres"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository/rpRedis"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/addNoticeService"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/deleteNoticeService"
 )
 
 type Repository struct {
@@ -44,10 +42,15 @@ func New(cfg *Config, rd *pkgRedis.Client) (*Repository, error) {
 	}, nil
 }
 
-func (rp *Repository) SaveNotice() addNoticeService.IRepository {
-	return rp.postgres.SaveNoticePostgres
-}
+// func (rp *Repository) SaveNotice() addNoticeService.IRepository {
+// 	return rp.postgres.SaveNoticePostgres
+// }
 
-func (rp *Repository) DeleteNotice() deleteNoticeService.IRepository {
-	return rp.postgres.DeleteNoticePostgres
+// func (rp *Repository) DeleteNotice() deleteNoticeService.IRepository {
+// 	return rp.postgres.DeleteNoticePostgres
+// }
+
+// Возвращает реализацию интерфейса, но не импортирует сам интерфейс
+func (rp *Repository) Postgres() *postgres.Postgres {
+	return rp.postgres
 }

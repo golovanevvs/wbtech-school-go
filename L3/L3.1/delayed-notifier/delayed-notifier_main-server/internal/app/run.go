@@ -19,7 +19,7 @@ func (a *App) Run(cancel context.CancelFunc) error {
 		return err
 	}
 
-	if err := a.deps.sv.Consume(ctx); err != nil {
+	if err := a.deps.sv.ConsumeNoticeService.Consume(ctx); err != nil {
 		return err
 	}
 

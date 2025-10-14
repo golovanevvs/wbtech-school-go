@@ -1,9 +1,10 @@
 package service
 
 import (
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/telegram"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository/postgres"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/addNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/consumeNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/deleteNoticeService"
@@ -13,22 +14,21 @@ import (
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/telegramHandler"
 )
 
-type IRepository interface {
-	SaveNotice() addNoticeService.IRepository
-	DeleteNotice() deleteNoticeService.IRepository
+type iRepository interface {
+	Postgres() *postgres.Postgres
 }
 
 type Service struct {
-	*addNoticeService.AddNoticeService
-	*deleteNoticeService.DeleteNoticeService
-	*telegramService.TelegramService
-	*consumeNoticeService.ConsumeNoticeService
+	AddNoticeService     *addNoticeService.AddNoticeService
+	DeleteNoticeService  *deleteNoticeService.DeleteNoticeService
+	TelegramService      *telegramService.TelegramService
+	ConsumeNoticeService *consumeNoticeService.ConsumeNoticeService
 }
 
-func New(rp IRepository, rb *rabbitmq.Client, tg *telegram.Client, rd *pkgRedis.Client) *Service {
+func New(rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client, rd *pkgRedis.Client) *Service {
 	return &Service{
-		AddNoticeService:     addNoticeService.New(rp.SaveNotice(), rb),
-		DeleteNoticeService:  deleteNoticeService.New(rp.DeleteNotice()),
+		AddNoticeService:     addNoticeService.New(rp.Postgres().SaveNoticePostgres, rb),
+		DeleteNoticeService:  deleteNoticeService.New(rp.Postgres().DeleteNoticePostgres),
 		TelegramService:      telegramService.New(tg, rd),
 		ConsumeNoticeService: consumeNoticeService.New(rb, tg, rd),
 	}
