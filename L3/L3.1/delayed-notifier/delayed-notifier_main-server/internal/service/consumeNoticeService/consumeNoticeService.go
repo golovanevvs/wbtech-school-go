@@ -3,6 +3,7 @@ package consumeNoticeService
 import (
 	"context"
 	"encoding/json"
+	"sync"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
@@ -11,24 +12,30 @@ import (
 	"github.com/wb-go/wbf/zlog"
 )
 
+type IDeleteService interface {
+	DeleteNotice(ctx context.Context, id int) (err error)
+}
+
 type IRepository interface {
 	LoadTelName(ctx context.Context, username string) (chatID int, err error)
 }
 
 type ConsumeNoticeService struct {
-	lg zlog.Zerolog
-	rb *pkgRabbitmq.Client
-	tg *pkgTelegram.Client
-	rp IRepository
+	lg    zlog.Zerolog
+	rb    *pkgRabbitmq.Client
+	tg    *pkgTelegram.Client
+	rp    IRepository
+	delSv IDeleteService
 }
 
-func New(rb *pkgRabbitmq.Client, tg *pkgTelegram.Client, rp IRepository) *ConsumeNoticeService {
+func New(rb *pkgRabbitmq.Client, tg *pkgTelegram.Client, rp IRepository, delSv IDeleteService) *ConsumeNoticeService {
 	lg := zlog.Logger.With().Str("component", "service-consumeNoticeService").Logger()
 	return &ConsumeNoticeService{
-		lg: lg,
-		rb: rb,
-		tg: tg,
-		rp: rp,
+		lg:    lg,
+		rb:    rb,
+		tg:    tg,
+		rp:    rp,
+		delSv: delSv,
 	}
 }
 
@@ -47,22 +54,29 @@ func (sv *ConsumeNoticeService) Consume(ctx context.Context) error {
 		}
 		sv.lg.Debug().Str("message", notice.Message).Msg("received message")
 
-		for _, ch := range notice.Channels {
-			switch ch.Type {
-			case model.ChannelTelegram:
-
-				chatID, err := sv.rp.LoadTelName(ctx, ch.Value)
-				if err != nil {
-					sv.lg.Error().Err(err).Msg("failed to load telegram chat id")
-					break
+		wg := sync.WaitGroup{}
+		for i, ch := range notice.Channels {
+			wg.Go(func() {
+				switch ch.Type {
+				case model.ChannelTelegram:
+					chatID, err := sv.rp.LoadTelName(ctx, ch.Value)
+					if err != nil {
+						sv.lg.Error().Err(err).Msg("failed to load telegram chat id")
+						break
+					}
+					sv.tg.SendTo(int64(chatID), notice.Message)
 				}
+			})
+		}
+		wg.Wait()
 
-				sv.tg.SendTo(int64(chatID), notice.Message)
+		if err := sv.delSv.DeleteNotice(ctx, notice.ID); err != nil {
+			sv.lg.Error().Err(err).Msg("failed to delete notice")
+			return
+		}
 
-				if err := sv.rb.Ack(message); err != nil {
-					sv.lg.Error().Err(err).Msg("failed to ack message")
-				}
-			}
+		if err := sv.rb.Ack(message); err != nil {
+			sv.lg.Error().Err(err).Msg("failed to ack message")
 		}
 	}
 

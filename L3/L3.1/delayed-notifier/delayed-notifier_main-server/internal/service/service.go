@@ -24,10 +24,11 @@ type Service struct {
 }
 
 func New(rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client) *Service {
+	delNotSv := deleteNoticeService.New(rp)
 	return &Service{
 		AddNoticeService:     addNoticeService.New(rp, rb),
-		DeleteNoticeService:  deleteNoticeService.New(rp),
+		DeleteNoticeService:  delNotSv,
 		TelegramService:      telegramService.New(tg, rp),
-		ConsumeNoticeService: consumeNoticeService.New(rb, tg, rp),
+		ConsumeNoticeService: consumeNoticeService.New(rb, tg, rp, delNotSv),
 	}
 }

@@ -24,6 +24,11 @@ func New(rp IRepository) *DeleteNoticeService {
 }
 
 func (sv *DeleteNoticeService) DeleteNotice(ctx context.Context, id int) (err error) {
-	sv.lg.Trace().Msg("run AddNotice")
+	err = sv.rp.DeleteNotice(ctx, id)
+	if err != nil {
+		sv.lg.Error().Err(err).Msg("failed deleted data from Redis")
+		return err
+	}
+
 	return nil
 }
