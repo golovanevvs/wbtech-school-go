@@ -63,11 +63,11 @@ func (hd *Handler) WebHookHandler(c *ginext.Context) {
 	message := update.Message.Text
 
 	if err := hd.sv.HandleStart(c.Request.Context(), username, chatID, message); err != nil {
-		lg.Warn().Int64("chatID", chatID).Str("message", message).Err(err).Msg("failed to handle message")
+		lg.Warn().Int64("chatID", chatID).Str("message_body", message).Err(err).Msg("failed to handle message")
 		c.Status(http.StatusOK)
 		return
 	}
 
-	lg.Debug().Int64("chatID", chatID).Str("message", message).Msg("Telegram message processed")
+	lg.Debug().Int64("chatID", chatID).Str("message_body", message).Msg("Telegram message processed")
 	c.Status(http.StatusOK)
 }

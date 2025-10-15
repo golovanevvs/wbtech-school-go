@@ -2,6 +2,12 @@ logger:
   level: "trace"
 
 app:
+  service:
+    consumenoticeservice:
+      retry-strategy:
+        attempts: 10
+        delay: 30s
+        backoff: 2.0
   transport:
     http:
       public_host: ""

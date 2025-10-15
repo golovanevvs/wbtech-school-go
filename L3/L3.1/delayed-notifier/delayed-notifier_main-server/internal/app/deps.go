@@ -103,7 +103,7 @@ func (b *dependencyBuilder) initRepository() error {
 }
 
 func (b *dependencyBuilder) initService() {
-	sv := service.New(b.deps.rp, b.deps.rb, b.deps.tg)
+	sv := service.New(b.cfg.sv, b.deps.rp, b.deps.rb, b.deps.tg)
 	zlog.Logger.Debug().Str("component", "app").Msg("service has been initialized")
 	b.deps.sv = sv
 }

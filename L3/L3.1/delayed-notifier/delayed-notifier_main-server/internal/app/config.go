@@ -56,6 +56,7 @@ func newConfig() (*Config, error) {
 		tg: pkgTelegram.NewConfig(cfg),
 		em: pkgEmail.NewConfig(cfg),
 		rp: repository.NewConfig(cfg),
+		sv: service.NewConfig(cfg),
 		tr: transport.NewConfig(cfg),
 	}, nil
 }
@@ -64,13 +65,14 @@ func (a *Config) String() string {
 	if a == nil {
 		return "appConfig: <nil>"
 	}
-	return fmt.Sprintf("Configuration:\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n",
+	return fmt.Sprintf("Configuration:\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n",
 		a.lg.String(),
 		a.rd.String(),
 		a.rb.String(),
 		a.tg.String(),
 		a.em.String(),
 		a.rp.String(),
+		a.sv.String(),
 		a.tr.String(),
 	)
 }

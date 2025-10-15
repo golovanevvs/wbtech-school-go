@@ -23,12 +23,12 @@ type Service struct {
 	*consumeNoticeService.ConsumeNoticeService
 }
 
-func New(rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client) *Service {
+func New(cfg *Config, rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client) *Service {
 	delNotSv := deleteNoticeService.New(rp)
 	return &Service{
 		AddNoticeService:     addNoticeService.New(rp, rb),
 		DeleteNoticeService:  delNotSv,
 		TelegramService:      telegramService.New(tg, rp),
-		ConsumeNoticeService: consumeNoticeService.New(rb, tg, rp, delNotSv),
+		ConsumeNoticeService: consumeNoticeService.New(cfg.consumeNoticeServiceConfig, rb, tg, rp, delNotSv),
 	}
 }
