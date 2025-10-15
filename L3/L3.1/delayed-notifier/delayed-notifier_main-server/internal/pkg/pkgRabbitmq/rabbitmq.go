@@ -168,32 +168,69 @@ func (c *Client) Publish(msg Message) error {
 	)
 }
 
-// PublishStruct automatically serializes the structure to JSON and publishes the message.
+// PublishStructWithTTL automatically serializes the structure to JSON and publishes the message.
 func (c *Client) PublishStructWithTTL(data interface{}, ttl time.Duration) error {
 	body, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal struct: %w", err)
 	}
-	return c.Publish(Message{Body: body, TTL: ttl})
+
+	queueName := fmt.Sprintf("msg_%d", time.Now().UnixNano())
+
+	tempQueue, err := c.DeclareTempQueue(queueName, ttl)
+	if err != nil {
+		return fmt.Errorf("failed to declare temp queue: %w", err)
+	}
+
+	if err := c.pubChannel.QueueBind(
+		tempQueue,
+		tempQueue,
+		c.config.Exchange,
+		false,
+		nil,
+	); err != nil {
+		return fmt.Errorf("failed to bind temp queue %q: %w", tempQueue, err)
+	}
+
+	expiration := fmt.Sprintf("%d", ttl.Milliseconds())
+	err = c.pubChannel.Publish(
+		c.config.Exchange,
+		tempQueue,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        body,
+			Expiration:  expiration,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to publish message to temp queue %q: %w", tempQueue, err)
+	}
+
+	return nil
 }
 
 // DeclareTempQueue creates a temporary queue with a specific TTL and auto-delete flag.
 func (c *Client) DeclareTempQueue(name string, ttl time.Duration) (string, error) {
 	args := amqp.Table{
-		"x-message-ttl": int32(ttl.Milliseconds()),
+		"x-message-ttl":          int32(ttl.Milliseconds()),
+		"x-expires":              int32(ttl.Milliseconds() + 5000),
+		"x-dead-letter-exchange": c.config.DLX,
 	}
 
 	q, err := c.pubChannel.QueueDeclare(
 		name,
-		true,  // durable
-		true,  // auto-delete
-		false, // not exclusive
+		false,
+		true,
+		false,
 		false,
 		args,
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to declare temp queue %q: %w", name, err)
 	}
+
 	return q.Name, nil
 }
 
