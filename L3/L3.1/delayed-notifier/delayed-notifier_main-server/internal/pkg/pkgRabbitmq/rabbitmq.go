@@ -177,6 +177,26 @@ func (c *Client) PublishStructWithTTL(data interface{}, ttl time.Duration) error
 	return c.Publish(Message{Body: body, TTL: ttl})
 }
 
+// DeclareTempQueue creates a temporary queue with a specific TTL and auto-delete flag.
+func (c *Client) DeclareTempQueue(name string, ttl time.Duration) (string, error) {
+	args := amqp.Table{
+		"x-message-ttl": int32(ttl.Milliseconds()),
+	}
+
+	q, err := c.pubChannel.QueueDeclare(
+		name,
+		true,  // durable
+		true,  // auto-delete
+		false, // not exclusive
+		false,
+		args,
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to declare temp queue %q: %w", name, err)
+	}
+	return q.Name, nil
+}
+
 // Ack acknowledges a message.
 func (c *Client) Ack(msg amqp.Delivery) error {
 	return msg.Ack(false)
@@ -207,9 +227,11 @@ func (c *Client) ConsumeDLQWithWorkers(ctx context.Context, workerCount int, han
 		workerCount = 1
 	}
 
+	const consumerTag = "dlq-consumer"
+
 	msgs, err := c.consumerChannel.Consume(
 		c.config.DLQ,
-		"",
+		consumerTag,
 		false, // manual ack
 		false,
 		false,
@@ -250,5 +272,22 @@ func (c *Client) ConsumeDLQWithWorkers(ctx context.Context, workerCount int, han
 		close(queue)
 	}()
 
+	go func() {
+		<-ctx.Done()
+		_ = c.CancelConsumer(consumerTag) // gracefully cancel consumer
+		_ = c.consumerChannel.Close()
+	}()
+
+	return nil
+}
+
+// CancelConsumer gracefully cancels a consumer by tag.
+func (c *Client) CancelConsumer(consumerTag string) error {
+	if c.consumerChannel == nil {
+		return fmt.Errorf("consumer channel is nil")
+	}
+	if err := c.consumerChannel.Cancel(consumerTag, false); err != nil {
+		return fmt.Errorf("failed to cancel consumer: %w", err)
+	}
 	return nil
 }
