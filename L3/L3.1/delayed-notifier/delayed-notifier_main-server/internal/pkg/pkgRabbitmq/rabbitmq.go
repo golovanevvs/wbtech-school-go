@@ -1,5 +1,5 @@
 // Package rabbitmq provides a wrapper for RabbitMQ with separate channels for publishing and consuming, DLX/DLQ, TTL, and worker-based DLQ consumer.
-package rabbitmq
+package pkgRabbitmq
 
 import (
 	"context"

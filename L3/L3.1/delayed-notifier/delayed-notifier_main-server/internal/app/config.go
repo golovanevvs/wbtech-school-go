@@ -3,11 +3,11 @@ package app
 import (
 	"fmt"
 
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/email"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/logger"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgEmail"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/telegram"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport"
 	"github.com/wb-go/wbf/config"
@@ -16,9 +16,9 @@ import (
 type Config struct {
 	lg *logger.Config
 	rd *pkgRedis.Config
-	rb *rabbitmq.Config
-	tg *telegram.Config
-	em *email.Config
+	rb *pkgRabbitmq.Config
+	tg *pkgTelegram.Config
+	em *pkgEmail.Config
 	rp *repository.Config
 	tr *transport.Config
 }
@@ -50,9 +50,9 @@ func newConfig() (*Config, error) {
 	return &Config{
 		lg: logger.NewConfig(cfg),
 		rd: pkgRedis.NewConfig(cfg),
-		rb: rabbitmq.NewConfig(cfg),
-		tg: telegram.NewConfig(cfg),
-		em: email.NewConfig(cfg),
+		rb: pkgRabbitmq.NewConfig(cfg),
+		tg: pkgTelegram.NewConfig(cfg),
+		em: pkgEmail.NewConfig(cfg),
 		rp: repository.NewConfig(cfg),
 		tr: transport.NewConfig(cfg),
 	}, nil

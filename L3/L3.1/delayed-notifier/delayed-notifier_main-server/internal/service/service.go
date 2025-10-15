@@ -15,10 +15,10 @@ type iRepository interface {
 }
 
 type Service struct {
-	*addNoticeService.AddNoticeService
-	*deleteNoticeService.DeleteNoticeService
-	*telegramService.TelegramService
-	*consumeNoticeService.ConsumeNoticeService
+	AddNoticeService     *addNoticeService.AddNoticeService
+	DeleteNoticeService  *deleteNoticeService.DeleteNoticeService
+	TelegramService      *telegramService.TelegramService
+	ConsumeNoticeService *consumeNoticeService.ConsumeNoticeService
 }
 
 func New(rp iRepository, rb *rabbitmq.Client, tg *telegram.Client) *Service {
