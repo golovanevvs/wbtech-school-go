@@ -2,16 +2,13 @@ package repository
 
 import (
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository/postgres"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository/rpRedis"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/addNoticeService"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/deleteNoticeService"
 )
 
 type Repository struct {
 	// Postgres *dbpg.DB
-	postgres *postgres.Postgres
-	redis    *rpRedis.RpRedis
+	// postgres *postgres.Postgres
+	redis *rpRedis.RpRedis
 }
 
 func New(cfg *Config, rd *pkgRedis.Client) (*Repository, error) {
@@ -39,15 +36,19 @@ func New(cfg *Config, rd *pkgRedis.Client) (*Repository, error) {
 	// 	Postgres: db,
 	// }, nil
 	return &Repository{
-		postgres: postgres.New(),
-		redis:    rpRedis.New(rd),
+		// postgres: postgres.New(),
+		redis: rpRedis.New(rd),
 	}, nil
+
+}
+func (rp *Repository) RpRedis() *rpRedis.RpRedis {
+	return rp.redis
 }
 
-func (rp *Repository) SaveNotice() addNoticeService.IRepository {
-	return rp.postgres.SaveNoticePostgres
-}
+// func (rp *Repository) SaveNotice() addNoticeService.IRepository {
+// 	return rp.postgres.SaveNoticePostgres
+// }
 
-func (rp *Repository) DeleteNotice() deleteNoticeService.IRepository {
-	return rp.postgres.DeleteNoticePostgres
-}
+// func (rp *Repository) DeleteNotice() deleteNoticeService.IRepository {
+// 	return rp.postgres.DeleteNoticePostgres
+// }

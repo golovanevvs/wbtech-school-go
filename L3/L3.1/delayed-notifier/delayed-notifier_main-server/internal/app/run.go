@@ -11,7 +11,7 @@ func (a *App) Run(cancel context.CancelFunc) error {
 
 	a.deps.tr.HTTP.RunServer(cancel)
 
-	if err := a.deps.tr.HTTP.WaitForServer(fmt.Sprintf("%s/healthy", a.cfg.tr.TrHTTP.PublicHost), 30*time.Second); err != nil {
+	if err := a.deps.tr.HTTP.WaitForServer(a.cfg.tr.TrHTTP.PublicHost, 30*time.Second); err != nil {
 		return err
 	}
 
@@ -19,7 +19,7 @@ func (a *App) Run(cancel context.CancelFunc) error {
 		return err
 	}
 
-	if err := a.deps.sv.Consume(ctx); err != nil {
+	if err := a.deps.sv.ConsumeNoticeService.Consume(ctx); err != nil {
 		return err
 	}
 

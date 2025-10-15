@@ -53,10 +53,10 @@ func (h *HTTP) ShutdownServer(ctx context.Context) error {
 	return nil
 }
 
-func (h *HTTP) WaitForServer(url string, timeout time.Duration) error {
+func (h *HTTP) WaitForServer(host string, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
-		resp, err := http.Get(url)
+		resp, err := http.Get(fmt.Sprintf("%s/healthy", host))
 		if err == nil && resp.StatusCode == http.StatusOK {
 			h.lg.Info().Str("addr", h.httpsrv.Addr).Msg("http server started")
 			return nil

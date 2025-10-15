@@ -10,17 +10,17 @@ import (
 	"github.com/wb-go/wbf/zlog"
 )
 
-type IRepository interface {
+type iRepository interface {
 	SaveNotice(ctx context.Context, notice model.Notice) (id int, err error)
 }
 
 type AddNoticeService struct {
 	lg zlog.Zerolog
-	rp IRepository
+	rp iRepository
 	rb *rabbitmq.Client
 }
 
-func New(rp IRepository, rb *rabbitmq.Client) *AddNoticeService {
+func New(rp iRepository, rb *rabbitmq.Client) *AddNoticeService {
 	lg := zlog.Logger.With().Str("component", "service-addNoticeService").Logger()
 	return &AddNoticeService{
 		lg: lg,

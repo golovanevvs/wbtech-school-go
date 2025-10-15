@@ -26,7 +26,7 @@ func (a *App) GracefullShutdown(ctx context.Context, cancel context.CancelFunc) 
 	}
 
 	if err := a.rm.closeAll(); err != nil {
-		lg.Error().Err(err).Msg("failed to close resource")
+		lg.Error().Err(err).Msg("failed to close resources")
 	}
 
 }

@@ -3,30 +3,32 @@ package consumeNoticeService
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/telegram"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/wb-go/wbf/zlog"
 )
 
+type iRepository interface {
+	LoadTelName(ctx context.Context, username string) (chatID int, err error)
+}
+
 type ConsumeNoticeService struct {
 	lg zlog.Zerolog
 	rb *rabbitmq.Client
 	tg *telegram.Client
-	rd *pkgRedis.Client
+	rp iRepository
 }
 
-func New(rb *rabbitmq.Client, tg *telegram.Client, rd *pkgRedis.Client) *ConsumeNoticeService {
+func New(rb *rabbitmq.Client, tg *telegram.Client, rp iRepository) *ConsumeNoticeService {
 	lg := zlog.Logger.With().Str("component", "service-consumeNoticeService").Logger()
 	return &ConsumeNoticeService{
 		lg: lg,
 		rb: rb,
 		tg: tg,
-		rd: rd,
+		rp: rp,
 	}
 }
 
@@ -48,12 +50,12 @@ func (sv *ConsumeNoticeService) Consume(ctx context.Context) error {
 		for _, ch := range notice.Channels {
 			switch ch.Type {
 			case model.ChannelTelegram:
-				chatIDStr, err := sv.rd.Get(ctx, ch.Value)
+
+				chatID, err := sv.rp.LoadTelName(ctx, ch.Value)
 				if err != nil {
-					sv.lg.Error().Err(err).Msg("failed to load chatID from Redis")
-					return
+					sv.lg.Error().Err(err).Msg("failed to load telegram chat id")
+					break
 				}
-				chatID, err := strconv.Atoi(chatIDStr)
 
 				sv.tg.SendTo(int64(chatID), notice.Message)
 

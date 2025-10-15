@@ -9,9 +9,9 @@ import (
 )
 
 type IService interface {
-	AddNotice() addNoticeHandler.IService
-	DeleteNotice() deleteNoticeHandler.IService
-	TelegramHandler() telegramHandler.IService
+	addNoticeHandler.IService
+	deleteNoticeHandler.IService
+	telegramHandler.IService
 }
 
 type Handler struct {
@@ -24,13 +24,13 @@ func New(cfg *Config, sv IService) *Handler {
 		Rt: rt,
 	}
 
-	addNoticeHandler := addNoticeHandler.New(rt, sv.AddNotice())
+	addNoticeHandler := addNoticeHandler.New(rt, sv)
 	addNoticeHandler.RegisterRoutes()
 
-	deleteNoticeHandler := deleteNoticeHandler.New(rt, sv.DeleteNotice())
+	deleteNoticeHandler := deleteNoticeHandler.New(rt, sv)
 	deleteNoticeHandler.RegisterRoutes()
 
-	telegramHandler := telegramHandler.New(rt, sv.TelegramHandler())
+	telegramHandler := telegramHandler.New(rt, sv)
 	telegramHandler.RegisterRoutes()
 
 	healthHandler := healthHandler.New(rt)

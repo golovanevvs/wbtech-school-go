@@ -39,7 +39,7 @@ func (b *dependencyBuilder) Close() error {
 	return b.rm.closeAll()
 }
 
-func (b *dependencyBuilder) withLogger() error {
+func (b *dependencyBuilder) initLogger() error {
 	err := zlog.SetLevel(b.cfg.lg.Level)
 
 	if err != nil {
@@ -54,81 +54,82 @@ func (b *dependencyBuilder) withLogger() error {
 	return nil
 }
 
-func (b *dependencyBuilder) withRedis() error {
+func (b *dependencyBuilder) initRedis() error {
 	rd, err := pkgRedis.New(b.cfg.rd)
 	if err != nil {
 		return fmt.Errorf("error initialize Redis: %w", err)
 	}
 	zlog.Logger.Debug().Str("component", "app").Msg("Redis has been initialized")
 	b.deps.rd = rd
-	b.rm.addResource(func() error { return b.deps.rd.Close() })
-
+	b.rm.addResource(resource{
+		name:      "Redis client",
+		closeFunc: func() error { return b.deps.rd.Close() },
+	})
 	return nil
 }
 
-func (b *dependencyBuilder) withRabbitMQ() error {
+func (b *dependencyBuilder) initRabbitMQ() error {
 	rb, err := rabbitmq.NewClient(b.cfg.rb)
 	if err != nil {
 		return fmt.Errorf("error initialize RabbitMQ client: %w", err)
 	}
 	zlog.Logger.Debug().Str("component", "app").Msg("RabbitMQ client has been initialized")
 	b.deps.rb = rb
-	b.rm.addResource(func() error { return b.deps.rb.Close() })
-
+	b.rm.addResource(resource{
+		name:      "RabbitMQ client",
+		closeFunc: func() error { return b.deps.rb.Close() },
+	})
 	return nil
 }
 
-func (b *dependencyBuilder) WithTelegram() error {
+func (b *dependencyBuilder) initTelegram() error {
 	tg, err := telegram.New(b.cfg.tg)
 	if err != nil {
 		return fmt.Errorf("error initialize telegram client: %w", err)
 	}
-
 	zlog.Logger.Debug().Str("component", "app").Msg("telegram client has been initialized")
 	b.deps.tg = tg
-
 	return nil
 }
 
-func (b *dependencyBuilder) withRepository() error {
+func (b *dependencyBuilder) initRepository() error {
 	rp, err := repository.New(b.cfg.rp, b.deps.rd)
 	if err != nil {
 		return fmt.Errorf("error initialize repository: %w", err)
 	}
 	zlog.Logger.Debug().Str("component", "app").Msg("repository has been initialized")
 	b.deps.rp = rp
-
 	return nil
 }
 
-func (b *dependencyBuilder) withService() {
-	sv := service.New(b.deps.rp, b.deps.rb, b.deps.tg, b.deps.rd)
+func (b *dependencyBuilder) initService() {
+	sv := service.New(b.deps.rp, b.deps.rb, b.deps.tg)
 	zlog.Logger.Debug().Str("component", "app").Msg("service has been initialized")
 	b.deps.sv = sv
 }
 
-func (b *dependencyBuilder) withTransport() {
+func (b *dependencyBuilder) initTransport() {
 	zlog.Logger.Debug().Str("component", "app").Msg("transport has been initialized")
 	b.deps.tr = transport.New(b.cfg.tr, b.deps.sv)
 }
 
 func (b *dependencyBuilder) build() (*dependencies, *resourceManager, error) {
-	if err := b.withLogger(); err != nil {
+	if err := b.initLogger(); err != nil {
 		return nil, b.rm, err
 	}
-	if err := b.withRedis(); err != nil {
+	if err := b.initRedis(); err != nil {
 		return nil, b.rm, err
 	}
-	if err := b.withRabbitMQ(); err != nil {
+	if err := b.initRabbitMQ(); err != nil {
 		return nil, b.rm, err
 	}
-	if err := b.WithTelegram(); err != nil {
+	if err := b.initTelegram(); err != nil {
 		return nil, b.rm, err
 	}
-	if err := b.withRepository(); err != nil {
+	if err := b.initRepository(); err != nil {
 		return nil, b.rm, err
 	}
-	b.withService()
-	b.withTransport()
+	b.initService()
+	b.initTransport()
 	return b.deps, b.rm, nil
 }

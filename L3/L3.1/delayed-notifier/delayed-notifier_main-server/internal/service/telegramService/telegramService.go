@@ -3,23 +3,26 @@ package telegramService
 import (
 	"context"
 
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/telegram"
 	"github.com/wb-go/wbf/zlog"
 )
 
+type iRepository interface {
+	SaveTelName(ctx context.Context, name string, chatID int64) (err error)
+}
+
 type TelegramService struct {
 	lg zlog.Zerolog
 	tg *telegram.Client
-	rd *pkgRedis.Client
+	rp iRepository
 }
 
-func New(tg *telegram.Client, rd *pkgRedis.Client) *TelegramService {
+func New(tg *telegram.Client, rp iRepository) *TelegramService {
 	lg := zlog.Logger.With().Str("component", "service-telegramService").Logger()
 	return &TelegramService{
 		lg: lg,
 		tg: tg,
-		rd: rd,
+		rp: rp,
 	}
 }
 
@@ -29,7 +32,7 @@ func (sv *TelegramService) HandleStart(ctx context.Context, username string, cha
 		return err
 	}
 
-	err = sv.rd.Set(ctx, username, chatID, 0)
+	err = sv.rp.SaveTelName(ctx, username, chatID)
 	if err != nil {
 		return err
 	}
