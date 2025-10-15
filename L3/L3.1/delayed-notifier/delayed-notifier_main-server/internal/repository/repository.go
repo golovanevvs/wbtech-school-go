@@ -8,7 +8,7 @@ import (
 type Repository struct {
 	// Postgres *dbpg.DB
 	// postgres *postgres.Postgres
-	redis *rpRedis.RpRedis
+	*rpRedis.RpRedis
 }
 
 func New(cfg *Config, rd *pkgRedis.Client) (*Repository, error) {
@@ -37,18 +37,7 @@ func New(cfg *Config, rd *pkgRedis.Client) (*Repository, error) {
 	// }, nil
 	return &Repository{
 		// postgres: postgres.New(),
-		redis: rpRedis.New(rd),
+		RpRedis: rpRedis.New(rd),
 	}, nil
 
 }
-func (rp *Repository) RpRedis() *rpRedis.RpRedis {
-	return rp.redis
-}
-
-// func (rp *Repository) SaveNotice() addNoticeService.IRepository {
-// 	return rp.postgres.SaveNoticePostgres
-// }
-
-// func (rp *Repository) DeleteNotice() deleteNoticeService.IRepository {
-// 	return rp.postgres.DeleteNoticePostgres
-// }

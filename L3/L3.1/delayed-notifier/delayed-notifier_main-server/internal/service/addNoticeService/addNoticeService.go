@@ -10,7 +10,7 @@ import (
 	"github.com/wb-go/wbf/zlog"
 )
 
-type iRepository interface {
+type IRepository interface {
 	SaveNotice(ctx context.Context, notice model.Notice) (id int, err error)
 }
 

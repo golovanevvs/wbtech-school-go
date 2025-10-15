@@ -6,16 +6,16 @@ import (
 	"github.com/wb-go/wbf/zlog"
 )
 
-type iRepository interface {
+type IRepository interface {
 	DeleteNotice(ctx context.Context, id int) (err error)
 }
 
 type DeleteNoticeService struct {
 	lg zlog.Zerolog
-	rp iRepository
+	rp IRepository
 }
 
-func New(rp iRepository) *DeleteNoticeService {
+func New(rp IRepository) *DeleteNoticeService {
 	lg := zlog.Logger.With().Str("component", "service-deleteNoticeService").Logger()
 	return &DeleteNoticeService{
 		lg: lg,

@@ -69,7 +69,7 @@ func (b *dependencyBuilder) initRedis() error {
 }
 
 func (b *dependencyBuilder) initRabbitMQ() error {
-	rb, err := rabbitmq.NewClient(b.cfg.rb)
+	rb, err := pkgRabbitmq.NewClient(b.cfg.rb)
 	if err != nil {
 		return fmt.Errorf("error initialize RabbitMQ client: %w", err)
 	}
@@ -83,7 +83,7 @@ func (b *dependencyBuilder) initRabbitMQ() error {
 }
 
 func (b *dependencyBuilder) initTelegram() error {
-	tg, err := telegram.New(b.cfg.tg)
+	tg, err := pkgTelegram.New(b.cfg.tg)
 	if err != nil {
 		return fmt.Errorf("error initialize telegram client: %w", err)
 	}

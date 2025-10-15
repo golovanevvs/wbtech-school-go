@@ -6,13 +6,12 @@ import (
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/wb-go/wbf/zlog"
 )
 
-type iRepository interface {
+type IRepository interface {
 	LoadTelName(ctx context.Context, username string) (chatID int, err error)
 }
 
@@ -20,10 +19,10 @@ type ConsumeNoticeService struct {
 	lg zlog.Zerolog
 	rb *pkgRabbitmq.Client
 	tg *pkgTelegram.Client
-	rd *pkgRedis.Client
+	rp IRepository
 }
 
-func New(rb *pkgRabbitmq.Client, tg *pkgTelegram.Client, rd *pkgRedis.Client) *ConsumeNoticeService {
+func New(rb *pkgRabbitmq.Client, tg *pkgTelegram.Client, rp IRepository) *ConsumeNoticeService {
 	lg := zlog.Logger.With().Str("component", "service-consumeNoticeService").Logger()
 	return &ConsumeNoticeService{
 		lg: lg,

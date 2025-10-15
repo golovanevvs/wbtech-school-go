@@ -1,9 +1,8 @@
 package service
 
 import (
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/rabbitmq"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/telegram"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository/rpRedis"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/addNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/consumeNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/deleteNoticeService"
@@ -11,21 +10,24 @@ import (
 )
 
 type iRepository interface {
-	RpRedis() *rpRedis.RpRedis
+	addNoticeService.IRepository
+	deleteNoticeService.IRepository
+	consumeNoticeService.IRepository
+	telegramService.IRepository
 }
 
 type Service struct {
-	AddNoticeService     *addNoticeService.AddNoticeService
-	DeleteNoticeService  *deleteNoticeService.DeleteNoticeService
-	TelegramService      *telegramService.TelegramService
-	ConsumeNoticeService *consumeNoticeService.ConsumeNoticeService
+	*addNoticeService.AddNoticeService
+	*deleteNoticeService.DeleteNoticeService
+	*telegramService.TelegramService
+	*consumeNoticeService.ConsumeNoticeService
 }
 
-func New(rp iRepository, rb *rabbitmq.Client, tg *telegram.Client) *Service {
+func New(rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client) *Service {
 	return &Service{
-		AddNoticeService:     addNoticeService.New(rp.RpRedis().SaveNotice(), rb),
-		DeleteNoticeService:  deleteNoticeService.New(rp.RpRedis().DeleteNotice()),
-		TelegramService:      telegramService.New(tg, rp.RpRedis().SaveTelName()),
-		ConsumeNoticeService: consumeNoticeService.New(rb, tg, rp.RpRedis().LoadTelName()),
+		AddNoticeService:     addNoticeService.New(rp, rb),
+		DeleteNoticeService:  deleteNoticeService.New(rp),
+		TelegramService:      telegramService.New(tg, rp),
+		ConsumeNoticeService: consumeNoticeService.New(rb, tg, rp),
 	}
 }
