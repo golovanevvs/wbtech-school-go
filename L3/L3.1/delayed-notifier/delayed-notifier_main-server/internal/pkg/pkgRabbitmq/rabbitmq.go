@@ -170,6 +170,14 @@ func (c *Client) Publish(msg Message) error {
 
 // PublishStructWithTTL automatically serializes the structure to JSON and publishes the message.
 func (c *Client) PublishStructWithTTL(data interface{}, ttl time.Duration) error {
+	if err := c.ensurePubChannel(); err != nil {
+		return fmt.Errorf("failed to ensure publish channel: %w", err)
+	}
+
+	if ttl <= 0 {
+		return fmt.Errorf("invalid TTL: must be positive, got %v", ttl)
+	}
+
 	body, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal struct: %w", err)
@@ -211,11 +219,35 @@ func (c *Client) PublishStructWithTTL(data interface{}, ttl time.Duration) error
 	return nil
 }
 
+func (c *Client) ensurePubChannel() error {
+	if c.pubChannel != nil && !c.pubChannel.IsClosed() {
+		return nil
+	}
+
+	ch, err := c.conn.Channel()
+	if err != nil {
+		return fmt.Errorf("failed to reopen publish channel: %w", err)
+	}
+
+	c.pubChannel = ch
+	return nil
+}
+
 // DeclareTempQueue creates a temporary queue with a specific TTL and auto-delete flag.
 func (c *Client) DeclareTempQueue(name string, ttl time.Duration) (string, error) {
+	ms := ttl.Milliseconds()
+	if ms <= 0 {
+		return "", fmt.Errorf("invalid TTL: must be positive, got %d ms", ms)
+	}
+
+	exp := ms + 5000
+	if exp <= 0 {
+		return "", fmt.Errorf("invalid x-expires: overflow or negative value (%d)", exp)
+	}
+
 	args := amqp.Table{
-		"x-message-ttl":          int32(ttl.Milliseconds()),
-		"x-expires":              int32(ttl.Milliseconds() + 5000),
+		"x-message-ttl":          int64(ms),
+		"x-expires":              int64(exp),
 		"x-dead-letter-exchange": c.config.DLX,
 	}
 
