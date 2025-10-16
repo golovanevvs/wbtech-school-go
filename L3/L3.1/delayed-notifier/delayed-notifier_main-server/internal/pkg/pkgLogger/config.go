@@ -1,4 +1,4 @@
-package logger
+package pkgLogger
 
 import (
 	"fmt"
