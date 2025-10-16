@@ -25,11 +25,15 @@ func New(rd *pkgRedis.Client) *RpRedisLoadTelChatID {
 func (rp *RpRedisLoadTelChatID) LoadTelegramChatID(ctx context.Context, username string) (chatID int, err error) {
 	chatIDStr, err := rp.rd.Get(ctx, username)
 	if err != nil {
-		rp.lg.Error().Err(err).Msg("failed to save to Redis")
-		return 0, fmt.Errorf("failed to save to Redis: %w", err)
+		rp.lg.Error().Err(err).Msg("failed to load chat ID from Redis")
+		return 0, fmt.Errorf("failed to load chat ID from Redis: %w", err)
 	}
 
 	chatID, err = strconv.Atoi(chatIDStr)
+	if err != nil {
+		rp.lg.Error().Err(err).Msg("failed to convert chat ID to int")
+		return 0, fmt.Errorf("failed to convert chat ID to int: %w", err)
+	}
 
 	return chatID, nil
 }

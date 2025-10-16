@@ -27,7 +27,7 @@ type Service struct {
 
 func New(cfg *Config, rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client) *Service {
 	delNotSv := deleteNoticeService.New(rp)
-	sendNotSv := sendNoticeService.New(cfg.sendNoticeServiceConfig, tg)
+	sendNotSv := sendNoticeService.New(cfg.sendNoticeServiceConfig, tg, rp)
 	return &Service{
 		AddNoticeService:     addNoticeService.New(rp, rb),
 		DeleteNoticeService:  delNotSv,

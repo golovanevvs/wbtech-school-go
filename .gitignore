@@ -33,3 +33,6 @@ go.work.sum
 config.yaml
 /L0/order-service/order-service-mainServer/config/kafka
 node_modules
+
+# Volume data
+**/data/
