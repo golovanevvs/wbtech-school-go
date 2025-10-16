@@ -3,7 +3,7 @@ logger:
 
 app:
   service:
-    consumenoticeservice:
+    sendnoticeservice:
       retry-strategy:
         attempts: 10
         delay: 30s

@@ -1,4 +1,4 @@
-package rpRedisLoadTelName
+package rpRedisLoadTelChatID
 
 import (
 	"context"
@@ -9,20 +9,20 @@ import (
 	"github.com/wb-go/wbf/zlog"
 )
 
-type RpRedisLoadTelName struct {
+type RpRedisLoadTelChatID struct {
 	lg zlog.Zerolog
 	rd *pkgRedis.Client
 }
 
-func New(rd *pkgRedis.Client) *RpRedisLoadTelName {
+func New(rd *pkgRedis.Client) *RpRedisLoadTelChatID {
 	lg := zlog.Logger.With().Str("component", "RpRedisLoadTelName").Logger()
-	return &RpRedisLoadTelName{
+	return &RpRedisLoadTelChatID{
 		lg: lg,
 		rd: rd,
 	}
 }
 
-func (rp *RpRedisLoadTelName) LoadTelName(ctx context.Context, username string) (chatID int, err error) {
+func (rp *RpRedisLoadTelChatID) LoadTelegramChatID(ctx context.Context, username string) (chatID int, err error) {
 	chatIDStr, err := rp.rd.Get(ctx, username)
 	if err != nil {
 		rp.lg.Error().Err(err).Msg("failed to save to Redis")

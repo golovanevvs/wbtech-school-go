@@ -3,42 +3,35 @@ package consumeNoticeService
 import (
 	"context"
 	"encoding/json"
-	"sync"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
 	amqp "github.com/rabbitmq/amqp091-go"
-	"github.com/wb-go/wbf/retry"
 	"github.com/wb-go/wbf/zlog"
 )
 
-type IDeleteService interface {
+type iDeleteNoticeService interface {
 	DeleteNotice(ctx context.Context, id int) (err error)
 }
 
-type IRepository interface {
-	LoadTelName(ctx context.Context, username string) (chatID int, err error)
+type iSendNoticeService interface {
+	SendNotice(ctx context.Context, notice model.Notice)
 }
 
 type ConsumeNoticeService struct {
-	lg            zlog.Zerolog
-	rb            *pkgRabbitmq.Client
-	tg            *pkgTelegram.Client
-	rp            IRepository
-	delSv         IDeleteService
-	retryStrategy retry.Strategy
+	lg        zlog.Zerolog
+	rb        *pkgRabbitmq.Client
+	delNotSv  iDeleteNoticeService
+	sendNotSv iSendNoticeService
 }
 
-func New(cfg *Config, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client, rp IRepository, delSv IDeleteService) *ConsumeNoticeService {
+func New(rb *pkgRabbitmq.Client, delNotSv iDeleteNoticeService, sendNotSv iSendNoticeService) *ConsumeNoticeService {
 	lg := zlog.Logger.With().Str("component", "service-consumeNoticeService").Logger()
 	return &ConsumeNoticeService{
-		lg:            lg,
-		rb:            rb,
-		tg:            tg,
-		rp:            rp,
-		delSv:         delSv,
-		retryStrategy: retry.Strategy(cfg.RetryStrategy),
+		lg:        lg,
+		rb:        rb,
+		delNotSv:  delNotSv,
+		sendNotSv: sendNotSv,
 	}
 }
 
@@ -62,7 +55,7 @@ func (sv *ConsumeNoticeService) handleMessage(ctx context.Context, message amqp.
 	sv.lg.Trace().Msg("--- consume handler started")
 	defer sv.lg.Trace().Msg("--- consume handler stopped")
 
-	// getting from DLQ
+	// getting from DLQ, unmarshaling
 	var notice model.Notice
 	err := json.Unmarshal(message.Body, &notice)
 	if err != nil {
@@ -75,35 +68,11 @@ func (sv *ConsumeNoticeService) handleMessage(ctx context.Context, message amqp.
 	}
 
 	// sending
-	sv.sendNotice(ctx, notice)
+	sv.sendNotSv.SendNotice(ctx, notice)
 
 	// deleting from repository
-	if err := sv.delSv.DeleteNotice(ctx, notice.ID); err != nil {
+	if err := sv.delNotSv.DeleteNotice(ctx, notice.ID); err != nil {
 		sv.lg.Error().Err(err).Msg("failed to delete notice")
 		return
 	}
-}
-
-func (sv *ConsumeNoticeService) sendNotice(ctx context.Context, notice model.Notice) {
-	wg := sync.WaitGroup{}
-	for _, ch := range notice.Channels {
-		wg.Go(func() {
-			switch ch.Type {
-			case model.ChannelTelegram:
-				chatID, err := sv.rp.LoadTelName(ctx, ch.Value)
-				if err != nil {
-					sv.lg.Error().Err(err).Msg("failed to load telegram chat id")
-					break
-				}
-
-				fn := func() error {
-					sv.tg.SendTo(int64(chatID), notice.Message)
-					return nil
-				}
-
-				err = retry.Do(fn, sv.retryStrategy)
-			}
-		})
-	}
-	wg.Wait()
 }

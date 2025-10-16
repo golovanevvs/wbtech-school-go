@@ -6,13 +6,14 @@ import (
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/addNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/consumeNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/deleteNoticeService"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/sendNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/telegramService"
 )
 
 type iRepository interface {
 	addNoticeService.IRepository
 	deleteNoticeService.IRepository
-	consumeNoticeService.IRepository
+	sendNoticeService.IRepository
 	telegramService.IRepository
 }
 
@@ -21,14 +22,17 @@ type Service struct {
 	*deleteNoticeService.DeleteNoticeService
 	*telegramService.TelegramService
 	*consumeNoticeService.ConsumeNoticeService
+	*sendNoticeService.SendNoticeService
 }
 
 func New(cfg *Config, rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client) *Service {
 	delNotSv := deleteNoticeService.New(rp)
+	sendNotSv := sendNoticeService.New(cfg.sendNoticeServiceConfig, tg)
 	return &Service{
 		AddNoticeService:     addNoticeService.New(rp, rb),
 		DeleteNoticeService:  delNotSv,
 		TelegramService:      telegramService.New(tg, rp),
-		ConsumeNoticeService: consumeNoticeService.New(cfg.consumeNoticeServiceConfig, rb, tg, rp, delNotSv),
+		ConsumeNoticeService: consumeNoticeService.New(rb, delNotSv, sendNotSv),
+		SendNoticeService:    sendNotSv,
 	}
 }
