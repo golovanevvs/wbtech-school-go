@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgEmail"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/addNoticeService"
@@ -25,9 +26,9 @@ type Service struct {
 	*sendNoticeService.SendNoticeService
 }
 
-func New(cfg *Config, rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client) *Service {
+func New(cfg *Config, rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client, em *pkgEmail.Client) *Service {
 	delNotSv := deleteNoticeService.New(rp)
-	sendNotSv := sendNoticeService.New(cfg.sendNoticeServiceConfig, tg, rp)
+	sendNotSv := sendNoticeService.New(cfg.sendNoticeServiceConfig, tg, em, rp)
 	return &Service{
 		AddNoticeService:     addNoticeService.New(rp, rb),
 		DeleteNoticeService:  delNotSv,

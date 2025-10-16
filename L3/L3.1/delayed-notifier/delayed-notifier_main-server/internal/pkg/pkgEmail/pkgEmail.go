@@ -2,32 +2,46 @@ package pkgEmail
 
 import (
 	"fmt"
-	"net/smtp"
+	"sync"
+
+	"gopkg.in/gomail.v2"
 )
 
 type Client struct {
-	cfg Config
+	cfg  *Config
+	lock sync.Mutex
 }
 
-func New(cfg Config) (*Client, error) {
+func New(cfg *Config) (*Client, error) {
 	if cfg.SMTPHost == "" || cfg.Username == "" || cfg.Password == "" {
 		return nil, fmt.Errorf("invalid email config")
 	}
 	return &Client{cfg: cfg}, nil
 }
 
-func (c *Client) Send(to string, message string) error {
-	auth := smtp.PlainAuth("", c.cfg.Username, c.cfg.Password, c.cfg.SMTPHost)
-	addr := fmt.Sprintf("%s:%d", c.cfg.SMTPHost, c.cfg.SMTPPort)
+func (c *Client) SendEmail(to []string, subject, body string, isHTML bool, attachments ...string) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 
-	msg := []byte(fmt.Sprintf(
-		"To: %s\r\n"+
-			"Subject: Notification\r\n"+
-			"\r\n"+
-			"%s\r\n", to, message))
+	msg := gomail.NewMessage()
+	msg.SetHeader("From", c.cfg.From)
+	msg.SetHeader("To", to...)
+	msg.SetHeader("Subject", subject)
 
-	if err := smtp.SendMail(addr, auth, c.cfg.From, []string{to}, msg); err != nil {
-		return fmt.Errorf("send email: %w", err)
+	if isHTML {
+		msg.SetBody("text/html", body)
+	} else {
+		msg.SetBody("text/plain", body)
 	}
+
+	for _, a := range attachments {
+		msg.Attach(a)
+	}
+
+	dialer := gomail.NewDialer(c.cfg.SMTPHost, c.cfg.SMTPPort, c.cfg.Username, c.cfg.Password)
+	if err := dialer.DialAndSend(msg); err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
 	return nil
 }

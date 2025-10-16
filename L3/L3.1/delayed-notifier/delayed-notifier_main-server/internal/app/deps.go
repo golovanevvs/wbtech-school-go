@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgEmail"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
@@ -16,6 +17,7 @@ type dependencies struct {
 	rd *pkgRedis.Client
 	rb *pkgRabbitmq.Client
 	tg *pkgTelegram.Client
+	em *pkgEmail.Client
 	rp *repository.Repository
 	sv *service.Service
 	tr *transport.Transport
@@ -92,6 +94,16 @@ func (b *dependencyBuilder) initTelegram() error {
 	return nil
 }
 
+func (b *dependencyBuilder) initEmail() error {
+	em, err := pkgEmail.New(b.cfg.em)
+	if err != nil {
+		return fmt.Errorf("error initialize email client: %w", err)
+	}
+	zlog.Logger.Debug().Str("component", "app").Msg("email client has been initialized")
+	b.deps.em = em
+	return nil
+}
+
 func (b *dependencyBuilder) initRepository() error {
 	rp, err := repository.New(b.cfg.rp, b.deps.rd)
 	if err != nil {
@@ -103,7 +115,7 @@ func (b *dependencyBuilder) initRepository() error {
 }
 
 func (b *dependencyBuilder) initService() {
-	sv := service.New(b.cfg.sv, b.deps.rp, b.deps.rb, b.deps.tg)
+	sv := service.New(b.cfg.sv, b.deps.rp, b.deps.rb, b.deps.tg, b.deps.em)
 	zlog.Logger.Debug().Str("component", "app").Msg("service has been initialized")
 	b.deps.sv = sv
 }
@@ -124,6 +136,9 @@ func (b *dependencyBuilder) build() (*dependencies, *resourceManager, error) {
 		return nil, b.rm, err
 	}
 	if err := b.initTelegram(); err != nil {
+		return nil, b.rm, err
+	}
+	if err := b.initEmail(); err != nil {
 		return nil, b.rm, err
 	}
 	if err := b.initRepository(); err != nil {
