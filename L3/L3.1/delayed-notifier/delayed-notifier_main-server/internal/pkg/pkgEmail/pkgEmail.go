@@ -1,6 +1,7 @@
 package pkgEmail
 
 import (
+	"crypto/tls"
 	"fmt"
 	"sync"
 
@@ -13,17 +14,24 @@ type Client struct {
 }
 
 func New(cfg *Config) (*Client, error) {
-	if cfg.SMTPHost == "" || cfg.Username == "" || cfg.Password == "" {
-		return nil, fmt.Errorf("invalid email config")
+	if cfg.SMTPHost == "" || cfg.Username == "" || cfg.Password == "" || cfg.From == "" {
+		return nil, fmt.Errorf("invalid email config: missing required fields")
 	}
-	return &Client{cfg: cfg}, nil
+	return &Client{
+		cfg: &Config{
+			SMTPPort: cfg.SMTPPort,
+			SMTPHost: cfg.SMTPHost,
+			Username: cfg.Username,
+			Password: cfg.Password,
+			From:     cfg.From,
+		},
+	}, nil
 }
 
 func (c *Client) SendEmail(to []string, subject, body string, isHTML bool, attachments ...string) error {
-	c.lock.Lock()
-	defer c.lock.Unlock()
 
 	msg := gomail.NewMessage()
+	c.lock.Lock()
 	msg.SetHeader("From", c.cfg.From)
 	msg.SetHeader("To", to...)
 	msg.SetHeader("Subject", subject)
@@ -37,8 +45,10 @@ func (c *Client) SendEmail(to []string, subject, body string, isHTML bool, attac
 	for _, a := range attachments {
 		msg.Attach(a)
 	}
+	c.lock.Unlock()
 
 	dialer := gomail.NewDialer(c.cfg.SMTPHost, c.cfg.SMTPPort, c.cfg.Username, c.cfg.Password)
+	dialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	if err := dialer.DialAndSend(msg); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}

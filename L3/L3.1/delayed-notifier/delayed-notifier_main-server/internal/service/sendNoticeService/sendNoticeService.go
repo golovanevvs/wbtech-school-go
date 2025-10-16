@@ -75,7 +75,7 @@ func (sv *SendNoticeService) SendNoticeToTelegram(ctx context.Context, username 
 
 func (sv *SendNoticeService) SendNoticeToEmail(ctx context.Context, email string, notice model.Notice) error {
 	fn := func() error {
-		err := sv.em.SendEmail([]string{email}, "delayed-notifier", notice.Message, false, "")
+		err := sv.em.SendEmail([]string{email}, "delayed-notifier", notice.Message, false)
 		if err != nil {
 			sv.lg.Warn().Err(err).Str("e-mail", email).Msg("failed to send notice to e-mail")
 		}

@@ -17,7 +17,7 @@ type Config struct {
 func NewConfig(cfg *config.Config) *Config {
 	return &Config{
 		SMTPPort: cfg.GetInt("email.smtp_port"),
-		SMTPHost: cfg.GetString("email_smtp_host"),
+		SMTPHost: cfg.GetString("email.smtp_host"),
 		Username: cfg.GetString("email.username"),
 		Password: cfg.GetString("email.password"),
 		From:     cfg.GetString("email.from"),
