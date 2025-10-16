@@ -1,8 +1,10 @@
 package sendNoticeService
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
@@ -52,8 +54,20 @@ func (sv *SendNoticeService) SendNoticeToTelegram(ctx context.Context, username 
 	}
 
 	fn := func() error {
+		defer func() {
+			if r := recover(); r != nil {
+				sv.lg.Error().Any("panic", r).Msg("panic recovered")
+				err = fmt.Errorf("panic recovered: %v", r)
+				fmt.Println("Press Enter to close…")
+				reader := bufio.NewReader(os.Stdin)
+				_, _ = reader.ReadString('\n')
+			}
+		}()
+
 		err := sv.tg.SendTo(int64(chatID), notice.Message)
-		sv.lg.Warn().Err(err).Msg("failed to send notice to telegram")
+		if err != nil {
+			sv.lg.Warn().Err(err).Msg("failed to send notice to telegram")
+		}
 		return err
 	}
 

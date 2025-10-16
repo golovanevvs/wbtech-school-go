@@ -1,8 +1,11 @@
 package consumeNoticeService
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
+	"os"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
@@ -52,6 +55,14 @@ func (sv *ConsumeNoticeService) Consume(ctx context.Context) error {
 }
 
 func (sv *ConsumeNoticeService) handleMessage(ctx context.Context, message amqp.Delivery) {
+	defer func() {
+		if r := recover(); r != nil {
+			sv.lg.Error().Any("panic", r).Msg("panic recovered")
+			fmt.Println("Press Enter to close…")
+			reader := bufio.NewReader(os.Stdin)
+			_, _ = reader.ReadString('\n')
+		}
+	}()
 	sv.lg.Trace().Msg("--- consume handler started")
 	defer sv.lg.Trace().Msg("--- consume handler stopped")
 
