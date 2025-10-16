@@ -18,13 +18,7 @@ func New(cfg *Config) (*Client, error) {
 		return nil, fmt.Errorf("invalid email config: missing required fields")
 	}
 	return &Client{
-		cfg: &Config{
-			SMTPPort: cfg.SMTPPort,
-			SMTPHost: cfg.SMTPHost,
-			Username: cfg.Username,
-			Password: cfg.Password,
-			From:     cfg.From,
-		},
+		cfg: cfg,
 	}, nil
 }
 

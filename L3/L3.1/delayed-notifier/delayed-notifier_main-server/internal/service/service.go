@@ -30,7 +30,7 @@ func New(cfg *Config, rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Cl
 	delNotSv := deleteNoticeService.New(rp)
 	sendNotSv := sendNoticeService.New(cfg.sendNoticeServiceConfig, tg, em, rp)
 	return &Service{
-		AddNoticeService:     addNoticeService.New(rp, rb),
+		AddNoticeService:     addNoticeService.New(rp, rb, delNotSv),
 		DeleteNoticeService:  delNotSv,
 		TelegramService:      telegramService.New(tg, rp),
 		ConsumeNoticeService: consumeNoticeService.New(rb, delNotSv, sendNotSv),

@@ -2,22 +2,18 @@ package rpRedisLoadTelChatID
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
-	"github.com/wb-go/wbf/zlog"
 )
 
 type RpRedisLoadTelChatID struct {
-	lg zlog.Zerolog
 	rd *pkgRedis.Client
 }
 
 func New(rd *pkgRedis.Client) *RpRedisLoadTelChatID {
-	lg := zlog.Logger.With().Str("component", "RpRedisLoadTelName").Logger()
 	return &RpRedisLoadTelChatID{
-		lg: lg,
 		rd: rd,
 	}
 }
@@ -25,14 +21,12 @@ func New(rd *pkgRedis.Client) *RpRedisLoadTelChatID {
 func (rp *RpRedisLoadTelChatID) LoadTelegramChatID(ctx context.Context, username string) (chatID int64, err error) {
 	chatIDStr, err := rp.rd.Get(ctx, username)
 	if err != nil {
-		rp.lg.Error().Err(err).Msg("failed to load chat ID from Redis")
-		return 0, fmt.Errorf("failed to load chat ID from Redis: %w", err)
+		return 0, pkgErrors.Wrapf(err, "load chat ID from Redis by username: %s", username)
 	}
 
 	chatid, err := strconv.Atoi(chatIDStr)
 	if err != nil {
-		rp.lg.Error().Err(err).Msg("failed to convert chat ID to int")
-		return 0, fmt.Errorf("failed to convert chat ID to int: %w", err)
+		return 0, pkgErrors.Wrapf(err, "convert to int from chat ID: %d", chatid)
 	}
 
 	chatID = int64(chatid)
