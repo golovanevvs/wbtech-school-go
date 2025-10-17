@@ -105,7 +105,7 @@ func (b *dependencyBuilder) initEmail() error {
 }
 
 func (b *dependencyBuilder) initRepository() error {
-	rp, err := repository.New(b.cfg.rp, b.deps.rd)
+	rp, err := repository.New(b.deps.rd)
 	if err != nil {
 		return fmt.Errorf("error initialize repository: %w", err)
 	}

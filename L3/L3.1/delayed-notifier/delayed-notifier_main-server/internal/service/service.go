@@ -12,7 +12,7 @@ import (
 )
 
 type iRepository interface {
-	addNoticeService.IRepository
+	addNoticeService.ISaveNoticeRepository
 	deleteNoticeService.IRepository
 	sendNoticeService.IRepository
 	telegramService.IRepository

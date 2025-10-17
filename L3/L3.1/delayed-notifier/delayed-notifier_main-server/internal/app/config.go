@@ -8,7 +8,6 @@ import (
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport"
 	"github.com/wb-go/wbf/config"
@@ -20,7 +19,6 @@ type Config struct {
 	rb *pkgRabbitmq.Config
 	tg *pkgTelegram.Config
 	em *pkgEmail.Config
-	rp *repository.Config
 	sv *service.Config
 	tr *transport.Config
 }
@@ -56,7 +54,6 @@ func newConfig() (*Config, error) {
 		rb: pkgRabbitmq.NewConfig(cfg),
 		tg: pkgTelegram.NewConfig(cfg),
 		em: pkgEmail.NewConfig(cfg),
-		rp: repository.NewConfig(cfg),
 		sv: service.NewConfig(cfg),
 		tr: transport.NewConfig(cfg),
 	}, nil
@@ -66,13 +63,12 @@ func (a *Config) String() string {
 	if a == nil {
 		return "appConfig: <nil>"
 	}
-	return fmt.Sprintf("Configuration:\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n",
+	return fmt.Sprintf("Configuration:\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n",
 		a.lg.String(),
 		a.rd.String(),
 		a.rb.String(),
 		a.tg.String(),
 		a.em.String(),
-		a.rp.String(),
 		a.sv.String(),
 		a.tr.String(),
 	)
