@@ -3,8 +3,8 @@ package app
 import (
 	"fmt"
 
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/logger"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgEmail"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgLogger"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
@@ -15,7 +15,7 @@ import (
 )
 
 type Config struct {
-	lg *logger.Config
+	lg *pkgLogger.Config
 	rd *pkgRedis.Config
 	rb *pkgRabbitmq.Config
 	tg *pkgTelegram.Config
@@ -51,7 +51,7 @@ func newConfig() (*Config, error) {
 	}
 
 	return &Config{
-		lg: logger.NewConfig(cfg),
+		lg: pkgLogger.NewConfig(cfg),
 		rd: pkgRedis.NewConfig(cfg),
 		rb: pkgRabbitmq.NewConfig(cfg),
 		tg: pkgTelegram.NewConfig(cfg),
