@@ -8,32 +8,34 @@ import (
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/consumeNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/deleteNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/sendNoticeService"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/telegramService"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/telegramStartService"
+	"github.com/wb-go/wbf/zlog"
 )
 
 type iRepository interface {
 	addNoticeService.ISaveNoticeRepository
 	deleteNoticeService.IRepository
 	sendNoticeService.IRepository
-	telegramService.IRepository
+	telegramStartService.IRepository
 }
 
 type Service struct {
 	*addNoticeService.AddNoticeService
 	*deleteNoticeService.DeleteNoticeService
-	*telegramService.TelegramService
+	*telegramStartService.TelegramStartService
 	*consumeNoticeService.ConsumeNoticeService
 	*sendNoticeService.SendNoticeService
 }
 
 func New(cfg *Config, rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client, em *pkgEmail.Client) *Service {
+	lg := zlog.Logger.With().Str("layer", "service").Logger()
 	delNotSv := deleteNoticeService.New(rp)
-	sendNotSv := sendNoticeService.New(cfg.sendNoticeServiceConfig, tg, em, rp)
+	sendNotSv := sendNoticeService.New(cfg.sendNoticeServiceConfig, &lg, tg, em, rp)
 	return &Service{
-		AddNoticeService:     addNoticeService.New(rp, rb, delNotSv),
+		AddNoticeService:     addNoticeService.New(&lg, rb, delNotSv, rp),
 		DeleteNoticeService:  delNotSv,
-		TelegramService:      telegramService.New(tg, rp),
-		ConsumeNoticeService: consumeNoticeService.New(rb, delNotSv, sendNotSv),
+		TelegramStartService: telegramStartService.New(&lg, tg, rp),
+		ConsumeNoticeService: consumeNoticeService.New(&lg, rb, delNotSv, sendNotSv),
 		SendNoticeService:    sendNotSv,
 	}
 }

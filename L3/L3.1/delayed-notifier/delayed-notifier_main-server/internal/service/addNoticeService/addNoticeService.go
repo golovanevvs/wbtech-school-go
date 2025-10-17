@@ -22,23 +22,31 @@ type IDeleteNoticeService interface {
 }
 
 type AddNoticeService struct {
-	lg       zlog.Zerolog
-	rp       ISaveNoticeRepository
+	lg       *zlog.Zerolog
 	rb       *pkgRabbitmq.Client
 	delNotSv IDeleteNoticeService
+	rp       ISaveNoticeRepository
 }
 
-func New(rp ISaveNoticeRepository, rb *pkgRabbitmq.Client, delNotSv IDeleteNoticeService) *AddNoticeService {
-	lg := zlog.Logger.With().Str("component", "service-addNoticeService").Logger()
+func New(
+	parentLg *zlog.Zerolog,
+	rb *pkgRabbitmq.Client,
+	delNotSv IDeleteNoticeService,
+	rp ISaveNoticeRepository,
+) *AddNoticeService {
+	lg := parentLg.With().Str("component", "AddNoticeService").Logger()
 	return &AddNoticeService{
-		lg:       lg,
-		rp:       rp,
+		lg:       &lg,
 		rb:       rb,
 		delNotSv: delNotSv,
+		rp:       rp,
 	}
 }
 
 func (sv *AddNoticeService) AddNotice(ctx context.Context, reqNotice model.ReqNotice) (id int, err error) {
+	lg := sv.lg.With().Str("method", "AddNotice").Logger()
+	lg.Trace().Msgf("%s method starting", color.GreenString("🟢"))
+	defer lg.Trace().Msgf("%s method stopped", color.RedString("🟢"))
 
 	createdAt := time.Now()
 	sentAt := reqNotice.SentAt
@@ -52,24 +60,24 @@ func (sv *AddNoticeService) AddNotice(ctx context.Context, reqNotice model.ReqNo
 		Status:    model.StatusScheduled,
 	}
 
-	sv.lg.Trace().Msgf("%s saving notice to repository...", color.YellowString("➤"))
+	lg.Trace().Msgf("%s saving notice to repository...", color.YellowString("➤"))
 	id, err = sv.rp.SaveNotice(ctx, notice)
 	if err != nil {
 		return 0, pkgErrors.Wrap(err, "save notice to repository")
 	}
-	sv.lg.Trace().Msgf("%s notice saved to repository successfully", color.GreenString("✔"))
+	lg.Trace().Msgf("%s notice saved to repository successfully", color.GreenString("✔"))
 
 	notice.ID = id
 
-	sv.lg.Trace().Int("notice ID", notice.ID).Msgf("%s publishing notice with TTL to message broker...", color.YellowString("➤"))
+	lg.Trace().Int("notice ID", notice.ID).Msgf("%s publishing notice with TTL to message broker...", color.YellowString("➤"))
 	if err = sv.rb.PublishStructWithTTL(notice, ttl); err != nil {
-		sv.lg.Error().Err(err).Msg("error publish struct with TTL to RabbitMQ")
+		lg.Error().Err(err).Msg("error publish struct with TTL to RabbitMQ")
 		if err := sv.delNotSv.DeleteNotice(ctx, notice.ID); err != nil {
-			sv.lg.Trace().Err(err).Int("notice ID", notice.ID).Msg("failed deleted notice from Redis")
+			lg.Trace().Err(err).Int("notice ID", notice.ID).Msg("failed deleted notice from Redis")
 		}
 		return 0, fmt.Errorf("error publish struct with TTL to RabbitMQ")
 	}
-	sv.lg.Trace().Int("notice ID", notice.ID).Msgf("%s notice with TTL published to message broker successfully", color.GreenString("✔"))
+	lg.Trace().Int("notice ID", notice.ID).Msgf("%s notice with TTL published to message broker successfully", color.GreenString("✔"))
 
 	return id, nil
 }

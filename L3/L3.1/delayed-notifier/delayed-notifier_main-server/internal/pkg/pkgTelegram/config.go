@@ -1,8 +1,6 @@
 package pkgTelegram
 
 import (
-	"fmt"
-
 	"github.com/wb-go/wbf/config"
 )
 
@@ -17,5 +15,5 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("telegram:\n \033[33mtoken: \033[0m\033[32m%s\033[0m", c.Token)
+	return "telegram:\n \033[33mtoken: \033[0m\033[32m***\033[0m"
 }

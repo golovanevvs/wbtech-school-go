@@ -2,11 +2,12 @@ package sendNoticeService
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
+	"github.com/fatih/color"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgEmail"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
 	"github.com/wb-go/wbf/retry"
 	"github.com/wb-go/wbf/zlog"
@@ -17,17 +18,23 @@ type IRepository interface {
 }
 
 type SendNoticeService struct {
-	lg            zlog.Zerolog
+	lg            *zlog.Zerolog
 	tg            *pkgTelegram.Client
 	em            *pkgEmail.Client
 	rp            IRepository
 	retryStrategy retry.Strategy
 }
 
-func New(cfg *Config, tg *pkgTelegram.Client, em *pkgEmail.Client, rp IRepository) *SendNoticeService {
-	lg := zlog.Logger.With().Str("component", "service-sendNoticeService").Logger()
+func New(
+	cfg *Config,
+	parentLg *zlog.Zerolog,
+	tg *pkgTelegram.Client,
+	em *pkgEmail.Client,
+	rp IRepository,
+) *SendNoticeService {
+	lg := parentLg.With().Str("component", "SendNoticeService").Logger()
 	return &SendNoticeService{
-		lg:            lg,
+		lg:            &lg,
 		tg:            tg,
 		em:            em,
 		rp:            rp,
@@ -36,7 +43,12 @@ func New(cfg *Config, tg *pkgTelegram.Client, em *pkgEmail.Client, rp IRepositor
 }
 
 func (sv *SendNoticeService) SendNotice(ctx context.Context, notice model.Notice) {
+	lg := sv.lg.With().Str("method", "SendNotice").Logger()
+	lg.Trace().Msgf("%s method starting", color.GreenString("🟢"))
+	defer lg.Trace().Msgf("%s method stopped", color.RedString("🟢"))
+
 	wg := sync.WaitGroup{}
+
 	for _, ch := range notice.Channels {
 		wg.Go(func() {
 			switch ch.Type {
@@ -51,41 +63,63 @@ func (sv *SendNoticeService) SendNotice(ctx context.Context, notice model.Notice
 }
 
 func (sv *SendNoticeService) SendNoticeToTelegram(ctx context.Context, username string, notice model.Notice) error {
+	lg := sv.lg.With().Str("method", "SendNoticeToTelegram").Logger()
+	lg.Trace().Msgf("%s method starting", color.GreenString("🟢"))
+	defer lg.Trace().Msgf("%s method stopped", color.RedString("🟢"))
+
+	lg.Trace().Str("username", username).Int("notice ID", notice.ID).Msgf("%s loading chat ID from repository...", color.YellowString("➤"))
 	chatID, err := sv.rp.LoadTelegramChatID(ctx, username)
 	if err != nil {
-		sv.lg.Error().Err(err).Msg("failed to load telegram chat id")
-		return fmt.Errorf("failed to load telegram chat id: %w", err)
+		return pkgErrors.Wrapf(err, "load telegram chat id from repository;  username: %s, notice ID: %d", username, notice.ID)
 	}
+	lg.Trace().Str("username", username).Int("notice ID", notice.ID).Int64("chat ID", chatID).Msgf("%s chat ID loaded from repository successfully", color.GreenString("✔"))
 
 	fn := func() error {
+		lg.Trace().Str("username", username).Int("notice ID", notice.ID).Msgf("%s sending message to Telegram...", color.YellowString("➤"))
 		err := sv.tg.SendTo(chatID, notice.Message)
 		if err != nil {
-			sv.lg.Warn().Err(err).Int64("chat ID", chatID).Msg("failed to send notice to telegram")
+			sv.lg.Warn().Err(err).Int64("chat ID", chatID).Int("notice ID", notice.ID).Msg("failed to send notice to telegram")
+		} else {
+			lg.Trace().Str("username", username).Int("notice ID", notice.ID).Int64("chat ID", chatID).Msgf("%s message sended to Telegram successfully", color.GreenString("✔"))
 		}
 		return err
 	}
 
+	lg.Trace().Str("username", username).Int("notice ID", notice.ID).Msgf("%s sending message to Telegram with retry starting...", color.YellowString("➤"))
 	if err := retry.Do(fn, sv.retryStrategy); err != nil {
-		sv.lg.Error().Err(err).Int("attempts", sv.retryStrategy.Attempts).Msg("failed to send notice to telegram after all attempts")
-		return fmt.Errorf("failed to send notice to telegram: %w", err)
+		return pkgErrors.Wrapf(err,
+			"send notice to telegram after all ettempts; chat ID: %d, notice ID: %d, attempts: %d",
+			chatID, notice.ID, sv.retryStrategy.Attempts)
 	}
+	lg.Trace().Str("username", username).Int("notice ID", notice.ID).Int64("chat ID", chatID).Msgf("%s sending message to Telegram with retry completed", color.GreenString("✔"))
 
 	return nil
 }
 
 func (sv *SendNoticeService) SendNoticeToEmail(ctx context.Context, email string, notice model.Notice) error {
+	lg := sv.lg.With().Str("method", "SendNoticeToEmail").Logger()
+	lg.Trace().Msgf("%s method starting", color.GreenString("🟢"))
+	defer lg.Trace().Msgf("%s method stopped", color.RedString("🟢"))
+
 	fn := func() error {
+		lg.Trace().Str("e-mail", email).Int("notice ID", notice.ID).Msgf("%s sending message to e-mail...", color.YellowString("➤"))
 		err := sv.em.SendEmail([]string{email}, "delayed-notifier", notice.Message, false)
 		if err != nil {
-			sv.lg.Warn().Err(err).Str("e-mail", email).Msg("failed to send notice to e-mail")
+			sv.lg.Warn().Err(err).Str("e-mail", email).Int("notice ID", notice.ID).Msg("failed to send notice to e-mail")
+		} else {
+			lg.Trace().Str("e-mail", email).Int("notice ID", notice.ID).Msgf("%s message sended to e-mail successfully", color.GreenString("✔"))
 		}
 		return err
 	}
 
+	lg.Trace().Str("e-mail", email).Int("notice ID", notice.ID).Msgf("%s sending message to e-mail with retry starting...", color.YellowString("➤"))
 	if err := retry.Do(fn, sv.retryStrategy); err != nil {
-		sv.lg.Error().Err(err).Int("attempts", sv.retryStrategy.Attempts).Msg("failed to send notice to e-mail after all attempts")
-		return fmt.Errorf("failed to send notice to e-mail: %w", err)
+		// return fmt.Errorf("failed to send notice to e-mail: %w", err)
+		return pkgErrors.Wrapf(err,
+			"send notice to e-mail after all ettempts; e-mail: %s, notice ID: %d, attempts: %d",
+			email, notice.ID, sv.retryStrategy.Attempts)
 	}
+	lg.Trace().Str("e-mail", email).Int("notice ID", notice.ID).Msgf("%s sending message to e-mail with retry completed", color.GreenString("✔"))
 
 	return nil
 }

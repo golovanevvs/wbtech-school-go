@@ -12,7 +12,7 @@ import (
 )
 
 type IService interface {
-	HandleStart(ctx context.Context, username string, chatID int64, message string) error
+	Start(ctx context.Context, username string, chatID int64, message string) error
 }
 
 type Handler struct {
@@ -62,7 +62,7 @@ func (hd *Handler) WebHookHandler(c *ginext.Context) {
 	chatID := update.Message.Chat.ID
 	message := update.Message.Text
 
-	if err := hd.sv.HandleStart(c.Request.Context(), username, chatID, message); err != nil {
+	if err := hd.sv.Start(c.Request.Context(), username, chatID, message); err != nil {
 		lg.Warn().Int64("chatID", chatID).Str("message_body", message).Err(err).Msg("failed to handle message")
 		c.Status(http.StatusOK)
 		return

@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/fatih/color"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/wb-go/wbf/zlog"
@@ -19,16 +21,16 @@ type iSendNoticeService interface {
 }
 
 type ConsumeNoticeService struct {
-	lg        zlog.Zerolog
+	lg        *zlog.Zerolog
 	rb        *pkgRabbitmq.Client
 	delNotSv  iDeleteNoticeService
 	sendNotSv iSendNoticeService
 }
 
-func New(rb *pkgRabbitmq.Client, delNotSv iDeleteNoticeService, sendNotSv iSendNoticeService) *ConsumeNoticeService {
-	lg := zlog.Logger.With().Str("component", "service-consumeNoticeService").Logger()
+func New(parentLg *zlog.Zerolog, rb *pkgRabbitmq.Client, delNotSv iDeleteNoticeService, sendNotSv iSendNoticeService) *ConsumeNoticeService {
+	lg := parentLg.With().Str("component", "ConsumeNoticeService").Logger()
 	return &ConsumeNoticeService{
-		lg:        lg,
+		lg:        &lg,
 		rb:        rb,
 		delNotSv:  delNotSv,
 		sendNotSv: sendNotSv,
@@ -36,45 +38,58 @@ func New(rb *pkgRabbitmq.Client, delNotSv iDeleteNoticeService, sendNotSv iSendN
 }
 
 func (sv *ConsumeNoticeService) Consume(ctx context.Context) error {
-	sv.lg.Debug().Msg("----- consumer starting...")
+	lg := sv.lg.With().Str("method", "Consume").Logger()
+	lg.Trace().Msgf("%s method starting", color.GreenString("🟢"))
+	defer lg.Trace().Msgf("%s method stopped", color.RedString("🟢"))
+
 	handler := func(msg amqp.Delivery) {
 		sv.handleMessage(ctx, msg)
 	}
 
 	if err := sv.rb.ConsumeDLQWithWorkers(ctx, 5, handler); err != nil {
-		sv.lg.Error().Err(err).Msg("failed to consume DLQ with workers")
-		return err
+		return pkgErrors.Wrap(err, "consumeDLQ with workers")
 	}
 
-	sv.lg.Info().Msg("----- consumer started")
+	lg.Info().Msgf("%s consumer started", color.BlueString("ℹ️"))
 
 	return nil
 }
 
 func (sv *ConsumeNoticeService) handleMessage(ctx context.Context, message amqp.Delivery) {
-	sv.lg.Trace().Msg("--- consume handler started")
-	defer sv.lg.Trace().Msg("--- consume handler stopped")
+	lg := sv.lg.With().Str("method", "handleMessage").Logger()
+	lg.Trace().Msgf("%s method starting", color.GreenString("🟢"))
+	defer lg.Trace().Msgf("%s method stopped", color.RedString("🟢"))
 
 	// getting from DLQ, unmarshaling
 	var notice model.Notice
+	lg.Trace().Msgf("%s unmarshaling message to notice...", color.YellowString("➤"))
 	err := json.Unmarshal(message.Body, &notice)
 	if err != nil {
-		sv.lg.Error().Err(err).Msg("failed to unmarshal message")
+		sv.lg.Error().Err(err).Msgf("%s failed to unmarshal message", color.RedString("❌"))
 		return
 	}
-	sv.lg.Debug().Str("message", notice.Message).Msg("received message")
-	if err := sv.rb.Ack(message); err != nil {
-		sv.lg.Error().Err(err).Msg("failed to ack message")
-	}
+	lg.Trace().Int("notice ID", notice.ID).Str("status", string(notice.Status)).Msgf("%s data unmarshaled successfully", color.GreenString("✔"))
 
-	// cheking status and sending notice
+	lg.Trace().Int("notice ID", notice.ID).Msgf("%s acknowledging message...", color.YellowString("➤"))
+	if err := sv.rb.Ack(message); err != nil {
+		sv.lg.Error().Err(err).Int("notice ID", notice.ID).Msgf("%s failed to ack message", color.RedString("❌"))
+	}
+	lg.Trace().Int("notice ID", notice.ID).Msgf("%s message acknowledged successfully", color.GreenString("✔"))
+
+	// cheking status, setting new status and sending notice
 	if notice.Status != model.StatusDeleted {
+		notice.Status = model.StatusPending
+		lg.Trace().Int("notice ID", notice.ID).Msgf("%s sending message...", color.YellowString("➤"))
 		sv.sendNotSv.SendNotice(ctx, notice)
+		lg.Trace().Int("notice ID", notice.ID).Msgf("%s message sending completed", color.GreenString("✔"))
+		notice.Status = model.StatusSent
 	}
 
 	// deleting notice from repository
+	lg.Trace().Int("notice ID", notice.ID).Msgf("%s deleting message from repository...", color.YellowString("➤"))
 	if err := sv.delNotSv.DeleteNotice(ctx, notice.ID); err != nil {
-		sv.lg.Error().Err(err).Msg("failed to delete notice")
+		sv.lg.Error().Err(err).Int("notice ID", notice.ID).Msgf("%s failed to delete notice from repository", color.RedString("❌"))
 		return
 	}
+	lg.Trace().Int("notice ID", notice.ID).Msgf("%s message deleted from repository", color.GreenString("✔"))
 }
