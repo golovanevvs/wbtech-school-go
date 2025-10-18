@@ -22,13 +22,13 @@ func main() {
 
 	app, err := app.New()
 	if err != nil {
-		lg.Error().Msg("delayed-notifier application stopped with error")
+		lg.Error().Err(err).Msg("delayed-notifier application stopped with error")
 		wait()
 		os.Exit(1)
 	}
 
 	if err := app.Run(cancel); err != nil {
-		lg.Error().Msg("delayed-notifier application stopped with error")
+		lg.Error().Err(err).Msg("delayed-notifier application stopped with error")
 		wait()
 		os.Exit(1)
 	}

@@ -16,7 +16,7 @@ type DeleteNoticeService struct {
 }
 
 func New(rp IRepository) *DeleteNoticeService {
-	lg := zlog.Logger.With().Str("component", "service-deleteNoticeService").Logger()
+	lg := zlog.Logger.With().Str("component-1", "service-deleteNoticeService").Logger()
 	return &DeleteNoticeService{
 		lg: lg,
 		rp: rp,

@@ -34,7 +34,7 @@ func New(
 	delNotSv IDeleteNoticeService,
 	rp ISaveNoticeRepository,
 ) *AddNoticeService {
-	lg := parentLg.With().Str("component", "AddNoticeService").Logger()
+	lg := parentLg.With().Str("component-1", "AddNoticeService").Logger()
 	return &AddNoticeService{
 		lg:       &lg,
 		rb:       rb,

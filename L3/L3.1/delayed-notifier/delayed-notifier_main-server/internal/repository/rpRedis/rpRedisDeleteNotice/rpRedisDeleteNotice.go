@@ -16,7 +16,7 @@ type RpRedisDeleteNotice struct {
 }
 
 func New(parentLg *zlog.Zerolog, rd *pkgRedis.Client) *RpRedisDeleteNotice {
-	lg := parentLg.With().Str("component1", "RpRedisDeleteNotice").Logger()
+	lg := parentLg.With().Str("component-2", "RpRedisDeleteNotice").Logger()
 	return &RpRedisDeleteNotice{
 		lg: &lg,
 		rd: rd,

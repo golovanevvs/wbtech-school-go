@@ -6,6 +6,7 @@ import (
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/healthHandler"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/telegramHandler"
 	"github.com/wb-go/wbf/ginext"
+	"github.com/wb-go/wbf/zlog"
 )
 
 type IService interface {
@@ -18,13 +19,15 @@ type Handler struct {
 	Rt *ginext.Engine
 }
 
-func New(cfg *Config, sv IService) *Handler {
+func New(cfg *Config, parentLg *zlog.Zerolog, sv IService) *Handler {
+	lg := parentLg.With().Str("component-2", "handler").Logger()
+
 	rt := ginext.New(cfg.GinMode)
 	hd := &Handler{
 		Rt: rt,
 	}
 
-	addNoticeHandler := addNoticeHandler.New(rt, sv)
+	addNoticeHandler := addNoticeHandler.New(&lg, rt, sv)
 	addNoticeHandler.RegisterRoutes()
 
 	deleteNoticeHandler := deleteNoticeHandler.New(rt, sv)

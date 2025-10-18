@@ -32,7 +32,7 @@ func New(
 	em *pkgEmail.Client,
 	rp IRepository,
 ) *SendNoticeService {
-	lg := parentLg.With().Str("component", "SendNoticeService").Logger()
+	lg := parentLg.With().Str("component-1", "SendNoticeService").Logger()
 	return &SendNoticeService{
 		lg:            &lg,
 		tg:            tg,
@@ -78,11 +78,11 @@ func (sv *SendNoticeService) SendNoticeToTelegram(ctx context.Context, username 
 		lg.Trace().Str("username", username).Int("notice ID", notice.ID).Msgf("%s sending message to Telegram...", color.YellowString("➤"))
 		err := sv.tg.SendTo(chatID, notice.Message)
 		if err != nil {
-			sv.lg.Warn().Err(err).Int64("chat ID", chatID).Int("notice ID", notice.ID).Msg("failed to send notice to telegram")
-		} else {
-			lg.Trace().Str("username", username).Int("notice ID", notice.ID).Int64("chat ID", chatID).Msgf("%s message sended to Telegram successfully", color.GreenString("✔"))
+			sv.lg.Warn().Err(err).Int64("chat ID", chatID).Int("notice ID", notice.ID).Msgf("%s failed to send notice to telegram", color.YellowString("⚠"))
+			return err
 		}
-		return err
+		lg.Trace().Str("username", username).Int("notice ID", notice.ID).Int64("chat ID", chatID).Msgf("%s message sended to Telegram successfully", color.GreenString("✔"))
+		return nil
 	}
 
 	lg.Trace().Str("username", username).Int("notice ID", notice.ID).Msgf("%s sending message to Telegram with retry starting...", color.YellowString("➤"))
@@ -114,7 +114,6 @@ func (sv *SendNoticeService) SendNoticeToEmail(ctx context.Context, email string
 
 	lg.Trace().Str("e-mail", email).Int("notice ID", notice.ID).Msgf("%s sending message to e-mail with retry starting...", color.YellowString("➤"))
 	if err := retry.Do(fn, sv.retryStrategy); err != nil {
-		// return fmt.Errorf("failed to send notice to e-mail: %w", err)
 		return pkgErrors.Wrapf(err,
 			"send notice to e-mail after all ettempts; e-mail: %s, notice ID: %d, attempts: %d",
 			email, notice.ID, sv.retryStrategy.Attempts)

@@ -3,6 +3,7 @@ package pkgLogger
 import (
 	"fmt"
 
+	"github.com/fatih/color"
 	"github.com/wb-go/wbf/config"
 )
 
@@ -17,5 +18,7 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("logger:\n \033[33mlevel: \033[0m\033[32m%s\033[0m", c.Level)
+	return fmt.Sprintf(`logger:
+  %s: %s`,
+		color.YellowString("level"), color.GreenString(c.Level))
 }

@@ -28,7 +28,7 @@ type ConsumeNoticeService struct {
 }
 
 func New(parentLg *zlog.Zerolog, rb *pkgRabbitmq.Client, delNotSv iDeleteNoticeService, sendNotSv iSendNoticeService) *ConsumeNoticeService {
-	lg := parentLg.With().Str("component", "ConsumeNoticeService").Logger()
+	lg := parentLg.With().Str("component-1", "ConsumeNoticeService").Logger()
 	return &ConsumeNoticeService{
 		lg:        &lg,
 		rb:        rb,

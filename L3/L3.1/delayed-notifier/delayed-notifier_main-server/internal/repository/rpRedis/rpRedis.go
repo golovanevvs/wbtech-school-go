@@ -19,7 +19,7 @@ type RpRedis struct {
 }
 
 func New(parentLg *zlog.Zerolog, rd *pkgRedis.Client) *RpRedis {
-	lg := parentLg.With().Str("component", "RpRedis").Logger()
+	lg := parentLg.With().Str("component-1", "RpRedis").Logger()
 	return &RpRedis{
 		RpRedisSaveNotice:    rpRedisSaveNotice.New(&lg, rd),
 		RpRedisLoadNotice:    rpRedisLoadNotice.New(&lg, rd),

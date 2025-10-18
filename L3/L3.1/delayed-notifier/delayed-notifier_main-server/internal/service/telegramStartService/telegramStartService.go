@@ -19,7 +19,7 @@ type TelegramStartService struct {
 }
 
 func New(parentLg *zlog.Zerolog, tg *pkgTelegram.Client, rp IRepository) *TelegramStartService {
-	lg := parentLg.With().Str("component", "TelegramStartService").Logger()
+	lg := parentLg.With().Str("component-1", "TelegramStartService").Logger()
 	return &TelegramStartService{
 		lg: &lg,
 		tg: tg,

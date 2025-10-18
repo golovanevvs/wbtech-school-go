@@ -15,7 +15,7 @@ type RpRedisSaveChatID struct {
 }
 
 func New(parentLg *zlog.Zerolog, rd *pkgRedis.Client) *RpRedisSaveChatID {
-	lg := parentLg.With().Str("component1", "RpRedisSaveTelChatID").Logger()
+	lg := parentLg.With().Str("component-2", "RpRedisSaveTelChatID").Logger()
 	return &RpRedisSaveChatID{
 		lg: &lg,
 		rd: rd,

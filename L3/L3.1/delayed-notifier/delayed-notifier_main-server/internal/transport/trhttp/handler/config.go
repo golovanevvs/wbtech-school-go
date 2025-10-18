@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 
+	"github.com/fatih/color"
 	"github.com/wb-go/wbf/config"
 )
 
@@ -17,5 +18,8 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("\033[33m   GinMode: \033[0m\033[32m%s\033[0m", c.GinMode)
+	return fmt.Sprintf(`handler:
+      %s: %s`,
+		color.YellowString("Gin mode"), color.GreenString(c.GinMode),
+	)
 }
