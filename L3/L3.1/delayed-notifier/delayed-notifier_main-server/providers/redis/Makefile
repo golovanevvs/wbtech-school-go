@@ -24,10 +24,12 @@ SERVICE := redis
 up:
 	@echo "Starting Redis..."
 	@docker compose up -d $(SERVICE)
+	@echo "Redis are up and running."
 
 stop:
 	@echo "Stopping Redis..."
 	@docker compose stop -d $(SERVICE)
+	@echo "Redis stopped."
 
 down:
 	@echo "Down Redis..."

@@ -189,3 +189,28 @@ redis-purge:
 	$(MAKE_CMD) -C $(REDIS) purge
 redis-logs:
 	$(MAKE_CMD) -C $(REDIS) logs
+
+# ========================
+# GRAFANA
+# ========================
+
+GRAFANA = providers/grafana
+
+grafana-up:
+	$(MAKE_CMD) -C $(GRAFANA) up
+grafana-stop:
+	$(MAKE_CMD) -C $(GRAFANA) stop
+grafana-restart:
+	$(MAKE_CMD) -C $(GRAFANA) restart
+grafana-down:
+	$(MAKE_CMD) -C $(GRAFANA) down
+grafana-purge:
+	$(MAKE_CMD) -C $(GRAFANA) purge
+grafana-logs:
+	$(MAKE_CMD) -C $(GRAFANA) logs
+grafana-ps:
+	$(MAKE_CMD) -C $(GRAFANA) ps
+grafana-version:
+	$(MAKE_CMD) -C $(GRAFANA) version
+grafana-check-data:
+	$(MAKE_CMD) -C $(GRAFANA) check-data

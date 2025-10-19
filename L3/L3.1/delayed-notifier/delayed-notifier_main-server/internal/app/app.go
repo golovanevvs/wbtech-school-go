@@ -15,7 +15,6 @@ type App struct {
 func New() (*App, error) {
 	cfg, err := newConfig()
 	if err != nil {
-		zlog.Logger.Error().Err(err).Str("component", "app").Msg("error creating configuration")
 		return nil, fmt.Errorf("error creating configuration: %w", err)
 	}
 
@@ -24,7 +23,6 @@ func New() (*App, error) {
 	zlog.Logger.Info().Str("component", "app").Msg("starting dependency initialization...")
 	deps, rm, err := newDependencyBuilder(cfg).build()
 	if err != nil {
-		zlog.Logger.Error().Err(err).Str("component", "app").Msg("error dependencies initialization")
 		return nil, fmt.Errorf("error dependencies initialization: %w", err)
 	}
 	zlog.Logger.Info().Str("component", "app").Msg("dependencies have been initialized successfully")

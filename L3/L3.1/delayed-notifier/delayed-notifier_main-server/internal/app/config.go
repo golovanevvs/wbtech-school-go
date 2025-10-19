@@ -27,6 +27,7 @@ func newConfig() (*Config, error) {
 
 	envFilePath := ".env"
 	appConfigFilePath := "./providers/app/config.yaml"
+	loggerConfigFilePath := "./providers/logger/config.yaml"
 	redisConfigFilePath := "./providers/redis/config.yaml"
 	rabbitmqConfigFilePath := "./providers/rabbitmq/config.yaml"
 	postgresConfigFilePath := "./providers/postgres/config.yaml"
@@ -39,7 +40,7 @@ func newConfig() (*Config, error) {
 
 	cfg.EnableEnv("")
 
-	if err := cfg.LoadConfigFiles(appConfigFilePath, redisConfigFilePath, rabbitmqConfigFilePath, postgresConfigFilePath); err != nil {
+	if err := cfg.LoadConfigFiles(appConfigFilePath, loggerConfigFilePath, redisConfigFilePath, rabbitmqConfigFilePath, postgresConfigFilePath); err != nil {
 		return nil, fmt.Errorf("failed to load config files: %w", err)
 	}
 
