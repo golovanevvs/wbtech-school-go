@@ -17,9 +17,9 @@ endif
 
 .PHONY: up logs stop restart rm down ps exec
 
-NAME = Grafana
+NAME = Promtail
 PROJECT_NAME = ${APP_NAME}
-SERVICE_NAME = ${GRAFANA_CONTAINER}
+SERVICE_NAME = ${PROMTAIL_CONTAINER}
 
 up:
 	@echo "➡ Starting ${NAME}..."
@@ -35,6 +35,7 @@ stop:
 	@echo "✅ ${NAME} stopped."
 
 restart: stop up
+	@echo "➡ Restarting Promtail..."
 
 rm:
 	@echo "➡ Removing ${NAME} (keeping data)..."
@@ -53,24 +54,24 @@ exec:
 	docker compose -p $(PROJECT_NAME) exec $(SERVICE_NAME) sh
 
 # ========================
-# GRAFANA
+# PROMTAIL
 # ========================
 
-# GRAFANA = providers/grafana
+# PROMTAIL = providers/promtail
 
-# grafana-up:
-# 	$(MAKE_CMD) -C $(GRAFANA) up
-# grafana-logs:
-# 	$(MAKE_CMD) -C $(GRAFANA) logs
-# grafana-stop:
-# 	$(MAKE_CMD) -C $(GRAFANA) stop
-# grafana-restart:
-# 	$(MAKE_CMD) -C $(GRAFANA) restart
-# grafana-rm:
-# 	$(MAKE_CMD) -C $(GRAFANA) rm
-# grafana-down:
-# 	$(MAKE_CMD) -C $(GRAFANA) down
-# grafana-ps:
-# 	$(MAKE_CMD) -C $(GRAFANA) ps
-# grafana-exec:
-# 	$(MAKE_CMD) -C $(GRAFANA) exec
+# promtail-up:
+# 	$(MAKE_CMD) -C $(PROMTAIL) up
+# promtail-logs:
+# 	$(MAKE_CMD) -C $(PROMTAIL) logs
+# promtail-stop:
+# 	$(MAKE_CMD) -C $(PROMTAIL) stop
+# promtail-restart:
+# 	$(MAKE_CMD) -C $(PROMTAIL) restart
+# promtail-rm:
+# 	$(MAKE_CMD) -C $(PROMTAIL) rm
+# promtail-down:
+# 	$(MAKE_CMD) -C $(PROMTAIL) down
+# promtail-ps:
+# 	$(MAKE_CMD) -C $(PROMTAIL) ps
+# promtail-exec:
+# 	$(MAKE_CMD) -C $(PROMTAIL) exec

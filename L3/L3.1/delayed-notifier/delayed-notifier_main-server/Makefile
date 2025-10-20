@@ -1,5 +1,3 @@
-.PHONY: up logs stop restart rm purge build ps exec env
-
 # ========================
 # Load environment variables
 # ========================
@@ -21,70 +19,19 @@ else
 endif
 
 # ========================
-# docker-compose
-# ========================
-
-COMPOSE_DEPS_FILE = docker-compose-deps.yml
-COMPOSE_APP_FILE  = docker-compose-app.yml
-COMPOSE_DEPS_PROJECT = delayed-notifier-deps
-COMPOSE_APP_PROJECT = delayed-notifier-app
-
-up:
-	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) build --build-arg APP_NAME=$(APP_NAME) --build-arg APP_TRANSPORT_HTTP_PORT=$(APP_TRANSPORT_HTTP_PORT)
-	docker compose -f $(COMPOSE_APP_FILE) up -d
-
-logs:
-	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) logs -f
-
-stop:
-	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) stop
-
-restart: stop up
-
-down:
-	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) rm -f
-
-purge:
-	docker compose -p $(APP_NAME) -f $(COMPOSE_APP_FILE) down -v --remove-orphans
-
-build:
-	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) build --no-cache --build-arg APP_NAME=$(APP_NAME) --build-arg APP_TRANSPORT_HTTP_PORT=$(APP_TRANSPORT_HTTP_PORT)
-
-ps:
-	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) ps
-
-exec:
-	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) exec myapp sh
-
-env:
-	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) exec myapp printenv
-
-deps-up:
-	docker compose -p $(COMPOSE_DEPS_PROJECT) -f $(COMPOSE_DEPS_FILE) up -d
-
-deps-logs:
-	docker compose -p $(COMPOSE_DEPS_PROJECT) -f $(COMPOSE_DEPS_FILE) logs -f
-
-deps-stop:
-	docker compose -p $(COMPOSE_DEPS_PROJECT) -f $(COMPOSE_DEPS_FILE) stop
-
-deps-purge:
-	docker compose -p $(COMPOSE_DEPS_PROJECT) -f $(COMPOSE_DEPS_FILE) down -v --remove-orphans
-
-# ========================
 # ALL
 # ========================
 
 all-up:
 	$(MAKE_CMD) all-deps-up
 	@sleep 3
-	$(MAKE_CMD) app-build-up
+	$(MAKE_CMD) app-up
 
-all-deps-up: rabbitmq-up redis-up
+all-deps-up: rabbitmq-up redis-up promtail-up loki-up grafana-up
 
-all-down: rabbitmq-down redis-down
+all-rm: rabbitmq-rm redis-rm promtail-rm loki-rm grafana-rm app-rm
 
-all-purge: rabbitmq-purge redis-purge
+all-down: rabbitmq-down redis-down promtail-down loki-down grafana-down app-down
 
 # ========================
 # APP
@@ -92,12 +39,28 @@ all-purge: rabbitmq-purge redis-purge
 
 APP = providers/app
 
-app-build:
-	$(MAKE_CMD) -C $(APP) build
+app-local-build:
+	$(MAKE_CMD) -C $(APP) local-build
+app-local-up:
+	$(MAKE_CMD) -C $(APP) local-up
+app-local-build-up:
+	$(MAKE_CMD) -C $(APP) local-build-up
 app-up:
 	$(MAKE_CMD) -C $(APP) up
-app-build-up:
-	$(MAKE_CMD) -C $(APP) build-up
+app-logs:
+	$(MAKE_CMD) -C $(APP) logs
+app-stop:
+	$(MAKE_CMD) -C $(APP) stop
+app-restart:
+	$(MAKE_CMD) -C $(APP) restart
+app-rm:
+	$(MAKE_CMD) -C $(APP) rm
+app-down:
+	$(MAKE_CMD) -C $(APP) down
+app-ps:
+	$(MAKE_CMD) -C $(APP) ps
+app-exec:
+	$(MAKE_CMD) -C $(APP) exec
 
 # ========================
 # MIGRATE
@@ -206,35 +169,20 @@ RABBITMQ = providers/rabbitmq
 
 rabbitmq-up:
 	$(MAKE_CMD) -C $(RABBITMQ) up
-rabbitmq-down:
-	$(MAKE_CMD) -C $(RABBITMQ) down
-rabbitmq-restart:
-	$(MAKE_CMD) -C $(RABBITMQ) restart
 rabbitmq-logs:
 	$(MAKE_CMD) -C $(RABBITMQ) logs
-rabbitmq-status:
-	$(MAKE_CMD) -C $(RABBITMQ) status
-rabbitmq-shell:
-	$(MAKE_CMD) -C $(RABBITMQ) shell
-rabbitmq-purge:
-	$(MAKE_CMD) -C $(RABBITMQ) purge
-
-# ========================
-# Ngrok
-# ========================
-
-NGROK = providers/ngrok
-
-ngrok-build:
-	$(MAKE_CMD) -C $(NGROK) build
-ngrok-up:
-	$(MAKE_CMD) -C $(NGROK) up
-ngrok-url:
-	$(MAKE_CMD) -C $(NGROK) url
-ngrok-down:
-	$(MAKE_CMD) -C $(NGROK) down
-ngrok-webhook:
-	$(MAKE_CMD) -C $(NGROK) webhook
+rabbitmq-stop:
+	$(MAKE_CMD) -C $(RABBITMQ) stop
+rabbitmq-restart:
+	$(MAKE_CMD) -C $(RABBITMQ) restart
+rabbitmq-rm:
+	$(MAKE_CMD) -C $(RABBITMQ) rm
+rabbitmq-down:
+	$(MAKE_CMD) -C $(RABBITMQ) down
+rabbitmq-ps:
+	$(MAKE_CMD) -C $(RABBITMQ) ps
+rabbitmq-exec:
+	$(MAKE_CMD) -C $(RABBITMQ) exec
 
 # ========================
 # REDIS
@@ -244,14 +192,66 @@ REDIS = providers/redis
 
 redis-up:
 	$(MAKE_CMD) -C $(REDIS) up
-redis-stop:
-	$(MAKE_CMD) -C $(REDIS) stop
-redis-down:
-	$(MAKE_CMD) -C $(REDIS) down
-redis-purge:
-	$(MAKE_CMD) -C $(REDIS) purge
 redis-logs:
 	$(MAKE_CMD) -C $(REDIS) logs
+redis-stop:
+	$(MAKE_CMD) -C $(REDIS) stop
+redis-restart:
+	$(MAKE_CMD) -C $(REDIS) restart
+redis-rm:
+	$(MAKE_CMD) -C $(REDIS) rm
+redis-down:
+	$(MAKE_CMD) -C $(REDIS) down
+redis-ps:
+	$(MAKE_CMD) -C $(REDIS) ps
+redis-exec:
+	$(MAKE_CMD) -C $(REDIS) exec
+
+# ========================
+# PROMTAIL
+# ========================
+
+PROMTAIL = providers/promtail
+
+promtail-up:
+	$(MAKE_CMD) -C $(PROMTAIL) up
+promtail-logs:
+	$(MAKE_CMD) -C $(PROMTAIL) logs
+promtail-stop:
+	$(MAKE_CMD) -C $(PROMTAIL) stop
+promtail-restart:
+	$(MAKE_CMD) -C $(PROMTAIL) restart
+promtail-rm:
+	$(MAKE_CMD) -C $(PROMTAIL) rm
+promtail-down:
+	$(MAKE_CMD) -C $(PROMTAIL) down
+promtail-ps:
+	$(MAKE_CMD) -C $(PROMTAIL) ps
+promtail-exec:
+	$(MAKE_CMD) -C $(PROMTAIL) exec
+
+# ========================
+# LOKI
+# ========================
+
+LOKI = providers/loki
+
+loki-up:
+	$(MAKE_CMD) -C $(LOKI) up
+loki-logs:
+	$(MAKE_CMD) -C $(LOKI) logs
+loki-stop:
+	$(MAKE_CMD) -C $(LOKI) stop
+loki-restart:
+	$(MAKE_CMD) -C $(LOKI) restart
+loki-rm:
+	$(MAKE_CMD) -C $(LOKI) rm
+loki-down:
+	$(MAKE_CMD) -C $(LOKI) down
+loki-ps:
+	$(MAKE_CMD) -C $(LOKI) ps
+loki-exec:
+	$(MAKE_CMD) -C $(LOKI) exec
 
 # ========================
 # GRAFANA
@@ -261,19 +261,17 @@ GRAFANA = providers/grafana
 
 grafana-up:
 	$(MAKE_CMD) -C $(GRAFANA) up
+grafana-logs:
+	$(MAKE_CMD) -C $(GRAFANA) logs
 grafana-stop:
 	$(MAKE_CMD) -C $(GRAFANA) stop
 grafana-restart:
 	$(MAKE_CMD) -C $(GRAFANA) restart
+grafana-rm:
+	$(MAKE_CMD) -C $(GRAFANA) rm
 grafana-down:
 	$(MAKE_CMD) -C $(GRAFANA) down
-grafana-purge:
-	$(MAKE_CMD) -C $(GRAFANA) purge
-grafana-logs:
-	$(MAKE_CMD) -C $(GRAFANA) logs
 grafana-ps:
 	$(MAKE_CMD) -C $(GRAFANA) ps
-grafana-version:
-	$(MAKE_CMD) -C $(GRAFANA) version
-grafana-check-data:
-	$(MAKE_CMD) -C $(GRAFANA) check-data
+grafana-exec:
+	$(MAKE_CMD) -C $(GRAFANA) exec

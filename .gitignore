@@ -34,4 +34,4 @@ go.work.sum
 node_modules
 
 # Volume data
-**/data/
+**/resources/data/

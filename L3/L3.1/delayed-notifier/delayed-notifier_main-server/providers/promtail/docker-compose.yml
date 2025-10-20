@@ -1,0 +1,12 @@
+services:
+  promtail:
+    image: grafana/promtail:latest
+    container_name: ${PROMTAIL_CONTAINER}
+    volumes:
+      - ./config.yaml:/etc/promtail/config.yaml:ro
+      - ../../resources/data/logger:/var/log/myapp:ro
+      - promtail_data:/var/lib/promtail
+    command: -config.file=/etc/promtail/config.yaml
+
+volumes:
+  promtail_data:

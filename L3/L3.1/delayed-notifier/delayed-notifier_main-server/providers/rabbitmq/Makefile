@@ -15,40 +15,42 @@ else
 	MAKE_CMD = make
 endif
 
-RABBIT_SERVICE := rabbitmq
+.PHONY: up logs stop restart rm down ps exec
 
-.PHONY: up down logs restart status shell purge
+NAME = RabbitMQ
+PROJECT_NAME = ${APP_NAME}
+SERVICE_NAME = ${RABBITMQ_CONTAINER}
 
 up:
-	@echo "Starting RabbitMQ..."
-	@docker compose up -d $(RABBIT_SERVICE)
-	$(MAKE_CMD) status
-
-down:
-	@echo "Stopping RabbitMQ..."
-	@docker compose down
-
-restart:
-	@echo "Restarting RabbitMQ..."
-	@docker compose restart $(RABBIT_SERVICE)
-	$(MAKE_CMD) status
+	@echo "Starting ${NAME}..."
+	docker compose -p $(PROJECT_NAME) up -d
+	@echo "${NAME} are up and running."
 
 logs:
-	@echo "Showing RabbitMQ logs..."
-	@docker compose logs -f $(RABBIT_SERVICE)
+	docker compose -p $(PROJECT_NAME) logs -f
 
-status:
-	@echo "RabbitMQ container status:"
-	@docker compose ps $(RABBIT_SERVICE)
+stop:
+	@echo "Stopping ${NAME}..."
+	docker compose -p $(PROJECT_NAME) stop
+	@echo "${NAME} stopped."
 
-shell:
-	@echo "Opening shell inside RabbitMQ container..."
-	@docker compose exec $(RABBIT_SERVICE) bash
+restart: stop up
 
-purge:
-	@echo "Cleaning RabbitMQ completely..."
-	docker compose down -v --remove-orphans
-	@echo "Done. Containers, networks, and volumes removed."
+rm:
+	@echo "Removing ${NAME} (keeping data)..."
+	docker compose -p $(PROJECT_NAME) rm -f
+	@echo "${NAME} removed."
+
+down:
+	@echo "Full cleanup ${NAME}: containers, volumes, networks, data..."
+	docker compose -p $(PROJECT_NAME) down -v --remove-orphans
+	@echo "${NAME} cleaned."
+
+ps:
+	docker compose -p $(PROJECT_NAME) ps
+
+exec:
+	docker compose -p $(PROJECT_NAME) exec $(SERVICE_NAME) sh
 
 # ========================
 # RABBITMQ
@@ -58,15 +60,17 @@ purge:
 
 # rabbitmq-up:
 # 	$(MAKE_CMD) -C $(RABBITMQ) up
-# rabbitmq-down:
-# 	$(MAKE_CMD) -C $(RABBITMQ) down
-# rabbitmq-restart:
-# 	$(MAKE_CMD) -C $(RABBITMQ) restart
 # rabbitmq-logs:
 # 	$(MAKE_CMD) -C $(RABBITMQ) logs
-# rabbitmq-status:
-# 	$(MAKE_CMD) -C $(RABBITMQ) status
-# rabbitmq-shell:
-# 	$(MAKE_CMD) -C $(RABBITMQ) shell
-# rabbitmq-purge:
-# 	$(MAKE_CMD) -C $(RABBITMQ) purge
+# rabbitmq-stop:
+# 	$(MAKE_CMD) -C $(RABBITMQ) stop
+# rabbitmq-restart:
+# 	$(MAKE_CMD) -C $(RABBITMQ) restart
+# rabbitmq-rm:
+# 	$(MAKE_CMD) -C $(RABBITMQ) rm
+# rabbitmq-down:
+# 	$(MAKE_CMD) -C $(RABBITMQ) down
+# rabbitmq-ps:
+# 	$(MAKE_CMD) -C $(RABBITMQ) ps
+# rabbitmq-exec:
+# 	$(MAKE_CMD) -C $(RABBITMQ) exec
