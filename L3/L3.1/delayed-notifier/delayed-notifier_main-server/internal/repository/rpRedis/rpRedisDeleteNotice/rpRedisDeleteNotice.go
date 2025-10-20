@@ -25,8 +25,8 @@ func New(parentLg *zlog.Zerolog, rd *pkgRedis.Client) *RpRedisDeleteNotice {
 
 func (rp *RpRedisDeleteNotice) DeleteNotice(ctx context.Context, id int) (err error) {
 	lg := rp.lg.With().Str("method", "DeleteNotice").Logger()
-	lg.Trace().Msgf("%s method starting", color.GreenString("🟢"))
-	defer lg.Trace().Msgf("%s method stopped", color.RedString("🟢"))
+	lg.Trace().Msg("⬇ method starting")
+	defer lg.Trace().Msg("⬆ method stopped")
 
 	key := fmt.Sprintf("notices:%d", id)
 	lg.Trace().Str("key", key).Msgf("%s deleting notice from Redis...", color.YellowString("➤"))

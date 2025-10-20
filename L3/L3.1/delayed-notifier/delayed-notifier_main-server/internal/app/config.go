@@ -25,7 +25,6 @@ type Config struct {
 
 func newConfig() (*Config, error) {
 
-	envFilePath := ".env"
 	appConfigFilePath := "./providers/app/config.yaml"
 	loggerConfigFilePath := "./providers/logger/config.yaml"
 	redisConfigFilePath := "./providers/redis/config.yaml"
@@ -33,10 +32,6 @@ func newConfig() (*Config, error) {
 	postgresConfigFilePath := "./providers/postgres/config.yaml"
 
 	cfg := config.New()
-
-	if err := cfg.LoadEnvFiles(envFilePath); err != nil {
-		return nil, fmt.Errorf("failed to load env files: %w", err)
-	}
 
 	cfg.EnableEnv("")
 

@@ -1,3 +1,15 @@
+.PHONY: up logs stop restart rm purge build ps exec env
+
+# ========================
+# Load environment variables
+# ========================
+
+ENV_FILE ?= .env
+ifneq (,$(wildcard $(ENV_FILE)))
+include $(ENV_FILE)
+export
+endif
+
 # ========================
 # Detect OS
 # ========================
@@ -7,6 +19,57 @@ ifeq ($(OS),Windows_NT)
 else
 	MAKE_CMD = make
 endif
+
+# ========================
+# docker-compose
+# ========================
+
+COMPOSE_DEPS_FILE = docker-compose-deps.yml
+COMPOSE_APP_FILE  = docker-compose-app.yml
+COMPOSE_DEPS_PROJECT = delayed-notifier-deps
+COMPOSE_APP_PROJECT = delayed-notifier-app
+
+up:
+	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) build --build-arg APP_NAME=$(APP_NAME) --build-arg APP_TRANSPORT_HTTP_PORT=$(APP_TRANSPORT_HTTP_PORT)
+	docker compose -f $(COMPOSE_APP_FILE) up -d
+
+logs:
+	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) logs -f
+
+stop:
+	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) stop
+
+restart: stop up
+
+down:
+	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) rm -f
+
+purge:
+	docker compose -p $(APP_NAME) -f $(COMPOSE_APP_FILE) down -v --remove-orphans
+
+build:
+	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) build --no-cache --build-arg APP_NAME=$(APP_NAME) --build-arg APP_TRANSPORT_HTTP_PORT=$(APP_TRANSPORT_HTTP_PORT)
+
+ps:
+	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) ps
+
+exec:
+	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) exec myapp sh
+
+env:
+	docker compose -p $(COMPOSE_APP_PROJECT) -f $(COMPOSE_APP_FILE) exec myapp printenv
+
+deps-up:
+	docker compose -p $(COMPOSE_DEPS_PROJECT) -f $(COMPOSE_DEPS_FILE) up -d
+
+deps-logs:
+	docker compose -p $(COMPOSE_DEPS_PROJECT) -f $(COMPOSE_DEPS_FILE) logs -f
+
+deps-stop:
+	docker compose -p $(COMPOSE_DEPS_PROJECT) -f $(COMPOSE_DEPS_FILE) stop
+
+deps-purge:
+	docker compose -p $(COMPOSE_DEPS_PROJECT) -f $(COMPOSE_DEPS_FILE) down -v --remove-orphans
 
 # ========================
 # ALL

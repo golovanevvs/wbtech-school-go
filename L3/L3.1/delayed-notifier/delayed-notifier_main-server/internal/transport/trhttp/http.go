@@ -76,7 +76,7 @@ func (h *HTTP) WaitForServer(host string) error {
 		return pkgErrors.Wrapf(err, "start http server, address: %s, attempts: %d", h.httpsrv.Addr, h.retryStrategyForWaitServer.Attempts)
 	}
 
-	h.lg.Info().Str("addr", h.httpsrv.Addr).Msgf("%s http server started successfully", color.BlueString("ℹ️"))
+	h.lg.Info().Str("addr", h.httpsrv.Addr).Msg("ℹ http server started successfully")
 
 	return nil
 }

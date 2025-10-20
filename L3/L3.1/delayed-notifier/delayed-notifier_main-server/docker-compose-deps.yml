@@ -1,0 +1,84 @@
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: ${RABBITMQ_CONTAINER}
+    hostname: ${RABBITMQ_HOST}
+    ports:
+      - "${RABBITMQ_PORT}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
+    volumes:
+      - ./resources/data/rabbitmq:/var/lib/rabbitmq
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    container_name: ${REDIS_CONTAINER}
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./resources/data/redis:/data
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --dir /data
+      --save 60 1
+      --appendonly yes
+      --appendfilename "appendonly.aof"
+      --appendfsync always
+      --aof-use-rdb-preamble yes
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --dbfilename dump.rdb
+      --maxmemory 0
+      --maxmemory-policy noeviction
+      --stop-writes-on-bgsave-error yes
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/config.yaml
+    volumes:
+      - ./providers/loki/config.yaml:/etc/loki/config.yaml:ro
+      - ./resources/data/loki:/loki
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - ./providers/promtail/config.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./resources/data/logger:/var/log/myapp:ro
+      - ./resources/data/promtail:/var/lib/promtail
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./resources/data/grafana:/var/lib/grafana
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+volumes:
+  rabbitmq_data:
+  redis_data:

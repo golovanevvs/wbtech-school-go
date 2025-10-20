@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	zlog.InitConsole()
+	zlog.Init()
 	lg := zlog.Logger.With().Str("component", "main").Logger()
 
 	lg.Info().Msg("delayed-notifier application started")

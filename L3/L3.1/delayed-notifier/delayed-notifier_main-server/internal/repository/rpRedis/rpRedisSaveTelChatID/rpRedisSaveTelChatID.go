@@ -24,8 +24,8 @@ func New(parentLg *zlog.Zerolog, rd *pkgRedis.Client) *RpRedisSaveChatID {
 
 func (rp *RpRedisSaveChatID) SaveTelegramChatID(ctx context.Context, username string, chatID int64) (err error) {
 	lg := rp.lg.With().Str("method", "SaveTelegramChatID").Logger()
-	lg.Trace().Msgf("%s method starting", color.GreenString("🟢"))
-	defer lg.Trace().Msgf("%s method stopped", color.RedString("🟢"))
+	lg.Trace().Msg("⬇ method starting")
+	defer lg.Trace().Msg("⬆ method stopped")
 
 	lg.Trace().Str("username", username).Int64("chat ID", chatID).Msgf("%s saving name, chat ID to Redis...", color.YellowString("➤"))
 	err = rp.rd.Set(ctx, username, chatID, 0)

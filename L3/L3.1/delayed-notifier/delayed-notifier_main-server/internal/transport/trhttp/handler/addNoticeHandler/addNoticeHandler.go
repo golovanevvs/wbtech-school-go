@@ -37,8 +37,8 @@ func (hd *Handler) RegisterRoutes() {
 
 func (hd *Handler) CreateNotice(c *ginext.Context) {
 	lg := hd.lg.With().Str("method", "CreateNotice").Logger()
-	lg.Trace().Msgf("%s method starting", color.GreenString("🟢"))
-	defer lg.Trace().Msgf("%s method stopped", color.RedString("🟢"))
+	lg.Trace().Msg("⬇ method starting")
+	defer lg.Trace().Msg("⬆ method stopped")
 
 	lg.Trace().Msgf("%s checking content type...", color.YellowString("➤"))
 	if !strings.Contains(c.ContentType(), "application/json") {

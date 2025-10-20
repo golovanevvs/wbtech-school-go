@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
 	"github.com/wb-go/wbf/ginext"
 	"github.com/wb-go/wbf/zlog"
@@ -36,9 +37,8 @@ func (hd *Handler) RegisterRoutes() {
 
 func (hd *Handler) WebHookHandler(c *ginext.Context) {
 	lg := hd.lg.With().Str("handler", "WebHookHandler").Logger()
-
-	lg.Trace().Msg("----- handler is starting")
-	defer lg.Trace().Msg("----- handler stopped")
+	lg.Trace().Msgf("%s method starting", pkgConst.Start)
+	defer lg.Trace().Msgf("%s method stopped", pkgConst.Stop)
 
 	if !strings.Contains(c.ContentType(), "application/json") {
 		lg.Warn().Str("content-type", c.ContentType()).Msg("invalid content-type")

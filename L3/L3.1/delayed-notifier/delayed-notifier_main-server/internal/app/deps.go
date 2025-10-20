@@ -3,8 +3,8 @@ package app
 import (
 	"fmt"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgEmail"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgLogger"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
@@ -43,29 +43,29 @@ func (b *dependencyBuilder) Close() error {
 }
 
 func (b *dependencyBuilder) initLogger() error {
-	if err := pkgLogger.InitLogger(b.cfg.lg); err != nil {
-		return fmt.Errorf("error initialize logger: %w", err)
-	}
-
-	zlog.Logger.Debug().
-		Str("component", "app").
-		Str("log_level", b.cfg.lg.ConsoleLevel.String()).
-		Msg("logging level has been configured")
-
-	return nil
-
-	// err := zlog.SetLevel(b.cfg.lg.Level)
-
-	// if err != nil {
-	// 	return fmt.Errorf("error set log level: %w", err)
+	// if err := pkgLogger.InitLogger(b.cfg.lg); err != nil {
+	// 	return fmt.Errorf("error initialize logger: %w", err)
 	// }
 
 	// zlog.Logger.Debug().
 	// 	Str("component", "app").
-	// 	Str("log_level", zlog.Logger.GetLevel().String()).
+	// 	Str("log_level", b.cfg.lg.ConsoleLevel.String()).
 	// 	Msg("logging level has been configured")
 
 	// return nil
+
+	err := zlog.SetLevel(b.cfg.lg.ConsoleLevel.String())
+
+	if err != nil {
+		return fmt.Errorf("error set log level: %w", err)
+	}
+
+	zlog.Logger.Debug().
+		Str("component", "app").
+		Str("log_level", zlog.Logger.GetLevel().String()).
+		Msg("logging level has been configured")
+
+	return nil
 }
 
 func (b *dependencyBuilder) initRedis() error {
@@ -133,7 +133,7 @@ func (b *dependencyBuilder) initService() {
 }
 
 func (b *dependencyBuilder) initTransport() {
-	zlog.Logger.Debug().Str("component", "app").Msg("transport has been initialized")
+	zlog.Logger.Debug().Str("component", "app").Msgf("%s transport has been initialized", pkgConst.Info)
 	b.deps.tr = transport.New(b.cfg.tr, b.deps.sv)
 }
 

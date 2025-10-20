@@ -28,8 +28,8 @@ func New(parentLg *zlog.Zerolog, rd *pkgRedis.Client) *RpRedisSaveNotice {
 
 func (rp *RpRedisSaveNotice) SaveNotice(ctx context.Context, notice model.Notice) (id int, err error) {
 	lg := rp.lg.With().Str("method", "SaveNotice").Logger()
-	lg.Trace().Msgf("%s method starting", color.GreenString("🟢"))
-	defer lg.Trace().Msgf("%s method stopped", color.RedString("🟢"))
+	lg.Trace().Msg("⬇ method starting")
+	defer lg.Trace().Msg("⬆ method stopped")
 
 	lg.Trace().Msgf("%s marshaling notice...", color.YellowString("➤"))
 	data, err := json.Marshal(notice)
