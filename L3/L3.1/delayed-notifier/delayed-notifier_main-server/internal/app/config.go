@@ -24,13 +24,12 @@ type Config struct {
 }
 
 func newConfig() (*Config, error) {
-
 	envFilePath := ".env"
-	appConfigFilePath := "./providers/app/config.yaml"
-	loggerConfigFilePath := "./providers/logger/config.yaml"
-	redisConfigFilePath := "./providers/redis/config.yaml"
-	rabbitmqConfigFilePath := "./providers/rabbitmq/config.yaml"
-	postgresConfigFilePath := "./providers/postgres/config.yaml"
+	appConfigFilePath := "providers/app/config.yaml"
+	loggerConfigFilePath := "providers/logger/config.yaml"
+	redisConfigFilePath := "providers/redis/config.yaml"
+	rabbitmqConfigFilePath := "providers/rabbitmq/config.yaml"
+	postgresConfigFilePath := "providers/postgres/config.yaml"
 
 	cfg := config.New()
 

@@ -12,7 +12,6 @@ services:
       redis-server
       --requirepass ${REDIS_PASSWORD}
       --dir /data
-      --save 60 1
       --appendonly yes
       --appendfilename "appendonly.aof"
       --appendfsync always

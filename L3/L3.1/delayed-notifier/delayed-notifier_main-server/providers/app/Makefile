@@ -15,9 +15,7 @@ MAIN_DIR := ./cmd/$(APP_NAME)
 
 ifeq ($(OS),Windows_NT)
     RUN_CMD = start "" "/C/Program Files/Git/git-bash.exe" -c
-	MAKE_CMD = mingw32-make
 else
-	MAKE_CMD = make
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         # macOS
@@ -28,20 +26,26 @@ else
     endif
 endif
 
+ifeq ($(OS),Windows_NT)
+	MAKE_CMD = mingw32-make
+else
+	MAKE_CMD = make
+endif
+
 PROJECT_NAME = ${APP_NAME}
 SERVICE_NAME = ${APP_NAME}
 
 # FOR LOCAL UP
 local-build:
-	@echo "Building app #$(APP_NAME)..."
+	@echo "Building app $(APP_NAME)..."
 	@cd $(PROJECT_DIR) && go build $(MAIN_DIR)
-	@echo "Building app #$(APP_NAME) completed"
+	@echo "Building app $(APP_NAME) completed"
 
 local-up:
-	@echo "Running app #$(APP_NAME)..."
+	@echo "Running app $(APP_NAME)..."
 	@cd $(PROJECT_DIR) && $(RUN_CMD) "./$(APP_NAME) $(ARGS)"
 	@sleep 1
-	@echo "Running app #$(APP_NAME) completed"
+	@echo "Running app $(APP_NAME) completed"
 
 local-build-up: local-build local-up
 

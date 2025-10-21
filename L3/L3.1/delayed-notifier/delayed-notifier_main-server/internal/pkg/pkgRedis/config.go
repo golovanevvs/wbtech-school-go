@@ -26,5 +26,5 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("redis:\n \033[33mHost:\033[0m \033[32m%s\033[0m, \033[33mPort:\033[0m \033[32m%d\033[0m, \033[33mDB:\033[0m \033[32m%d\033[0m, \033[33mTTL:\033[0m \033[32m%v\033[0m", c.Host, c.Port, c.DB, c.TTL)
+	return fmt.Sprintf("redis:\n Host: %s, Port: %d, DB: %d, TTL: %v", c.Host, c.Port, c.DB, c.TTL)
 }

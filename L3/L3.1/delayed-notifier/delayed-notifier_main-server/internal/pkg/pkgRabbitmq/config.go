@@ -38,5 +38,5 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("rabbitmq:\n \033[33mHost:\033[0m \033[32m%s\033[0m, \033[33mPort:\033[0m \033[32m%d\033[0m, \033[33mVHost:\033[0m \033[32m%s\033[0m, \033[33mUsername:\033[0m \033[32m%s\033[0m\n \033[33mExchange:\033[0m \033[32m%s\033[0m, \033[33mExchangeType:\033[0m \033[32m%s\033[0m\n \033[33mQueue:\033[0m \033[32m%s\033[0m, \033[33mRoutingKey:\033[0m \033[32m%s\033[0m\n \033[33mDLX:\033[0m \033[32m%s\033[0m, \033[33mDLQ:\033[0m \033[32m%s\033[0m", c.Host, c.Port, c.VHost, c.Username, c.Exchange, c.ExchangeType, c.Queue, c.RoutingKey, c.DLX, c.DLQ)
+	return fmt.Sprintf("rabbitmq:\n Host: %s, Port: %d, VHost: %s,Username: %s\n Exchange: %s, ExchangeType: %s\n Queue:%s, RoutingKey: %s\n DLX: %s, DLQ: %s", c.Host, c.Port, c.VHost, c.Username, c.Exchange, c.ExchangeType, c.Queue, c.RoutingKey, c.DLX, c.DLQ)
 }
