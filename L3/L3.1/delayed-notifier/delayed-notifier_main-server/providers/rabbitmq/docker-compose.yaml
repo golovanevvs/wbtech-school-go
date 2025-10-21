@@ -2,7 +2,6 @@ services:
   rabbitmq:
     image: rabbitmq:management
     container_name: ${RABBITMQ_CONTAINER}
-    hostname: ${RABBITMQ_HOST}
     ports:
       - "${RABBITMQ_PORT}:5672"
       - "${RABBITMQ_MANAGEMENT_PORT}:15672"
