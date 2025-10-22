@@ -3,9 +3,9 @@ module github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-
 go 1.25.2
 
 require (
+	github.com/enescakir/emoji v1.0.0
 	github.com/fatih/color v1.18.0
 	github.com/go-playground/validator/v10 v10.14.0
-	github.com/natefinch/lumberjack/v3 v3.0.0-alpha
 	github.com/wb-go/wbf v0.0.7
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
@@ -13,7 +13,6 @@ require (
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/enescakir/emoji v1.0.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )
 
@@ -44,7 +43,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/redis/go-redis/v9 v9.14.0
-	github.com/rs/zerolog v1.34.0
+	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
