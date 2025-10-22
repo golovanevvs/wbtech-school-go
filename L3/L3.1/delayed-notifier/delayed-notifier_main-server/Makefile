@@ -5,7 +5,7 @@
 ENV_FILE ?= .env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
-export
+export ENV PROJECT_NAME
 endif
 
 # ========================
@@ -38,6 +38,8 @@ all-down: rabbitmq-down redis-down promtail-down loki-down grafana-down app-down
 # ========================
 
 APP = providers/app
+
+.PHONY: app-local-build app-local-up app-local-build-up app-up app-logs app-stop app-restart app-rm app-down app-ps app-exec
 
 app-local-build:
 	$(MAKE_CMD) -C $(APP) local-build
@@ -167,6 +169,8 @@ postgres-clean-all:
 
 RABBITMQ = providers/rabbitmq
 
+.PHONY: rabbitmq-up rabbitmq-logs rabbitmq-stop rabbitmq-restart rabbitmq-rm rabbitmq-down rabbitmq-ps rabbitmq-exec
+
 rabbitmq-up:
 	$(MAKE_CMD) -C $(RABBITMQ) up
 rabbitmq-logs:
@@ -189,6 +193,8 @@ rabbitmq-exec:
 # ========================
 
 REDIS = providers/redis
+
+.PHONY: redis-up redis-logs redis-stop redis-restart redis-rm redis-down redis-ps redis-exec
 
 redis-up:
 	$(MAKE_CMD) -C $(REDIS) up

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/fatih/color"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler"
 	"github.com/wb-go/wbf/retry"
@@ -23,7 +24,7 @@ type HTTP struct {
 }
 
 func New(cfg *Config, parentLg *zlog.Zerolog, sv IService) *HTTP {
-	lg := parentLg.With().Str("component-1", "HTTP").Logger()
+	lg := parentLg.With().Str("component", "HTTP").Logger()
 	return &HTTP{
 		lg: &lg,
 		httpsrv: &http.Server{
@@ -36,22 +37,22 @@ func New(cfg *Config, parentLg *zlog.Zerolog, sv IService) *HTTP {
 
 func (h *HTTP) RunServer(cancel context.CancelFunc) {
 	go func() {
-		h.lg.Debug().Str("addr", h.httpsrv.Addr).Msgf("%s http server starting...", color.YellowString("➤"))
+		h.lg.Debug().Str("addr", h.httpsrv.Addr).Msgf("%s http server starting...", pkgConst.Start)
 		if err := h.httpsrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			h.lg.Error().Err(err).Str("addr", h.httpsrv.Addr).Msgf("%s error http server start", color.RedString("❌"))
+			h.lg.Error().Err(err).Str("addr", h.httpsrv.Addr).Msgf("%s error http server start", pkgConst.Error)
 			cancel()
 		}
 	}()
 }
 
 func (h *HTTP) ShutdownServer(ctx context.Context) error {
-	h.lg.Debug().Str("addr", h.httpsrv.Addr).Msgf("%s http server stopping...", color.YellowString("➤"))
+	h.lg.Debug().Str("addr", h.httpsrv.Addr).Msgf("%s http server stopping...", pkgConst.Start)
 
 	if err := h.httpsrv.Shutdown(ctx); err != nil {
 		pkgErrors.Wrapf(err, "http server shutdown, address: %s", h.httpsrv.Addr)
 	}
 
-	h.lg.Info().Str("addr", h.httpsrv.Addr).Msgf("%s http server stopped successfully", color.BlueString("ℹ️"))
+	h.lg.Info().Str("addr", h.httpsrv.Addr).Msgf("%s http server stopped successfully", pkgConst.Info)
 
 	return nil
 }
@@ -60,7 +61,7 @@ func (h *HTTP) WaitForServer(host string) error {
 	fn := func() error {
 		resp, err := http.Get(fmt.Sprintf("%s/healthy", host))
 		if err != nil {
-			h.lg.Warn().Err(err).Str("addr", h.httpsrv.Addr).Msgf("%s failed to start http server", color.YellowString("⚠"))
+			h.lg.Warn().Err(err).Str("addr", h.httpsrv.Addr).Msgf("%s failed to start http server", pkgConst.Warn)
 			return err
 		}
 		defer resp.Body.Close()

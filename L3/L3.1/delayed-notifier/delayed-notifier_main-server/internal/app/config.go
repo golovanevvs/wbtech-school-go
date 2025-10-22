@@ -24,22 +24,30 @@ type Config struct {
 }
 
 func newConfig() (*Config, error) {
-	envFilePath := ".env"
-	appConfigFilePath := "providers/app/config.yaml"
-	loggerConfigFilePath := "providers/logger/config.yaml"
-	redisConfigFilePath := "providers/redis/config.yaml"
-	rabbitmqConfigFilePath := "providers/rabbitmq/config.yaml"
-	postgresConfigFilePath := "providers/postgres/config.yaml"
-
 	cfg := config.New()
 
-	if err := cfg.LoadEnvFiles(envFilePath); err != nil {
+	if err := cfg.LoadEnvFiles(
+		".env",
+		"providers/app/.env",
+		"providers/email/.env",
+		"providers/grafana/.env",
+		"providers/loki/.env",
+		"providers/promtail/.env",
+		"providers/rabbitmq/.env",
+		"providers/redis/.env",
+		"providers/telegram/.env",
+	); err != nil {
 		return nil, fmt.Errorf("failed to load env files: %w", err)
 	}
 
 	cfg.EnableEnv("")
 
-	if err := cfg.LoadConfigFiles(appConfigFilePath, loggerConfigFilePath, redisConfigFilePath, rabbitmqConfigFilePath, postgresConfigFilePath); err != nil {
+	if err := cfg.LoadConfigFiles(
+		"providers/app/config.yaml",
+		"providers/logger/config.yaml",
+		"providers/rabbitmq/config.yaml",
+		"providers/redis/config.yaml",
+	); err != nil {
 		return nil, fmt.Errorf("failed to load config files: %w", err)
 	}
 

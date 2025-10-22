@@ -54,7 +54,7 @@ func (b *dependencyBuilder) initLogger() error {
 
 	// return nil
 
-	err := zlog.SetLevel(b.cfg.lg.ConsoleLevel.String())
+	err := zlog.SetLevel(b.cfg.lg.Level)
 
 	if err != nil {
 		return fmt.Errorf("error set log level: %w", err)

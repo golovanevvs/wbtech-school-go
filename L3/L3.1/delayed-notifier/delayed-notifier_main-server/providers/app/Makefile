@@ -3,10 +3,10 @@ MAKEFLAGS += --no-print-directory
 PROJECT_DIR := $(abspath ../..)
 
 # Load environment variables
-ENV_FILE ?= $(PROJECT_DIR)/.env
+ENV_FILE ?= .env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
-export
+# export
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -45,7 +45,7 @@ local-up:
 
 local-build-up: local-build local-up
 
-#FOR DOCKER UP
+# FOR DOCKER UP
 up:
 	@echo "Building and starting container $(APP_NAME)..."
 	docker compose -p $(PROJECT_NAME) --build-arg APP_NAME=$(APP_NAME) --build-arg APP_TRANSPORT_HTTP_PORT=$(APP_TRANSPORT_HTTP_PORT)
@@ -90,6 +90,8 @@ exec:
 # ========================
 
 # APP = providers/app
+
+# .PHONY: app-local-build app-local-up app-local-build-up app-up app-logs app-stop app-restart app-rm app-down app-ps app-exec
 
 # app-local-build:
 # 	$(MAKE_CMD) -C $(APP) local-build

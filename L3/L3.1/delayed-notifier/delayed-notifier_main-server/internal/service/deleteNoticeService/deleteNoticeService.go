@@ -3,6 +3,7 @@ package deleteNoticeService
 import (
 	"context"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
 	"github.com/wb-go/wbf/zlog"
 )
 
@@ -16,7 +17,7 @@ type DeleteNoticeService struct {
 }
 
 func New(rp IRepository) *DeleteNoticeService {
-	lg := zlog.Logger.With().Str("component-1", "service-deleteNoticeService").Logger()
+	lg := zlog.Logger.With().Str("component", "deleteNoticeService").Logger()
 	return &DeleteNoticeService{
 		lg: lg,
 		rp: rp,
@@ -26,8 +27,7 @@ func New(rp IRepository) *DeleteNoticeService {
 func (sv *DeleteNoticeService) DeleteNotice(ctx context.Context, id int) (err error) {
 	err = sv.rp.DeleteNotice(ctx, id)
 	if err != nil {
-		sv.lg.Error().Err(err).Msg("failed deleted data from Redis")
-		return err
+		return pkgErrors.Wrap(err, "delete notice")
 	}
 
 	return nil

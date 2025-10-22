@@ -1,7 +1,13 @@
 package pkgConst
 
-const (
-	Start = "🟣"
-	Stop  = "🟤"
-	Info  = "ℹ️"
+import "github.com/enescakir/emoji"
+
+var (
+	Start     = emoji.PurpleCircle
+	Stop      = "🟤"
+	Info      = emoji.Information
+	Warn      = emoji.Warning
+	OpStart   = "➤"
+	OpSuccess = "✔"
+	Error     = "❌"
 )

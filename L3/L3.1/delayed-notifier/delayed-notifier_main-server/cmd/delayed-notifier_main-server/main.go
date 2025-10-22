@@ -11,7 +11,13 @@ import (
 )
 
 func main() {
-	zlog.InitConsole()
+	env := os.Getenv("ENV")
+	if env == "local" {
+		zlog.InitConsole()
+	} else {
+		zlog.Init()
+	}
+
 	lg := zlog.Logger.With().Str("component", "main").Logger()
 
 	lg.Info().Msg("delayed-notifier application started")

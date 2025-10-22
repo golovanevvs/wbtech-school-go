@@ -3,7 +3,7 @@ MAKEFLAGS += --no-print-directory
 PROJECT_DIR := $(abspath ../..)
 
 # Load environment variables
-ENV_FILE ?= $(PROJECT_DIR)/.env
+ENV_FILE ?= .env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
 export
@@ -18,7 +18,6 @@ endif
 .PHONY: up logs stop restart rm down ps exec
 
 NAME = Redis
-PROJECT_NAME = ${APP_NAME}
 SERVICE_NAME = ${REDIS_CONTAINER}
 
 up:
@@ -58,6 +57,8 @@ exec:
 # ========================
 
 # REDIS = providers/redis
+
+# .PHONY: redis-up redis-logs redis-stop redis-restart redis-rm redis-down redis-ps redis-exec
 
 # redis-up:
 # 	$(MAKE_CMD) -C $(REDIS) up

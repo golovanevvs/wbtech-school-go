@@ -2,12 +2,10 @@ package addNoticeService
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/fatih/color"
-
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
 	"github.com/wb-go/wbf/zlog"
@@ -34,7 +32,7 @@ func New(
 	delNotSv IDeleteNoticeService,
 	rp ISaveNoticeRepository,
 ) *AddNoticeService {
-	lg := parentLg.With().Str("component-1", "AddNoticeService").Logger()
+	lg := parentLg.With().Str("component", "AddNoticeService").Logger()
 	return &AddNoticeService{
 		lg:       &lg,
 		rb:       rb,
@@ -45,8 +43,8 @@ func New(
 
 func (sv *AddNoticeService) AddNotice(ctx context.Context, reqNotice model.ReqNotice) (id int, err error) {
 	lg := sv.lg.With().Str("method", "AddNotice").Logger()
-	lg.Trace().Msgf("%s method starting", color.GreenString("🟢"))
-	defer lg.Trace().Msgf("%s method stopped", color.RedString("🟢"))
+	lg.Trace().Msgf("%s method starting", pkgConst.Start)
+	defer lg.Trace().Msgf("%s method stopped", pkgConst.Stop)
 
 	createdAt := time.Now()
 	sentAt := reqNotice.SentAt
@@ -60,24 +58,24 @@ func (sv *AddNoticeService) AddNotice(ctx context.Context, reqNotice model.ReqNo
 		Status:    model.StatusScheduled,
 	}
 
-	lg.Trace().Msgf("%s saving notice to repository...", color.YellowString("➤"))
+	lg.Trace().Msgf("%s saving notice to repository...", pkgConst.OpStart)
 	id, err = sv.rp.SaveNotice(ctx, notice)
 	if err != nil {
 		return 0, pkgErrors.Wrap(err, "save notice to repository")
 	}
-	lg.Trace().Msgf("%s notice saved to repository successfully", color.GreenString("✔"))
+	lg.Trace().Msgf("%s notice saved to repository successfully", pkgConst.OpSuccess)
 
 	notice.ID = id
 
-	lg.Trace().Int("notice ID", notice.ID).Msgf("%s publishing notice with TTL to message broker...", color.YellowString("➤"))
+	lg.Trace().Int("notice ID", notice.ID).Msgf("%s publishing notice with TTL to message broker...", pkgConst.OpStart)
 	if err = sv.rb.PublishStructWithTTL(notice, ttl); err != nil {
-		lg.Error().Err(err).Msg("error publish struct with TTL to RabbitMQ")
+		lg.Debug().Err(err).Msgf("%s failed to publish struct with TTL to RabbitMQ", pkgConst.Error)
 		if err := sv.delNotSv.DeleteNotice(ctx, notice.ID); err != nil {
-			lg.Trace().Err(err).Int("notice ID", notice.ID).Msg("failed deleted notice from Redis")
+			lg.Debug().Err(err).Int("notice ID", notice.ID).Msgf("%s failed deleted notice from Redis", pkgConst.Error)
 		}
-		return 0, fmt.Errorf("error publish struct with TTL to RabbitMQ")
+		return 0, pkgErrors.Wrap(err, "error publish struct with TTL to RabbitMQ")
 	}
-	lg.Trace().Int("notice ID", notice.ID).Msgf("%s notice with TTL published to message broker successfully", color.GreenString("✔"))
+	lg.Trace().Int("notice ID", notice.ID).Msgf("%s notice with TTL published to message broker successfully", pkgConst.OpSuccess)
 
 	return id, nil
 }

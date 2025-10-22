@@ -3,7 +3,7 @@ MAKEFLAGS += --no-print-directory
 PROJECT_DIR := $(abspath ../..)
 
 # Load environment variables
-ENV_FILE ?= $(PROJECT_DIR)/.env
+ENV_FILE ?= .env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
 export
@@ -18,7 +18,6 @@ endif
 .PHONY: up logs stop restart rm down ps exec
 
 NAME = RabbitMQ
-PROJECT_NAME = ${APP_NAME}
 SERVICE_NAME = ${RABBITMQ_CONTAINER}
 
 up:
@@ -57,6 +56,8 @@ exec:
 # ========================
 
 # RABBITMQ = providers/rabbitmq
+
+# .PHONY: rabbitmq-up rabbitmq-logs rabbitmq-stop rabbitmq-restart rabbitmq-rm rabbitmq-down rabbitmq-ps rabbitmq-exec
 
 # rabbitmq-up:
 # 	$(MAKE_CMD) -C $(RABBITMQ) up
