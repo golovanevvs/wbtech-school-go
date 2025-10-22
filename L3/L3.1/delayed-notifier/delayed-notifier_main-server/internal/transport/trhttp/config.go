@@ -27,9 +27,9 @@ func NewConfig(cfg *config.Config) *Config {
 		Port:       cfg.GetInt("app.transport.http.port"),
 		PublicHost: cfg.GetString("app.transport.http.public_host"),
 		RetryStrategyForWaitServer: RetryStrategy{
-			Attempts: cfg.GetInt("app.transport.http.retry-strategy.attempts"),
-			Delay:    cfg.GetDuration("app.transport.http.retry-strategy.delay"),
-			Backoff:  cfg.GetFloat64("app.transport.http.retry-strategy.backoff"),
+			Attempts: cfg.GetInt("app.transport.http.retry.attempts"),
+			Delay:    cfg.GetDuration("app.transport.http.retry.delay"),
+			Backoff:  cfg.GetFloat64("app.transport.http.retry.backoff"),
 		},
 		Handler: handler.NewConfig(cfg),
 	}

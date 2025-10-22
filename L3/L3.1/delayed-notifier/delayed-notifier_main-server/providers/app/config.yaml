@@ -1,15 +1,16 @@
-logger:
-  level: "trace"
-
 app:
   service:
     sendnoticeservice:
-      retry-strategy:
+      retry:
         attempts: 10
         delay: 5s
         backoff: 1.1
   transport:
     http:
-      public_host: "https://insecurely-fond-shiner.cloudpub.ru"
+      public_host: https://insecurely-fond-shiner.cloudpub.ru
+      retry:
+        attempts: 10
+        delay: 5s
+        backoff: 1.1
       handler:
-        gin_mode: "release"
+        gin_mode: release

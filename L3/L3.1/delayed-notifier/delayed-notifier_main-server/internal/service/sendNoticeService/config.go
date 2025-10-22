@@ -21,9 +21,9 @@ type retryStrategy struct {
 func NewConfig(cfg *config.Config) *Config {
 	return &Config{
 		RetryStrategy: retryStrategy{
-			Attempts: cfg.GetInt("app.service.sendnoticeservice.retry-strategy.attempts"),
-			Delay:    cfg.GetDuration("app.service.sendnoticeservice.retry-strategy.delay"),
-			Backoff:  cfg.GetFloat64("app.service.sendnoticeservice.retry-strategy.backoff"),
+			Attempts: cfg.GetInt("app.service.sendnoticeservice.retry.attempts"),
+			Delay:    cfg.GetDuration("app.service.sendnoticeservice.retry.delay"),
+			Backoff:  cfg.GetFloat64("app.service.sendnoticeservice.retry.backoff"),
 		},
 	}
 }
