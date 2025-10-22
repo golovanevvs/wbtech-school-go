@@ -9,10 +9,6 @@ include $(ENV_FILE)
 export
 endif
 
-.PHONY: build up build-up
-
-MAIN_DIR := ./cmd/$(APP_NAME)
-
 ifeq ($(OS),Windows_NT)
     RUN_CMD = start "" "/C/Program Files/Git/git-bash.exe" -c
 else
@@ -38,7 +34,7 @@ SERVICE_NAME = ${APP_NAME}
 # FOR LOCAL UP
 local-build:
 	@echo "Building app $(APP_NAME)..."
-	@cd $(PROJECT_DIR) && go build $(MAIN_DIR)
+	@cd $(PROJECT_DIR) && go build ./cmd/$(APP_NAME)
 	@echo "Building app $(APP_NAME) completed"
 
 local-up:

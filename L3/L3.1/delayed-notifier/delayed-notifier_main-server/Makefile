@@ -42,9 +42,9 @@ APP = providers/app
 app-local-build:
 	$(MAKE_CMD) -C $(APP) local-build
 app-local-up:
-	$(MAKE_CMD) -C $(APP) local-up
+	$(MAKE_CMD) -C $(APP) local-up ARGS="$(ARGS)"
 app-local-build-up:
-	$(MAKE_CMD) -C $(APP) local-build-up
+	$(MAKE_CMD) -C $(APP) local-build-up ARGS="$(ARGS)"
 app-up:
 	$(MAKE_CMD) -C $(APP) up
 app-logs:
