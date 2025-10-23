@@ -5,11 +5,11 @@ go 1.25.2
 require (
 	github.com/enescakir/emoji v1.0.0
 	github.com/go-playground/validator/v10 v10.28.0
-	github.com/wb-go/wbf v0.0.7
+	github.com/wb-go/wbf v0.0.8
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
 
-replace github.com/wb-go/wbf => github.com/golovanevvs/wbf v0.0.25
+// replace github.com/wb-go/wbf => github.com/golovanevvs/wbf v0.0.25
 
 require (
 	github.com/bytedance/gopkg v0.1.3 // indirect
