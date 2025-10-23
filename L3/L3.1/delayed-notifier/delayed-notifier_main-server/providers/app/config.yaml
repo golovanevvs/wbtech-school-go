@@ -1,16 +1,10 @@
 app:
-  service:
-    sendnoticeservice:
-      retry:
-        attempts: 5
-        delay: 300ms
-        backoff: 2
+  retry:
+    attempts: 5
+    delay: 300ms
+    backoff: 2
   transport:
     http:
       public_host: https://insecurely-fond-shiner.cloudpub.ru
-      retry:
-        attempts: 5
-        delay: 300ms
-        backoff: 2
       handler:
         gin_mode: release

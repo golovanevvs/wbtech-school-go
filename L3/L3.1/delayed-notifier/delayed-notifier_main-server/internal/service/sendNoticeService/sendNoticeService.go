@@ -8,6 +8,7 @@ import (
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgEmail"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRetry"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgTelegram"
 	"github.com/wb-go/wbf/retry"
 	"github.com/wb-go/wbf/zlog"
@@ -18,27 +19,27 @@ type IRepository interface {
 }
 
 type SendNoticeService struct {
-	lg            *zlog.Zerolog
-	tg            *pkgTelegram.Client
-	em            *pkgEmail.Client
-	rp            IRepository
-	retryStrategy retry.Strategy
+	lg *zlog.Zerolog
+	rs *pkgRetry.Retry
+	tg *pkgTelegram.Client
+	em *pkgEmail.Client
+	rp IRepository
 }
 
 func New(
-	cfg *Config,
 	parentLg *zlog.Zerolog,
+	rs *pkgRetry.Retry,
 	tg *pkgTelegram.Client,
 	em *pkgEmail.Client,
 	rp IRepository,
 ) *SendNoticeService {
 	lg := parentLg.With().Str("component", "SendNoticeService").Logger()
 	return &SendNoticeService{
-		lg:            &lg,
-		tg:            tg,
-		em:            em,
-		rp:            rp,
-		retryStrategy: retry.Strategy(cfg.RetryStrategy),
+		lg: &lg,
+		rs: rs,
+		tg: tg,
+		em: em,
+		rp: rp,
 	}
 }
 
@@ -86,10 +87,10 @@ func (sv *SendNoticeService) SendNoticeToTelegram(ctx context.Context, username 
 	}
 
 	lg.Trace().Str("username", username).Int("notice ID", notice.ID).Msgf("%s sending message to Telegram with retry starting...", pkgConst.OpStart)
-	if err := retry.Do(fn, sv.retryStrategy); err != nil {
+	if err := retry.Do(fn, retry.Strategy(*sv.rs)); err != nil {
 		return pkgErrors.Wrapf(err,
 			"send notice to telegram after all ettempts; chat ID: %d, notice ID: %d, attempts: %d",
-			chatID, notice.ID, sv.retryStrategy.Attempts)
+			chatID, notice.ID, sv.rs.Attempts)
 	}
 	lg.Trace().Str("username", username).Int("notice ID", notice.ID).Int64("chat ID", chatID).Msgf("%s sending message to Telegram with retry completed", pkgConst.OpSuccess)
 
@@ -113,10 +114,10 @@ func (sv *SendNoticeService) SendNoticeToEmail(ctx context.Context, email string
 	}
 
 	lg.Trace().Str("e-mail", email).Int("notice ID", notice.ID).Msgf("%s sending message to e-mail with retry starting...", pkgConst.OpStart)
-	if err := retry.Do(fn, sv.retryStrategy); err != nil {
+	if err := retry.Do(fn, retry.Strategy(*sv.rs)); err != nil {
 		return pkgErrors.Wrapf(err,
 			"send notice to e-mail after all ettempts; e-mail: %s, notice ID: %d, attempts: %d",
-			email, notice.ID, sv.retryStrategy.Attempts)
+			email, notice.ID, sv.rs.Attempts)
 	}
 	lg.Trace().Str("e-mail", email).Int("notice ID", notice.ID).Msgf("%s sending message to e-mail with retry completed", pkgConst.OpSuccess)
 

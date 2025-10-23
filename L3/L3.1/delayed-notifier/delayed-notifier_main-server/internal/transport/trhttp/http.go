@@ -7,6 +7,7 @@ import (
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRetry"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler"
 	"github.com/wb-go/wbf/retry"
 	"github.com/wb-go/wbf/zlog"
@@ -17,20 +18,20 @@ type IService interface {
 }
 
 type HTTP struct {
-	lg                         *zlog.Zerolog
-	httpsrv                    *http.Server
-	retryStrategyForWaitServer retry.Strategy
+	lg      *zlog.Zerolog
+	rs      *pkgRetry.Retry
+	httpsrv *http.Server
 }
 
-func New(cfg *Config, parentLg *zlog.Zerolog, sv IService) *HTTP {
+func New(cfg *Config, parentLg *zlog.Zerolog, rs *pkgRetry.Retry, sv IService) *HTTP {
 	lg := parentLg.With().Str("component", "HTTP").Logger()
 	return &HTTP{
 		lg: &lg,
+		rs: rs,
 		httpsrv: &http.Server{
 			Addr:    fmt.Sprintf(":%d", cfg.Port),
 			Handler: handler.New(cfg.Handler, &lg, sv).Rt,
 		},
-		retryStrategyForWaitServer: retry.Strategy(cfg.RetryStrategyForWaitServer),
 	}
 }
 
@@ -72,8 +73,8 @@ func (h *HTTP) WaitForServer(host string) error {
 		return nil
 	}
 
-	if err := retry.Do(fn, h.retryStrategyForWaitServer); err != nil {
-		return pkgErrors.Wrapf(err, "start http server, address: %s, attempts: %d", h.httpsrv.Addr, h.retryStrategyForWaitServer.Attempts)
+	if err := retry.Do(fn, retry.Strategy(*h.rs)); err != nil {
+		return pkgErrors.Wrapf(err, "start http server, address: %s, attempts: %d", h.httpsrv.Addr, h.rs.Attempts)
 	}
 
 	h.lg.Info().Str("addr", h.httpsrv.Addr).Msgf("%s http server started successfully", pkgConst.Info)
