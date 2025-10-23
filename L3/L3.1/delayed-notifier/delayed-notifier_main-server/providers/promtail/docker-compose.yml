@@ -4,9 +4,11 @@ services:
     container_name: ${PROMTAIL_CONTAINER}
     volumes:
       - ./config.yaml:/etc/promtail/config.yaml:ro
-      - ../../resources/data/promtail:/var/log/myapp:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - promtail_data:/var/lib/promtail
+ 
     command: -config.file=/etc/promtail/config.yaml
-
+ 
 volumes:
   promtail_data:

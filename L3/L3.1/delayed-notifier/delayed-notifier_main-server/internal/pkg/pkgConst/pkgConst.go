@@ -4,7 +4,7 @@ import "github.com/enescakir/emoji"
 
 var (
 	Start     = emoji.PurpleCircle
-	Stop      = "🟤"
+	Stop      = emoji.BrownCircle
 	Info      = emoji.Information
 	Warn      = emoji.Warning
 	OpStart   = "➤"
