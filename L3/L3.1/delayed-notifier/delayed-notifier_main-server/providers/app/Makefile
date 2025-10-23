@@ -54,7 +54,8 @@ local-build-up: local-build local-up
 # FOR DOCKER UP
 up:
 	@echo "Building and starting container $(APP_NAME)..."
-	docker compose -p $(PROJECT_NAME) up --build -d
+	docker compose -p $(PROJECT_NAME) build --no-cache
+	docker compose -p $(PROJECT_NAME) up -d
 	@echo "Container is up"
 
 logs:

@@ -18,6 +18,12 @@ endif
 # ALL
 # ========================
 
+all-local-up:
+	$(MAKE_CMD) redis-up
+	$(MAKE_CMD) rabbitmq-up
+	@sleep 3
+	$(MAKE_CMD) app-local-build-up ARGS="$(ARGS)"
+
 all-up:
 	$(MAKE_CMD) all-deps-up
 	@sleep 3
