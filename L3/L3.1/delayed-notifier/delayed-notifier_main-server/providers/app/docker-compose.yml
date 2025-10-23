@@ -1,5 +1,5 @@
 services:
-  myapp:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
@@ -7,11 +7,8 @@ services:
         APP_NAME: ${APP_NAME}
         APP_TRANSPORT_HTTP_PORT: ${APP_TRANSPORT_HTTP_PORT}
     container_name: ${APP_CONTAINER}
-    env_file:
-      - ../../.env
     environment:
       - REDIS_HOST=redis
       - RABBITMQ_HOST=rabbitmq
     ports:
       - "${APP_TRANSPORT_HTTP_PORT}:${APP_TRANSPORT_HTTP_PORT}"
-    restart: unless-stopped

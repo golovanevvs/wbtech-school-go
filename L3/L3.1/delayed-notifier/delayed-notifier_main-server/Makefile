@@ -1,5 +1,5 @@
 # ========================
-# Load environment variables
+# Setup
 # ========================
 
 ENV_FILE ?= .env
@@ -7,10 +7,6 @@ ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
 export ENV PROJECT_NAME
 endif
-
-# ========================
-# Detect OS
-# ========================
 
 ifeq ($(OS),Windows_NT)
 	MAKE_CMD = mingw32-make

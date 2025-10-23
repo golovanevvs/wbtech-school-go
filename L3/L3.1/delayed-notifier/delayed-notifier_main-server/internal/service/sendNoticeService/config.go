@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/wb-go/wbf/config"
 )
 
@@ -30,9 +29,10 @@ func NewConfig(cfg *config.Config) *Config {
 
 func (c Config) String() string {
 	return fmt.Sprintf(`SendNoticeService:
-    retry strategy:
-      %s: %s, %s: %s, %s: %s`,
-		color.YellowString("attempts"), color.GreenString("%d", c.RetryStrategy.Attempts),
-		color.YellowString("delay"), color.GreenString("%v", c.RetryStrategy.Delay),
-		color.YellowString("backoff"), color.GreenString("%v", c.RetryStrategy.Backoff))
+    %s:
+      %s: %d, %s: %v, %s: %v`,
+		"retry strategy",
+		"attempts", c.RetryStrategy.Attempts,
+		"delay", c.RetryStrategy.Delay,
+		"backoff", c.RetryStrategy.Backoff)
 }

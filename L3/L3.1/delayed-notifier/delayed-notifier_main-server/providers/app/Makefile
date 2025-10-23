@@ -6,7 +6,7 @@ PROJECT_DIR := $(abspath ../..)
 ENV_FILE ?= .env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
-# export
+export APP_NAME APP_TRANSPORT_HTTP_PORT
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -48,8 +48,7 @@ local-build-up: local-build local-up
 # FOR DOCKER UP
 up:
 	@echo "Building and starting container $(APP_NAME)..."
-	docker compose -p $(PROJECT_NAME) --build-arg APP_NAME=$(APP_NAME) --build-arg APP_TRANSPORT_HTTP_PORT=$(APP_TRANSPORT_HTTP_PORT)
-	docker compose -p $(PROJECT_NAME) up -d
+	docker compose -p $(PROJECT_NAME) up --build -d
 	@echo "Containers are up"
 
 logs:

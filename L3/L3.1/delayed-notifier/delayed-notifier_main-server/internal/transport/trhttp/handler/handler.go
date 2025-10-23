@@ -20,7 +20,7 @@ type Handler struct {
 }
 
 func New(cfg *Config, parentLg *zlog.Zerolog, sv IService) *Handler {
-	lg := parentLg.With().Str("component-2", "handler").Logger()
+	lg := parentLg.With().Str("component", "handler").Logger()
 
 	rt := ginext.New(cfg.GinMode)
 	hd := &Handler{

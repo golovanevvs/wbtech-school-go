@@ -1,6 +1,8 @@
 package pkgTelegram
 
 import (
+	"fmt"
+
 	"github.com/wb-go/wbf/config"
 )
 
@@ -15,5 +17,11 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return "telegram:\n \033[33mtoken: \033[0m\033[32m***\033[0m"
+	var token string
+	if len(c.Token) > 0 {
+		token = "***hidden***"
+	}
+	return fmt.Sprintf(`telegram:
+  %s: %s`,
+		"token", token)
 }

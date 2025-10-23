@@ -11,8 +11,6 @@ RUN go mod download
 
 COPY ../../. .
 
-ARG APP_NAME=myapp
-
 RUN go build -o $APP_NAME ./cmd/$APP_NAME
 
 # ===== Stage 2: Runtime =====
@@ -23,7 +21,6 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /root/
 COPY --from=builder /app/$APP_NAME .
 
-ENV APP_TRANSPORT_HTTP_PORT=7777
 EXPOSE $APP_TRANSPORT_HTTP_PORT
 
 CMD ["sh", "-c", "./$APP_NAME"]

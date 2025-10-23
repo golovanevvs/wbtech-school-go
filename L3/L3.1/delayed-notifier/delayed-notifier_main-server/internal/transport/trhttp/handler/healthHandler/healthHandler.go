@@ -3,6 +3,7 @@ package healthHandler
 import (
 	"net/http"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/wb-go/wbf/ginext"
 	"github.com/wb-go/wbf/zlog"
 )
@@ -13,7 +14,7 @@ type Handler struct {
 }
 
 func New(rt *ginext.Engine) *Handler {
-	lg := zlog.Logger.With().Str("component", "handler-healthHandler").Logger()
+	lg := zlog.Logger.With().Str("component", "healthHandler").Logger()
 	return &Handler{
 		lg: lg,
 		rt: rt,
@@ -25,10 +26,9 @@ func (hd *Handler) RegisterRoutes() {
 }
 
 func (hd *Handler) HealthHandler(c *ginext.Context) {
-	lg := hd.lg.With().Str("handler", "healthHandler").Logger()
-
-	lg.Trace().Msg("----- handler is starting")
-	defer lg.Trace().Msg("----- handler stopped")
+	lg := hd.lg.With().Str("method", "HealthHandler").Logger()
+	lg.Trace().Msgf("%s method starting", pkgConst.Start)
+	defer lg.Trace().Msgf("%s method stopped", pkgConst.Stop)
 
 	c.String(http.StatusOK, "ok")
 }

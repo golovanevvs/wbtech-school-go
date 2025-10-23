@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/fatih/color"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler"
@@ -67,7 +66,7 @@ func (h *HTTP) WaitForServer(host string) error {
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			err = fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-			h.lg.Warn().Err(err).Str("addr", h.httpsrv.Addr).Msgf("%s failed to start http server", color.YellowString("⚠"))
+			h.lg.Warn().Err(err).Str("addr", h.httpsrv.Addr).Msgf("%s failed to start http server", pkgConst.Warn)
 			return err
 		}
 		return nil
@@ -77,7 +76,7 @@ func (h *HTTP) WaitForServer(host string) error {
 		return pkgErrors.Wrapf(err, "start http server, address: %s, attempts: %d", h.httpsrv.Addr, h.retryStrategyForWaitServer.Attempts)
 	}
 
-	h.lg.Info().Str("addr", h.httpsrv.Addr).Msg("ℹ http server started successfully")
+	h.lg.Info().Str("addr", h.httpsrv.Addr).Msgf("%s http server started successfully", pkgConst.Info)
 
 	return nil
 }

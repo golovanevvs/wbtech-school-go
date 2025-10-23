@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler"
 	"github.com/wb-go/wbf/config"
 )
@@ -38,15 +37,16 @@ func NewConfig(cfg *config.Config) *Config {
 func (c Config) String() string {
 	return fmt.Sprintf(`http:
     %s: %s
-    %s: %s
-    retry strategy for wait server:
-      %s: %s, %s: %s, %s: %s
+    %s: %d
+    %s:
+      %s: %d, %s: %v, %s: %v
     %s`,
-		color.YellowString("public host"), color.GreenString(c.PublicHost),
-		color.YellowString("port"), color.GreenString("%d", c.Port),
-		color.YellowString("attempts"), color.GreenString("%d", c.RetryStrategyForWaitServer.Attempts),
-		color.YellowString("delay"), color.GreenString("%v", c.RetryStrategyForWaitServer.Delay),
-		color.YellowString("backoff"), color.GreenString("%v", c.RetryStrategyForWaitServer.Backoff),
+		"public host", c.PublicHost,
+		"port", c.Port,
+		"retry strategy for wait server",
+		"attempts", c.RetryStrategyForWaitServer.Attempts,
+		"delay", c.RetryStrategyForWaitServer.Delay,
+		"backoff", c.RetryStrategyForWaitServer.Backoff,
 		c.Handler.String(),
 	)
 }

@@ -26,5 +26,7 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("redis:\n Host: %s, Port: %d, DB: %d, TTL: %v", c.Host, c.Port, c.DB, c.TTL)
+	return fmt.Sprintf(`redis:
+  %s: %s, %s: %d, %s: %d, %s: %v`,
+		"Host", c.Host, "Port", c.Port, "DB", c.DB, "TTL", c.TTL)
 }

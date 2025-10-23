@@ -54,10 +54,18 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c dsnConfig) String() string {
-	return fmt.Sprintf("\033[33mHost: \033[0m\033[32m%s\033[0m, \033[33mPort: \033[0m\033[32m%d\033[0m, \033[33mUser: \033[0m\033[32m%s\033[0m, \033[33mDBName: \033[0m\033[32m%s\033[0m",
-		c.Host, c.Port, c.User, c.DBName)
+	return fmt.Sprintf(`      %s: %s, %s: %d, %s: %s, %s: %s`,
+		"Host", c.Host, "Port", c.Port, "User", c.User, "DBName", c.DBName)
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("postgres:\n  Master: \033[32m%s\033[0m\n  Slave1: \033[32m%s\033[0m\n  Slave2: \033[32m%s\033[0m\n\033[33m  MaxOpenConns:\033[0m \033[32m%d\033[0m, \033[33mMaxIdleConns:\033[0m \033[32m%d\033[0m, \033[33mConnMaxLifetime:\033[0m \033[32m%s\033[0m", c.Master.String(), c.Slave1.String(), c.Slave2.String(), c.MaxOpenConns, c.MaxIdleConns, c.ConnMaxLifetime)
+	return fmt.Sprintf(`postgres:
+  %s: %s
+    %s: %s
+	%s: %s
+	%s: %d, %s: %d, %s: %s`,
+		"Master", c.Master.String(),
+		"Slave1", c.Slave1.String(),
+		"Slave2", c.Slave2.String(),
+		"MaxOpenConns", c.MaxOpenConns, "MaxIdleConns", c.MaxIdleConns, "ConnMaxLifetime", c.ConnMaxLifetime)
 }

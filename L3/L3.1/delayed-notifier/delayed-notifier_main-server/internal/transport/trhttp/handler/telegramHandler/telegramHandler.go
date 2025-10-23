@@ -40,15 +40,17 @@ func (hd *Handler) WebHookHandler(c *ginext.Context) {
 	lg.Trace().Msgf("%s method starting", pkgConst.Start)
 	defer lg.Trace().Msgf("%s method stopped", pkgConst.Stop)
 
+	lg.Trace().Msgf("%s checking content type...", pkgConst.OpStart)
 	if !strings.Contains(c.ContentType(), "application/json") {
-		lg.Warn().Str("content-type", c.ContentType()).Msg("invalid content-type")
+		lg.Warn().Str("content-type", c.ContentType()).Int("status", http.StatusBadRequest).Msg("invalid content-type")
 		c.JSON(http.StatusBadRequest, ginext.H{"error": pkgErrors.ErrContentTypeAJ.Error()})
 		return
 	}
+	lg.Trace().Msgf("%s content type is valid", pkgConst.OpSuccess)
 
 	var update tgbotapi.Update
 	if err := c.ShouldBindJSON(&update); err != nil {
-		lg.Warn().Err(err).Msg("error bind json")
+		lg.Warn().Err(err).Msgf("%s error bind json", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ginext.H{"error": err.Error()})
 		return
 	}
@@ -63,7 +65,7 @@ func (hd *Handler) WebHookHandler(c *ginext.Context) {
 	message := update.Message.Text
 
 	if err := hd.sv.Start(c.Request.Context(), username, chatID, message); err != nil {
-		lg.Warn().Int64("chatID", chatID).Str("message_body", message).Err(err).Msg("failed to handle message")
+		lg.Warn().Int64("chatID", chatID).Str("message_body", message).Err(err).Msgf("%s failed to handle message", pkgConst.Warn)
 		c.Status(http.StatusOK)
 		return
 	}

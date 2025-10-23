@@ -38,5 +38,13 @@ func NewConfig(cfg *config.Config) *Config {
 }
 
 func (c Config) String() string {
-	return fmt.Sprintf("rabbitmq:\n Host: %s, Port: %d, VHost: %s,Username: %s\n Exchange: %s, ExchangeType: %s\n Queue:%s, RoutingKey: %s\n DLX: %s, DLQ: %s", c.Host, c.Port, c.VHost, c.Username, c.Exchange, c.ExchangeType, c.Queue, c.RoutingKey, c.DLX, c.DLQ)
+	return fmt.Sprintf(`rabbitmq:
+  %s: %s, %s: %d, %s: %s, %s: %s
+  %s: %s, %s: %s
+  %s:%s, %s: %s
+  %s: %s, %s: %s`,
+		"Host", c.Host, "Port", c.Port, "VHost", c.VHost, "Username", c.Username,
+		"Exchange", c.Exchange, "ExchangeType", c.ExchangeType,
+		"Queue", c.Queue, "RoutingKey", c.RoutingKey,
+		"DLX", c.DLX, "DLQ", c.DLQ)
 }
