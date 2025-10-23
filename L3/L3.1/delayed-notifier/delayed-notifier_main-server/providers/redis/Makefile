@@ -23,7 +23,7 @@ SERVICE_NAME = ${REDIS_CONTAINER}
 up:
 	@echo "Starting ${NAME}..."
 	docker compose -p $(PROJECT_NAME) up -d
-	@echo "${NAME} are up and running."
+	@echo "${NAME} is up and running."
 
 logs:
 	docker compose -p $(PROJECT_NAME) logs -f

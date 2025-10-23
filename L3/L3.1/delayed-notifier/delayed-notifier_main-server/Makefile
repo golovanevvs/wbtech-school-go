@@ -23,11 +23,11 @@ all-up:
 	@sleep 3
 	$(MAKE_CMD) app-up
 
-all-deps-up: rabbitmq-up redis-up promtail-up loki-up grafana-up
+all-deps-up: redis-up rabbitmq-up promtail-up loki-up grafana-up
 
-all-rm: rabbitmq-rm redis-rm promtail-rm loki-rm grafana-rm app-rm
+all-rm: app-rm
 
-all-down: rabbitmq-down redis-down promtail-down loki-down grafana-down app-down
+all-down: app-down
 
 # ========================
 # APP

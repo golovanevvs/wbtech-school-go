@@ -25,7 +25,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	app, err := app.New()
+	app, err := app.New(env)
 	if err != nil {
 		lg.Error().Err(err).Msg("application initialization failed")
 		wait()

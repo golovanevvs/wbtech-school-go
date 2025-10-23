@@ -12,8 +12,8 @@ type App struct {
 	rm   *resourceManager
 }
 
-func New() (*App, error) {
-	cfg, err := newConfig()
+func New(env string) (*App, error) {
+	cfg, err := newConfig(env)
 	if err != nil {
 		return nil, fmt.Errorf("error creating configuration: %w", err)
 	}

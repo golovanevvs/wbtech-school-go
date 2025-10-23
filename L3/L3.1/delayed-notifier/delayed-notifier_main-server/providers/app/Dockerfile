@@ -6,10 +6,14 @@ RUN apk add --no-cache git ca-certificates
 
 WORKDIR /app
 
-COPY ../../go.mod ../../go.sum ./
+ARG APP_NAME
+ARG APP_TRANSPORT_HTTP_PORT
+
+COPY go.mod go.sum ./
+
 RUN go mod download
 
-COPY ../../. .
+COPY . .
 
 RUN go build -o $APP_NAME ./cmd/$APP_NAME
 
@@ -18,9 +22,11 @@ RUN go build -o $APP_NAME ./cmd/$APP_NAME
 FROM alpine:latest
 
 RUN apk add --no-cache ca-certificates
+
 WORKDIR /root/
+
 COPY --from=builder /app/$APP_NAME .
 
 EXPOSE $APP_TRANSPORT_HTTP_PORT
 
-CMD ["sh", "-c", "./$APP_NAME"]
+ENTRYPOINT ["/root/delayed-notifier_main-server"]

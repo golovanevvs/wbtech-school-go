@@ -3,11 +3,17 @@ MAKEFLAGS += --no-print-directory
 PROJECT_DIR := $(abspath ../..)
 
 # Load environment variables
-ENV_FILE ?= .env
-ifneq (,$(wildcard $(ENV_FILE)))
-include $(ENV_FILE)
-export APP_NAME APP_TRANSPORT_HTTP_PORT
-endif
+ENV_FILES := .env ../email/.env ../rabbitmq/.env ../redis/.env ../telegram/.env 
+
+$(foreach file,$(ENV_FILES), \
+  $(if $(wildcard $(file)), $(eval include $(file))) \
+)
+
+export APP_NAME APP_TRANSPORT_HTTP_PORT APP_TRANSPORT_HTTP_PUBLIC_HOST
+export EMAIL_SMTP_HOST EMAIL_SMTP_PORT EMAIL_USERNAME EMAIL_PASSWORD EMAIL_FROM
+export RABBITMQ_PORT RABBITMQ_VHOST RABBITMQ_USERNAME RABBITMQ_PASSWORD
+export REDIS_PORT REDIS_PASSWORD
+export TELEGRAM_TOKEN
 
 ifeq ($(OS),Windows_NT)
     RUN_CMD = start "" "/C/Program Files/Git/git-bash.exe" -c
@@ -49,7 +55,7 @@ local-build-up: local-build local-up
 up:
 	@echo "Building and starting container $(APP_NAME)..."
 	docker compose -p $(PROJECT_NAME) up --build -d
-	@echo "Containers are up"
+	@echo "Container is up"
 
 logs:
 	@echo "Showing logs for ${APP_NAME}..."

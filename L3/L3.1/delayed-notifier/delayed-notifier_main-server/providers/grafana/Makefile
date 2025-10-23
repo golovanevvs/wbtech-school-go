@@ -3,7 +3,7 @@ MAKEFLAGS += --no-print-directory
 PROJECT_DIR := $(abspath ../..)
 
 # Load environment variables
-ENV_FILE ?= $(PROJECT_DIR)/.env
+ENV_FILE ?= .env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
 export
@@ -18,13 +18,12 @@ endif
 .PHONY: up logs stop restart rm down ps exec
 
 NAME = Grafana
-PROJECT_NAME = ${APP_NAME}
 SERVICE_NAME = ${GRAFANA_CONTAINER}
 
 up:
 	@echo "➡ Starting ${NAME}..."
 	docker compose -p $(PROJECT_NAME) up -d
-	@echo "✅ ${NAME} are up and running."
+	@echo "✅ ${NAME} is up and running."
 
 logs:
 	docker compose -p $(PROJECT_NAME) logs -f

@@ -23,21 +23,23 @@ type Config struct {
 	tr *transport.Config
 }
 
-func newConfig() (*Config, error) {
+func newConfig(env string) (*Config, error) {
 	cfg := config.New()
 
-	if err := cfg.LoadEnvFiles(
-		".env",
-		"providers/app/.env",
-		"providers/email/.env",
-		"providers/grafana/.env",
-		"providers/loki/.env",
-		"providers/promtail/.env",
-		"providers/rabbitmq/.env",
-		"providers/redis/.env",
-		"providers/telegram/.env",
-	); err != nil {
-		return nil, fmt.Errorf("failed to load env files: %w", err)
+	if env == "local" {
+		if err := cfg.LoadEnvFiles(
+			".env",
+			"providers/app/.env",
+			"providers/email/.env",
+			"providers/grafana/.env",
+			"providers/loki/.env",
+			"providers/promtail/.env",
+			"providers/rabbitmq/.env",
+			"providers/redis/.env",
+			"providers/telegram/.env",
+		); err != nil {
+			return nil, fmt.Errorf("failed to load env files: %w", err)
+		}
 	}
 
 	cfg.EnableEnv("")
