@@ -2,7 +2,6 @@ package updateNoticeService
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
@@ -38,8 +37,6 @@ func (sv *UpdateNoticeService) UpdateStatus(ctx context.Context, notice *model.N
 	defer lg.Trace().Msgf("%s method stopped", pkgConst.Stop)
 
 	notice.Status = newStatus
-	fmt.Println(notice.Status)
-	fmt.Println(notice.ID)
 
 	lg.Trace().Msgf("%s updating notice status to repository...", pkgConst.OpStart)
 	err = sv.rp.UpdateNotice(ctx, notice)
