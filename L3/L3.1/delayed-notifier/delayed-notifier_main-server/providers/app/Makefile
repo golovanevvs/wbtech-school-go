@@ -45,14 +45,13 @@ local-build:
 
 local-up:
 	@echo "Running app $(APP_NAME)..."
+# 	@cd $(PROJECT_DIR) && $(RUN_CMD) "./$(APP_NAME) $(ARGS)"
+# 	@echo "Running app $(APP_NAME) completed"
 ifeq ($(OS),Windows_NT)
-	# Windows: используем PowerShell команду
 	start powershell -NoExit -Command "cd '$(PROJECT_DIR)'; .\$(APP_NAME).exe $(ARGS)"
 else
-	# Unix-like: используем стандартную команду
 	@cd $(PROJECT_DIR) && $(RUN_CMD) "./$(APP_NAME) $(ARGS)"
 endif
-	@sleep 1
 	@echo "Running app $(APP_NAME) completed"
 
 local-build-up: local-build local-up
