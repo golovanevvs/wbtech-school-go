@@ -73,7 +73,7 @@ func (a *Config) String() string {
 	if a == nil {
 		return "appConfig: <nil>"
 	}
-	return fmt.Sprintf("Configuration:\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n",
+	return fmt.Sprintf("Configuration:\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n",
 		a.lg.String(),
 		a.rs.String(),
 		a.rd.String(),

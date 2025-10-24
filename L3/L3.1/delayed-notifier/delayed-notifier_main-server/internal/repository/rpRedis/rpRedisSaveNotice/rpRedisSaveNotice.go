@@ -39,7 +39,7 @@ func (rp *RpRedisSaveNotice) SaveNotice(ctx context.Context, notice model.Notice
 	lg.Trace().Msgf("%s notice marshaled successfully", pkgConst.OpSuccess)
 
 	lg.Trace().Msgf("%s saving notice to Redis...", pkgConst.OpStart)
-	key, err := rp.rd.SetWithID(ctx, "notices", data, 0)
+	key, err := rp.rd.SetWithID(ctx, "notices", data)
 	if err != nil {
 		return 0, pkgErrors.Wrap(err, "save to Redis")
 	}
@@ -51,6 +51,22 @@ func (rp *RpRedisSaveNotice) SaveNotice(ctx context.Context, notice model.Notice
 		return 0, pkgErrors.Wrap(err, "convert string to int")
 	}
 	lg.Trace().Int("notice ID", id).Msgf("%s notice ID converted to int successfully", pkgConst.OpSuccess)
+
+	notice.ID = id
+
+	lg.Trace().Msgf("%s marshaling notice...", pkgConst.OpStart)
+	data, err = json.Marshal(notice)
+	if err != nil {
+		return 0, pkgErrors.Wrap(err, "marshal notice")
+	}
+	lg.Trace().Msgf("%s notice marshaled successfully", pkgConst.OpSuccess)
+
+	lg.Trace().Msgf("%s saving notice to Redis...", pkgConst.OpStart)
+	err = rp.rd.Set(ctx, key, data)
+	if err != nil {
+		return 0, pkgErrors.Wrap(err, "save to Redis")
+	}
+	lg.Trace().Str("key", key).Msgf("%s notice saved to Redis successfully", pkgConst.OpSuccess)
 
 	return id, nil
 }

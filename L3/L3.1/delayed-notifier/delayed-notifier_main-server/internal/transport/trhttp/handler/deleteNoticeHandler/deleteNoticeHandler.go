@@ -13,7 +13,7 @@ import (
 )
 
 type IService interface {
-	DeleteNotice(ctx context.Context, id int) (err error)
+	PreDeleteNotice(ctx context.Context, id int) (err error)
 }
 
 type Handler struct {
@@ -56,7 +56,7 @@ func (hd *Handler) DeleteNotice(c *ginext.Context) {
 	}
 
 	lg.Trace().Msgf("%s deleting notice...", pkgConst.OpStart)
-	err = hd.sv.DeleteNotice(c.Request.Context(), id)
+	err = hd.sv.PreDeleteNotice(c.Request.Context(), id)
 	if errors.Is(err, pkgErrors.ErrNoticeNotFound) {
 		lg.Warn().Err(err).Int("notice ID", id).Msgf("%s no exists notice ID", pkgConst.Warn)
 		c.JSON(http.StatusNotFound, ginext.H{"error": "notice with ID=" + idStr + " not found: " + err.Error()})

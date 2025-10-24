@@ -20,20 +20,39 @@ type iSendNoticeService interface {
 	SendNotice(ctx context.Context, notice model.Notice)
 }
 
+type iGetNoticeService interface {
+	GetNotice(ctx context.Context, id int) (notice *model.Notice, err error)
+}
+
+type iUpdateNoticeService interface {
+	UpdateStatus(ctx context.Context, notice *model.Notice, newStatus model.Status) (err error)
+}
+
 type ConsumeNoticeService struct {
 	lg        *zlog.Zerolog
 	rb        *pkgRabbitmq.Client
 	delNotSv  iDeleteNoticeService
 	sendNotSv iSendNoticeService
+	getNotSv  iGetNoticeService
+	updNotSv  iUpdateNoticeService
 }
 
-func New(parentLg *zlog.Zerolog, rb *pkgRabbitmq.Client, delNotSv iDeleteNoticeService, sendNotSv iSendNoticeService) *ConsumeNoticeService {
+func New(
+	parentLg *zlog.Zerolog,
+	rb *pkgRabbitmq.Client,
+	delNotSv iDeleteNoticeService,
+	sendNotSv iSendNoticeService,
+	getNotSv iGetNoticeService,
+	updNotSv iUpdateNoticeService,
+) *ConsumeNoticeService {
 	lg := parentLg.With().Str("component", "ConsumeNoticeService").Logger()
 	return &ConsumeNoticeService{
 		lg:        &lg,
 		rb:        rb,
 		delNotSv:  delNotSv,
 		sendNotSv: sendNotSv,
+		getNotSv:  getNotSv,
+		updNotSv:  updNotSv,
 	}
 }
 
@@ -77,9 +96,16 @@ func (sv *ConsumeNoticeService) handleMessage(ctx context.Context, message amqp.
 	lg.Trace().Int("notice ID", notice.ID).Msgf("%s message acknowledged successfully", pkgConst.OpSuccess)
 
 	// cheking status, setting new status and sending notice
-	if notice.Status != model.StatusDeleted {
-		// сделать репозиторий updateStatus
-		notice.Status = model.StatusPending
+	updateNotice, err := sv.getNotSv.GetNotice(ctx, notice.ID)
+	if err != nil {
+		lg.Error().Err(err).Int("notice ID", notice.ID).Msg("failed to update notice status")
+		return
+	}
+	if updateNotice.Status != model.StatusDeleted {
+		if err := sv.updNotSv.UpdateStatus(ctx, &notice, model.StatusPending); err != nil {
+			lg.Error().Err(err).Int("notice ID", notice.ID).Msg("failed to update notice status")
+			return
+		}
 		lg.Trace().Int("notice ID", notice.ID).Msgf("%s sending message...", pkgConst.OpStart)
 		sv.sendNotSv.SendNotice(ctx, notice)
 		lg.Trace().Int("notice ID", notice.ID).Msgf("%s message sending completed", pkgConst.OpSuccess)

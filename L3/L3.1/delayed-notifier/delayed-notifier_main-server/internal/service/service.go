@@ -11,14 +11,16 @@ import (
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/getNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/sendNoticeService"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/telegramStartService"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/service/updateNoticeService"
 	"github.com/wb-go/wbf/zlog"
 )
 
 type iRepository interface {
 	addNoticeService.ISaveNoticeRepository
-	deleteNoticeService.IRepository
+	deleteNoticeService.IDelRepository
 	getNoticeService.IRepository
 	sendNoticeService.IRepository
+	updateNoticeService.IUpdateNoticeRepository
 	telegramStartService.IRepository
 }
 
@@ -29,18 +31,22 @@ type Service struct {
 	*telegramStartService.TelegramStartService
 	*consumeNoticeService.ConsumeNoticeService
 	*sendNoticeService.SendNoticeService
+	*updateNoticeService.UpdateNoticeService
 }
 
 func New(rs *pkgRetry.Retry, rp iRepository, rb *pkgRabbitmq.Client, tg *pkgTelegram.Client, em *pkgEmail.Client) *Service {
 	lg := zlog.Logger.With().Str("layer", "service").Logger()
-	delNotSv := deleteNoticeService.New(rp)
+	getNotSv := getNoticeService.New(&lg, rp)
+	updNotSv := updateNoticeService.New(&lg, rp)
+	delNotSv := deleteNoticeService.New(&lg, rp, getNotSv, updNotSv)
 	sendNotSv := sendNoticeService.New(&lg, rs, tg, em, rp)
 	return &Service{
 		AddNoticeService:     addNoticeService.New(&lg, rb, delNotSv, rp),
 		DeleteNoticeService:  delNotSv,
-		GetNoticeService:     getNoticeService.New(&lg, rp),
+		GetNoticeService:     getNotSv,
 		TelegramStartService: telegramStartService.New(&lg, tg, rp),
-		ConsumeNoticeService: consumeNoticeService.New(&lg, rb, delNotSv, sendNotSv),
+		ConsumeNoticeService: consumeNoticeService.New(&lg, rb, delNotSv, sendNotSv, getNotSv, updNotSv),
 		SendNoticeService:    sendNotSv,
+		UpdateNoticeService:  updNotSv,
 	}
 }
