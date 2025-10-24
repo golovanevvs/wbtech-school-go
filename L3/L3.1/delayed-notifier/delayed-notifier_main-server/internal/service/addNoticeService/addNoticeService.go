@@ -58,6 +58,13 @@ func (sv *AddNoticeService) AddNotice(ctx context.Context, reqNotice model.ReqNo
 		Status:    model.StatusScheduled,
 	}
 
+	lg.Trace().Msgf("%s validating notice...", pkgConst.OpStart)
+	if err := notice.Validate(); err != nil {
+		lg.Debug().Err(err).Msgf("%s notice validation failed", pkgConst.Error)
+		return 0, pkgErrors.Wrap(err, "notice validation failed")
+	}
+	lg.Trace().Msgf("%s notice validated successfully", pkgConst.OpSuccess)
+
 	lg.Trace().Msgf("%s saving notice to repository...", pkgConst.OpStart)
 	id, err = sv.rp.SaveNotice(ctx, notice)
 	if err != nil {

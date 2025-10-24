@@ -35,13 +35,16 @@ func (rp *RpRedisLoadNotice) LoadNotice(ctx context.Context, id int) (notice *mo
 	lg.Trace().Str("key", key).Msgf("%s getting data from Redis...", pkgConst.OpStart)
 	data, err := rp.rd.Get(ctx, key)
 	if err != nil {
+		lg.Trace().Err(err).Int("notice ID", id).Msgf("%s failed to get data from Redis", pkgConst.Error)
 		return nil, pkgErrors.Wrap(err, "getting data from Redis")
 	}
 	lg.Trace().Str("key", key).Msgf("%s data got from Redis successfully", pkgConst.OpSuccess)
 
 	lg.Trace().Msgf("%s unmarshaling data to notice...", pkgConst.OpStart)
+	notice = &model.Notice{}
 	err = json.Unmarshal([]byte(data), notice)
 	if err != nil {
+		lg.Trace().Err(err).Int("notice ID", id).Msgf("%s failed to unmarshal data to notice", pkgConst.Error)
 		return nil, pkgErrors.Wrap(err, "unmarshal data")
 	}
 	lg.Trace().Int("notice ID", notice.ID).Msgf("%s data unmarshaled successfully", pkgConst.OpSuccess)

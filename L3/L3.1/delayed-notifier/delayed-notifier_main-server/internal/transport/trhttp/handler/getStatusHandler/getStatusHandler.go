@@ -1,4 +1,4 @@
-package deleteNoticeHandler
+package getStatusHandler
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
 	"github.com/wb-go/wbf/ginext"
@@ -13,7 +14,7 @@ import (
 )
 
 type IService interface {
-	DeleteNotice(ctx context.Context, id int) (err error)
+	GetNotice(ctx context.Context, id int) (notice *model.Notice, err error)
 }
 
 type Handler struct {
@@ -22,9 +23,8 @@ type Handler struct {
 	sv IService
 }
 
-func New(rt *ginext.Engine, sv IService) *Handler {
-	lg := zlog.Logger.With().Str("component", "deleteNoticeHandler").Logger()
-
+func New(parentLg *zlog.Zerolog, rt *ginext.Engine, sv IService) *Handler {
+	lg := parentLg.With().Str("component", "addNoticeHandler").Logger()
 	return &Handler{
 		lg: &lg,
 		rt: rt,
@@ -33,11 +33,11 @@ func New(rt *ginext.Engine, sv IService) *Handler {
 }
 
 func (hd *Handler) RegisterRoutes() {
-	hd.rt.DELETE("/notify/:id", hd.DeleteNotice)
+	hd.rt.GET("/notify/:id", hd.GetNotice)
 }
 
-func (hd *Handler) DeleteNotice(c *ginext.Context) {
-	lg := hd.lg.With().Str("method", "DeleteNotice").Logger()
+func (hd *Handler) GetNotice(c *ginext.Context) {
+	lg := hd.lg.With().Str("method", "GetNotice").Logger()
 	lg.Trace().Msgf("%s method starting", pkgConst.Start)
 	defer lg.Trace().Msgf("%s method stopped", pkgConst.Stop)
 
@@ -55,19 +55,19 @@ func (hd *Handler) DeleteNotice(c *ginext.Context) {
 		return
 	}
 
-	lg.Trace().Msgf("%s deleting notice...", pkgConst.OpStart)
-	err = hd.sv.DeleteNotice(c.Request.Context(), id)
+	lg.Trace().Msgf("%s getting notice...", pkgConst.OpStart)
+	notice, err := hd.sv.GetNotice(c.Request.Context(), id)
 	if errors.Is(err, pkgErrors.ErrNoticeNotFound) {
-		lg.Warn().Err(err).Int("notice ID", id).Msgf("%s no exists notice ID", pkgConst.Warn)
+		lg.Warn().Err(err).Int("notice ID", id).Msgf("%s notice ID", pkgConst.Warn)
 		c.JSON(http.StatusNotFound, ginext.H{"error": "notice with ID=" + idStr + " not found: " + err.Error()})
 		return
 	}
 	if err != nil {
-		lg.Warn().Err(err).Int("notice ID", id).Msgf("%s failed to delete notice", pkgConst.Warn)
-		c.JSON(http.StatusInternalServerError, ginext.H{"error": "failed to delete notice: " + err.Error()})
+		lg.Warn().Err(err).Int("notice ID", id).Msgf("%s failed to get notice", pkgConst.Warn)
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": "failed to get notice: " + err.Error()})
 		return
 	}
-	lg.Trace().Int("notice ID", id).Msgf("%s notice deleted successfully", pkgConst.OpSuccess)
+	lg.Trace().Int("notice ID", id).Msgf("%s notice got successfully", pkgConst.OpSuccess)
 
-	c.JSON(http.StatusOK, ginext.H{"status": "deleted"})
+	c.JSON(http.StatusOK, ginext.H{"status": notice.Status})
 }

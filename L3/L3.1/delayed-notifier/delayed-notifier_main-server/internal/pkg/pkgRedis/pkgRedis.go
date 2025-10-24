@@ -2,9 +2,11 @@ package pkgRedis
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -64,14 +66,25 @@ func (c *Client) SetWithID(ctx context.Context, prefix string, value interface{}
 
 func (c *Client) Get(ctx context.Context, key string) (string, error) {
 	val, err := c.rdb.Get(ctx, key).Result()
-	if err == redis.Nil {
-		return "", nil
+	if errors.Is(err, redis.Nil) {
+		return "", pkgErrors.Wrap(pkgErrors.ErrNoticeNotFound, "get data from Redis")
 	}
-	return val, err
+	if err != nil {
+		return "", pkgErrors.Wrap(err, "get data from Redis")
+	}
+	return val, nil
 }
 
 func (c *Client) Del(ctx context.Context, keys ...string) error {
-	return c.rdb.Del(ctx, keys...).Err()
+	deleted, err := c.rdb.Del(ctx, keys...).Result()
+	if err != nil {
+		return pkgErrors.Wrap(err, "delete data from Redis")
+	}
+	if deleted == 0 {
+		return pkgErrors.Wrap(pkgErrors.ErrNoticeNotFound, "delete data from Redis")
+
+	}
+	return nil
 }
 
 func (c *Client) Exists(ctx context.Context, key string) (bool, error) {

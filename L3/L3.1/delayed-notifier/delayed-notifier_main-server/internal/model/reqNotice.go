@@ -10,7 +10,7 @@ type ReqNotice struct {
 	UserID   int        `json:"user_id" binding:"required,numeric"`
 	Message  string     `json:"message" binding:"required"`
 	Channels Channels   `json:"channels" binding:"required"`
-	SentAt   *time.Time `json:"sent_at" validate:"required"`
+	SentAt   *time.Time `json:"sent_at" binding:"required"`
 }
 
 func (n *ReqNotice) Validate() error {

@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/addNoticeHandler"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/deleteNoticeHandler"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/getStatusHandler"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/healthHandler"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/telegramHandler"
 	"github.com/wb-go/wbf/ginext"
@@ -12,6 +13,7 @@ import (
 type IService interface {
 	addNoticeHandler.IService
 	deleteNoticeHandler.IService
+	getStatusHandler.IService
 	telegramHandler.IService
 }
 
@@ -32,6 +34,9 @@ func New(cfg *Config, parentLg *zlog.Zerolog, sv IService) *Handler {
 
 	deleteNoticeHandler := deleteNoticeHandler.New(rt, sv)
 	deleteNoticeHandler.RegisterRoutes()
+
+	getStatusHandler := getStatusHandler.New(&lg, rt, sv)
+	getStatusHandler.RegisterRoutes()
 
 	telegramHandler := telegramHandler.New(rt, sv)
 	telegramHandler.RegisterRoutes()

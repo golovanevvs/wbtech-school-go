@@ -32,7 +32,7 @@ func (rp *RpRedisDeleteNotice) DeleteNotice(ctx context.Context, id int) (err er
 	lg.Trace().Str("key", key).Msgf("%s deleting notice from Redis...", pkgConst.OpStart)
 	err = rp.rd.Del(ctx, key)
 	if err != nil {
-		return pkgErrors.Wrapf(err, "delete data from Redis, key: %s", key)
+		return pkgErrors.Wrapf(err, "delete notice from Redis, key: %s", key)
 	}
 	lg.Trace().Str("key", key).Msgf("%s notice deleted from Redis successfully", pkgConst.OpSuccess)
 
