@@ -5,6 +5,5 @@ app:
     backoff: 2
   transport:
     http:
-      public_host: https://insecurely-fond-shiner.cloudpub.ru
       handler:
         gin_mode: release
