@@ -1,5 +1,5 @@
 # ========================
-# Setup
+# SETUP
 # ========================
 
 ENV_FILE ?= .env
@@ -65,6 +65,8 @@ app-ps:
 	$(MAKE_CMD) -C $(APP) ps
 app-exec:
 	$(MAKE_CMD) -C $(APP) exec
+app-test-cover:
+	$(MAKE_CMD) -C $(APP) test-cover
 
 # ========================
 # MIGRATE

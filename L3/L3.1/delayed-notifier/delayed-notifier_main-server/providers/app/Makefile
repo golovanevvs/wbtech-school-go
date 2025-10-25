@@ -1,8 +1,8 @@
+# SETUP
 MAKEFLAGS += --no-print-directory
 
 PROJECT_DIR := $(abspath ../..)
 
-# Load environment variables
 ENV_FILES := .env ../email/.env ../rabbitmq/.env ../redis/.env ../telegram/.env 
 
 $(foreach file,$(ENV_FILES), \
@@ -42,6 +42,14 @@ local-build:
 	@echo "Building app $(APP_NAME)..."
 	@cd $(PROJECT_DIR) && go build ./cmd/$(APP_NAME)
 	@echo "Building app $(APP_NAME) completed"
+
+ifeq ($(OS),Windows_NT)
+	@echo "Creating run script $(APP_NAME).bat..."
+	@echo @echo off > $(PROJECT_DIR)/$(APP_NAME).bat
+	@echo set ENV=local >> $(PROJECT_DIR)/$(APP_NAME).bat
+	@echo $(APP_NAME).exe >> $(PROJECT_DIR)/$(APP_NAME).bat
+	@echo "File $(APP_NAME).bat created successfully"
+endif
 
 local-up:
 	@echo "Running app $(APP_NAME)..."
@@ -95,6 +103,39 @@ exec:
 	@echo "Connecting to container ${APP_NAME}..."
 	docker compose -p $(PROJECT_NAME) exec $(SERVICE_NAME) sh
 
+# TESTS
+COVER_DIR = $(PROJECT_DIR)/resources/coverage
+COVER_TMP = $(COVER_DIR)/coverage.out.tmp
+COVER_OUT = $(COVER_DIR)/coverage.out
+COVER_HTML = $(COVER_DIR)/coverage.html
+
+test-cover:
+	@echo "Running tests with coverage..."
+	@mkdir -p $(COVER_DIR)
+	@cd $(PROJECT_DIR) && go test -coverprofile=$(COVER_TMP) ./...
+
+	@echo "Filtering mocks..."
+	@cat $(COVER_TMP) | grep -v "_mock.go" > $(COVER_OUT)
+
+	@echo "Coverage summary:"
+	@go tool cover -func=$(COVER_OUT)
+
+	@echo "Generating HTML report..."
+	@go tool cover -html=$(COVER_OUT) -o $(COVER_HTML)
+
+	@echo "Opening coverage report..."
+	@if [ "$$(uname)" = "Linux" ]; then \
+		xdg-open $(COVER_HTML); \
+	elif [ "$$(uname)" = "Darwin" ]; then \
+		open $(COVER_HTML); \
+	else \
+		start $(COVER_HTML); \
+	fi
+
+	@echo "Cleaning temporary files..."
+	@rm -f $(COVER_TMP)
+
+	@echo "Coverage report generated at: $(COVER_HTML)"
 
 # ========================
 # APP
@@ -126,3 +167,5 @@ exec:
 # 	$(MAKE_CMD) -C $(APP) ps
 # app-exec:
 # 	$(MAKE_CMD) -C $(APP) exec
+# app-test-cover:
+# 	$(MAKE_CMD) -C $(APP) test-cover
