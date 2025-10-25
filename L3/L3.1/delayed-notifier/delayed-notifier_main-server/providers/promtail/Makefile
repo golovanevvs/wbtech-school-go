@@ -2,7 +2,6 @@ MAKEFLAGS += --no-print-directory
 
 PROJECT_DIR := $(abspath ../..)
 
-# Load environment variables
 ENV_FILE ?= .env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
@@ -23,7 +22,7 @@ SERVICE_NAME = ${PROMTAIL_CONTAINER}
 up:
 	@echo "➡ Starting ${NAME}..."
 	docker compose -p $(PROJECT_NAME) up -d
-	@echo "✅ ${NAME} is up and running."
+	@echo "${NAME} is up and running."
 
 logs:
 	docker compose -p $(PROJECT_NAME) logs -f
@@ -31,7 +30,7 @@ logs:
 stop:
 	@echo "➡ Stopping ${NAME}..."
 	docker compose -p $(PROJECT_NAME) stop
-	@echo "✅ ${NAME} stopped."
+	@echo "${NAME} stopped."
 
 restart: stop up
 	@echo "➡ Restarting Promtail..."
@@ -39,12 +38,12 @@ restart: stop up
 rm:
 	@echo "➡ Removing ${NAME} (keeping data)..."
 	docker compose -p $(PROJECT_NAME) rm -f
-	@echo "✅ ${NAME} removed."
+	@echo "${NAME} removed."
 
 down:
 	@echo "➡ Full cleanup ${NAME}: containers, volumes, networks, data..."
 	docker compose -p $(PROJECT_NAME) down -v --remove-orphans
-	@echo "✅ ${NAME} cleaned."
+	@echo "${NAME} cleaned."
 
 ps:
 	docker compose -p $(PROJECT_NAME) ps
@@ -57,6 +56,8 @@ exec:
 # ========================
 
 # PROMTAIL = providers/promtail
+
+# .PHONY: promtail-up promtail-logs promtail-stop promtail-restart promtail-rm promtail-down promtail-ps promtail-exec
 
 # promtail-up:
 # 	$(MAKE_CMD) -C $(PROMTAIL) up

@@ -2,7 +2,6 @@ MAKEFLAGS += --no-print-directory
 
 PROJECT_DIR := $(abspath ../..)
 
-# Load environment variables
 ENV_FILE ?= .env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)

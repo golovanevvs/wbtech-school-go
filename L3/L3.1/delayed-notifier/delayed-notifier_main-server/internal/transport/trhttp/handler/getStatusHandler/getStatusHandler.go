@@ -67,7 +67,7 @@ func (hd *Handler) GetNotice(c *ginext.Context) {
 		c.JSON(http.StatusInternalServerError, ginext.H{"error": "failed to get notice: " + err.Error()})
 		return
 	}
-	lg.Trace().Int("notice ID", id).Msgf("%s notice got successfully", pkgConst.OpSuccess)
+	lg.Debug().Int("notice ID", id).Msgf("%s notice got successfully", pkgConst.OpSuccess)
 
 	c.JSON(http.StatusOK, ginext.H{"status": notice.Status})
 }

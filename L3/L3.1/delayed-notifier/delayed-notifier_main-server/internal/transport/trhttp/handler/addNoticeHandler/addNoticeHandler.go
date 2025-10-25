@@ -64,7 +64,7 @@ func (hd *Handler) CreateNotice(c *ginext.Context) {
 		c.JSON(http.StatusInternalServerError, ginext.H{"error": "failed to add notice: " + err.Error()})
 		return
 	}
-	lg.Trace().Int("notice ID", id).Msgf("%s notice added successfully", pkgConst.OpSuccess)
+	lg.Debug().Int("notice ID", id).Msgf("%s notice added successfully", pkgConst.OpSuccess)
 
 	c.JSON(http.StatusOK, ginext.H{"id": id})
 }

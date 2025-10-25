@@ -2,7 +2,6 @@ MAKEFLAGS += --no-print-directory
 
 PROJECT_DIR := $(abspath ../..)
 
-# Load environment variables
 ENV_FILE ?= $(PROJECT_DIR)/.env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
@@ -15,11 +14,9 @@ else
 	MAKE_CMD = make
 endif
 
-# Project paths
 POSTGRES_DIR = replication
 PGAUTO_DIR = pg-auto-failover
 
-# Replication mode (async, sync-all, sync-one)
 MODE ?= async
 
 .PHONY: help up up-async up-sync-all up-sync-one down restart status status-sync logs-cont setup check clean purge test backup monitor \

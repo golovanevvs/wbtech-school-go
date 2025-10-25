@@ -2,7 +2,6 @@ MAKEFLAGS += --no-print-directory
 
 PROJECT_DIR := $(abspath ../..)
 
-# Load environment variables
 ENV_FILE ?= $(PROJECT_DIR)/.env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
@@ -38,6 +37,8 @@ down:
 # ========================
 
 # MIGRATE = providers/migrate
+
+# .PHONY: migrate-create migrate-up migrate-down
 
 # migrate-create:
 # 	$(MAKE_CMD) -C $(MIGRATE) create

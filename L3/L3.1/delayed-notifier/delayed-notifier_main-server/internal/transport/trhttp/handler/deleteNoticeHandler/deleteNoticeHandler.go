@@ -67,7 +67,7 @@ func (hd *Handler) DeleteNotice(c *ginext.Context) {
 		c.JSON(http.StatusInternalServerError, ginext.H{"error": "failed to delete notice: " + err.Error()})
 		return
 	}
-	lg.Trace().Int("notice ID", id).Msgf("%s notice deleted successfully", pkgConst.OpSuccess)
+	lg.Debug().Int("notice ID", id).Msgf("%s notice deleted successfully", pkgConst.OpSuccess)
 
 	c.JSON(http.StatusOK, ginext.H{"status": "deleted"})
 }
