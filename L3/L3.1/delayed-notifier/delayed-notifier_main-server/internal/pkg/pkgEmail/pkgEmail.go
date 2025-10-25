@@ -8,6 +8,16 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
+type Dialer interface {
+	DialAndSend(...*gomail.Message) error
+}
+
+var newDialer = func(host string, port int, user, pass string) Dialer {
+	d := gomail.NewDialer(host, port, user, pass)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	return d
+}
+
 type Client struct {
 	cfg  *Config
 	lock sync.Mutex
@@ -41,8 +51,7 @@ func (c *Client) SendEmail(to []string, subject, body string, isHTML bool, attac
 	}
 	c.lock.Unlock()
 
-	dialer := gomail.NewDialer(c.cfg.SMTPHost, c.cfg.SMTPPort, c.cfg.Username, c.cfg.Password)
-	dialer.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	dialer := newDialer(c.cfg.SMTPHost, c.cfg.SMTPPort, c.cfg.Username, c.cfg.Password)
 	if err := dialer.DialAndSend(msg); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}

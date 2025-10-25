@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgEmail"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgLogger"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRabbitmq"
@@ -73,13 +74,28 @@ func (a *Config) String() string {
 	if a == nil {
 		return "appConfig: <nil>"
 	}
-	return fmt.Sprintf("Configuration:\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n\n%s\n",
-		a.lg.String(),
-		a.rs.String(),
-		a.rd.String(),
-		a.rb.String(),
-		a.tg.String(),
-		a.em.String(),
-		a.tr.String(),
+	return fmt.Sprintf(`%s Configuration:
+%s %s
+
+%s %s
+
+%s %s
+
+%s %s
+
+%s %s
+
+%s %s
+
+%s %s
+`,
+		pkgConst.Config,
+		pkgConst.Logger, a.lg.String(),
+		pkgConst.Retry, a.rs.String(),
+		pkgConst.Redis, a.rd.String(),
+		pkgConst.RabbitMQ, a.rb.String(),
+		pkgConst.Telegram, a.tg.String(),
+		pkgConst.EMail, a.em.String(),
+		pkgConst.Transport, a.tr.String(),
 	)
 }

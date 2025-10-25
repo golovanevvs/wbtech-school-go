@@ -137,6 +137,16 @@ test-cover:
 
 	@echo "Coverage report generated at: $(COVER_HTML)"
 
+# MOCKS
+MOCK = $(PROJECT_DIR)/internal/repository/rpRedis/rpRedisSaveNotice/mocks
+
+.PHONY: mock-rd-savenotice-gen mock-rd-savenotice-clean
+
+mock-rd-savenotice-gen:
+	$(MAKE_CMD) -C $(MOCK) mock-rd-savenotice-gen
+mock-rd-savenotice-clean:
+	$(MAKE_CMD) -C $(MOCK) mock-rd-savenotice-clean
+
 # ========================
 # APP
 # ========================
@@ -169,3 +179,11 @@ test-cover:
 # 	$(MAKE_CMD) -C $(APP) exec
 # app-test-cover:
 # 	$(MAKE_CMD) -C $(APP) test-cover
+
+# MOCKS
+
+# .PHONY: app-mock-rd-savenotice-gen app-mock-rd-savenotice-clean
+# app-mock-rd-savenotice-gen:
+# 	$(MAKE_CMD) -C $(APP) mock-rd-savenotice-gen
+# app-mock-rd-savenotice-clean:
+# 	$(MAKE_CMD) -C $(APP) mock-rd-savenotice-clean

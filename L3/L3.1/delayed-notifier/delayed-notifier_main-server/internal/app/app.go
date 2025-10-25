@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/wb-go/wbf/zlog"
 )
 
@@ -18,17 +19,17 @@ func New(env string) (*App, error) {
 
 	cfg, err := newConfig(env)
 	if err != nil {
-		return nil, fmt.Errorf("error creating configuration: %w", err)
+		return nil, fmt.Errorf("creating configuration: %w", err)
 	}
 
-	lg.Info().Msg(cfg.String())
+	lg.Debug().Msg(cfg.String())
 
-	lg.Info().Msg("starting dependency initialization...")
+	lg.Debug().Msgf("%s starting dependency initialization...", pkgConst.Starting)
 	deps, rm, err := newDependencyBuilder(cfg, &lg).build()
 	if err != nil {
 		return nil, fmt.Errorf("error dependencies initialization: %w", err)
 	}
-	lg.Info().Msg("dependencies have been initialized successfully")
+	lg.Info().Msgf("%s dependencies have been initialized successfully", pkgConst.Finished)
 
 	return &App{
 		cfg:  cfg,

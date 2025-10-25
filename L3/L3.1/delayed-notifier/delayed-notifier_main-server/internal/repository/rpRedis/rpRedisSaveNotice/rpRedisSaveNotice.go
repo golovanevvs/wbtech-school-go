@@ -5,20 +5,25 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/model"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgRedis"
 	"github.com/wb-go/wbf/zlog"
 )
 
-type RpRedisSaveNotice struct {
-	lg *zlog.Zerolog
-	rd *pkgRedis.Client
+type RedisClient interface {
+	SetWithID(ctx context.Context, prefix string, value interface{}, ttl ...time.Duration) (string, error)
+	Set(ctx context.Context, key string, value interface{}, ttl ...time.Duration) error
 }
 
-func New(parentLg *zlog.Zerolog, rd *pkgRedis.Client) *RpRedisSaveNotice {
+type RpRedisSaveNotice struct {
+	lg *zlog.Zerolog
+	rd RedisClient
+}
+
+func New(parentLg *zlog.Zerolog, rd RedisClient) *RpRedisSaveNotice {
 	lg := parentLg.With().Str("component", "RpRedisSaveNotice").Logger()
 	return &RpRedisSaveNotice{
 		lg: &lg,

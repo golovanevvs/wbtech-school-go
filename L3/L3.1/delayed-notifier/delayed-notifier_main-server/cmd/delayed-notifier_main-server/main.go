@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/app"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/wb-go/wbf/zlog"
 )
 
@@ -20,7 +21,7 @@ func main() {
 
 	lg := zlog.Logger.With().Str("component", "main").Logger()
 
-	lg.Info().Msg("delayed-notifier application started")
+	lg.Info().Msgf("%s delayed-notifier application started", pkgConst.AppStart)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
