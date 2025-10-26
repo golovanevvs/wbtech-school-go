@@ -28,19 +28,19 @@ func main() {
 
 	app, err := app.New(env)
 	if err != nil {
-		lg.Error().Err(err).Msg("application initialization failed")
+		lg.Error().Err(err).Msgf("%s application initialization failed", pkgConst.Error)
 		// wait()
 		os.Exit(1)
 	}
 
 	if err := app.Run(cancel); err != nil {
-		lg.Error().Err(err).Msg("application stopped with error")
+		lg.Error().Err(err).Msgf("%s application stopped with error", pkgConst.Error)
 		// wait()
 		os.Exit(1)
 	}
 
 	app.GracefullShutdown(ctx, cancel)
-	lg.Info().Msg("application stopped gracefully")
+	lg.Info().Msgf("%s application stopped gracefully", pkgConst.AppStop)
 	// wait()
 }
 

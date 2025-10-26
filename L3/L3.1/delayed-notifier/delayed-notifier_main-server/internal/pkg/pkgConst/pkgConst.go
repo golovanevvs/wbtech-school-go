@@ -5,6 +5,7 @@ import "github.com/enescakir/emoji"
 // emoji
 var (
 	AppStart  = emoji.Rocket
+	AppStop   = emoji.CrossMarkButton
 	Config    = emoji.Gear
 	Starting  = emoji.GreenSquare
 	Finished  = emoji.CheckMarkButton

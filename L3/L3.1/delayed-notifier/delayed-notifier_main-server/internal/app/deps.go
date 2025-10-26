@@ -53,6 +53,8 @@ func (b *dependencyBuilder) initLogger() error {
 		return pkgErrors.Wrap(err, "set log level")
 	}
 
+	b.lg = &zlog.Logger
+
 	b.lg.Debug().
 		Str("log_level", zlog.Logger.GetLevel().String()).
 		Msgf("%s logging level has been configured", pkgConst.Info)

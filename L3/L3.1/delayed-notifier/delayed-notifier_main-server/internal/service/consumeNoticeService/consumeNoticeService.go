@@ -61,6 +61,8 @@ func (sv *ConsumeNoticeService) Consume(ctx context.Context) error {
 	lg.Trace().Msgf("%s method starting", pkgConst.Start)
 	defer lg.Trace().Msgf("%s method stopped", pkgConst.Stop)
 
+	lg.Info().Msgf("%s consumer starting...", pkgConst.Starting)
+
 	handler := func(msg amqp.Delivery) {
 		sv.handleMessage(ctx, msg)
 	}
@@ -69,7 +71,7 @@ func (sv *ConsumeNoticeService) Consume(ctx context.Context) error {
 		return pkgErrors.Wrap(err, "consumeDLQ with workers")
 	}
 
-	lg.Info().Msgf("%s consumer started", pkgConst.Info)
+	lg.Info().Msgf("%s consumer started successfully", pkgConst.Finished)
 
 	return nil
 }

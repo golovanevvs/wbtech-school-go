@@ -37,7 +37,7 @@ func New(cfg *Config, parentLg *zlog.Zerolog, rs *pkgRetry.Retry, sv IService) *
 
 func (h *HTTP) RunServer(cancel context.CancelFunc) {
 	go func() {
-		h.lg.Debug().Str("addr", h.httpsrv.Addr).Msgf("%s http server starting...", pkgConst.Start)
+		h.lg.Info().Str("addr", h.httpsrv.Addr).Msgf("%s http server starting...", pkgConst.Starting)
 		if err := h.httpsrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			h.lg.Error().Err(err).Str("addr", h.httpsrv.Addr).Msgf("%s error http server start", pkgConst.Error)
 			cancel()
@@ -46,13 +46,13 @@ func (h *HTTP) RunServer(cancel context.CancelFunc) {
 }
 
 func (h *HTTP) ShutdownServer(ctx context.Context) error {
-	h.lg.Debug().Str("addr", h.httpsrv.Addr).Msgf("%s http server stopping...", pkgConst.Start)
+	h.lg.Debug().Str("addr", h.httpsrv.Addr).Msgf("%s http server stopping...", pkgConst.Starting)
 
 	if err := h.httpsrv.Shutdown(ctx); err != nil {
 		pkgErrors.Wrapf(err, "http server shutdown, address: %s", h.httpsrv.Addr)
 	}
 
-	h.lg.Info().Str("addr", h.httpsrv.Addr).Msgf("%s http server stopped successfully", pkgConst.Info)
+	h.lg.Info().Str("addr", h.httpsrv.Addr).Msgf("%s http server stopped successfully", pkgConst.Finished)
 
 	return nil
 }
@@ -77,7 +77,7 @@ func (h *HTTP) WaitForServer(host string) error {
 		return pkgErrors.Wrapf(err, "start http server, address: %s, attempts: %d", h.httpsrv.Addr, h.rs.Attempts)
 	}
 
-	h.lg.Info().Str("addr", h.httpsrv.Addr).Msgf("%s http server started successfully", pkgConst.Info)
+	h.lg.Info().Str("addr", h.httpsrv.Addr).Msgf("%s http server started successfully", pkgConst.Finished)
 
 	return nil
 }

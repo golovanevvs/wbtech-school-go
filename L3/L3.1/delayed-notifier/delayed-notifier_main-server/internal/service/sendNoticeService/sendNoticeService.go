@@ -92,7 +92,7 @@ func (sv *SendNoticeService) SendNoticeToTelegram(ctx context.Context, username 
 			"send notice to telegram after all ettempts; chat ID: %d, notice ID: %d, attempts: %d",
 			chatID, notice.ID, sv.rs.Attempts)
 	}
-	lg.Trace().Str("username", username).Int("notice ID", notice.ID).Int64("chat ID", chatID).Msgf("%s sending message to Telegram with retry completed", pkgConst.OpSuccess)
+	lg.Debug().Str("username", username).Int("notice ID", notice.ID).Int64("chat ID", chatID).Msgf("%s sending message to Telegram with retry completed", pkgConst.OpSuccess)
 
 	return nil
 }
@@ -119,7 +119,7 @@ func (sv *SendNoticeService) SendNoticeToEmail(ctx context.Context, email string
 			"send notice to e-mail after all ettempts; e-mail: %s, notice ID: %d, attempts: %d",
 			email, notice.ID, sv.rs.Attempts)
 	}
-	lg.Trace().Str("e-mail", email).Int("notice ID", notice.ID).Msgf("%s sending message to e-mail with retry completed", pkgConst.OpSuccess)
+	lg.Debug().Str("e-mail", email).Int("notice ID", notice.ID).Msgf("%s sending message to e-mail with retry completed", pkgConst.OpSuccess)
 
 	return nil
 }

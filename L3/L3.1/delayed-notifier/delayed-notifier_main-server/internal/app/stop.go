@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
 	"github.com/wb-go/wbf/zlog"
 )
 
@@ -16,17 +17,17 @@ func (a *App) GracefullShutdown(ctx context.Context, cancel context.CancelFunc) 
 
 	select {
 	case <-sigCh:
-		lg.Warn().Msg("Shutdown signal received, gracefully shutting down...")
+		lg.Warn().Msgf("%s shutdown signal received, gracefully shutting down...", pkgConst.Warn)
 		cancel()
 	case <-ctx.Done():
 	}
 
 	if err := a.deps.tr.HTTP.ShutdownServer(ctx); err != nil {
-		lg.Error().Err(err).Msg("failed to shutdown http server")
+		lg.Error().Err(err).Msgf("%s failed to shutdown http server", pkgConst.Error)
 	}
 
 	if err := a.rm.closeAll(); err != nil {
-		lg.Error().Err(err).Msg("failed to close resources")
+		lg.Error().Err(err).Msgf("%s failed to close resources", pkgConst.Error)
 	}
 
 }

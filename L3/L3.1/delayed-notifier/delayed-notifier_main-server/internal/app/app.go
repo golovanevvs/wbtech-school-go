@@ -15,16 +15,16 @@ type App struct {
 }
 
 func New(env string) (*App, error) {
-	lg := zlog.Logger.With().Str("component", "app").Logger()
-
 	cfg, err := newConfig(env)
 	if err != nil {
 		return nil, fmt.Errorf("creating configuration: %w", err)
 	}
 
-	lg.Debug().Msg(cfg.String())
+	lg := zlog.Logger.With().Str("component", "app").Logger()
 
-	lg.Debug().Msgf("%s starting dependency initialization...", pkgConst.Starting)
+	lg.Info().Msg(cfg.String())
+
+	lg.Info().Msgf("%s starting dependency initialization...", pkgConst.Starting)
 	deps, rm, err := newDependencyBuilder(cfg, &lg).build()
 	if err != nil {
 		return nil, fmt.Errorf("error dependencies initialization: %w", err)

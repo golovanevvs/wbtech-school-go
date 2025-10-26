@@ -70,6 +70,6 @@ func (hd *Handler) WebHookHandler(c *ginext.Context) {
 		return
 	}
 
-	lg.Debug().Int64("chatID", chatID).Str("message_body", message).Msg("Telegram message processed")
+	lg.Debug().Int64("chatID", chatID).Str("message_body", message).Msgf("%s Telegram message processed", pkgConst.OpSuccess)
 	c.Status(http.StatusOK)
 }

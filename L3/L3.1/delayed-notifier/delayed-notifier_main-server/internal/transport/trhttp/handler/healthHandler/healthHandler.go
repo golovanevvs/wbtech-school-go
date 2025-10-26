@@ -30,5 +30,7 @@ func (hd *Handler) HealthHandler(c *ginext.Context) {
 	lg.Trace().Msgf("%s method starting", pkgConst.Start)
 	defer lg.Trace().Msgf("%s method stopped", pkgConst.Stop)
 
+	lg.Debug().Msgf("%s healt check successful", pkgConst.OpSuccess)
+
 	c.String(http.StatusOK, "ok")
 }
