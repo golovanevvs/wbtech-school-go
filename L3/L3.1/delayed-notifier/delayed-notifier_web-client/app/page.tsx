@@ -1,7 +1,6 @@
 "use client"
 
 import { Container } from "@mui/material"
-// import styles from "./page.module.css"
 import NotifyForm from "./ui/NotifyForm"
 
 export default function Home() {
@@ -9,10 +8,12 @@ export default function Home() {
     <Container
       disableGutters
       sx={{
-        minWidth: "200px",
-        maxWidth: "1000px",
+        width: "100%",
+        maxWidth: 600,
+        minWidth: 250,
+        mx: "auto", // центрирование
         bgcolor: "background.default",
-        p:2,
+        p: 2,
       }}
       >
         <NotifyForm/>

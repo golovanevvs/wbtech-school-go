@@ -20,7 +20,7 @@ export const FieldRow = ({ label, value, statusColor }: FieldRowProps) => {
       <Box
         sx={{
           fontWeight: "bold",
-          minWidth: "150px",
+          minWidth: "100px",
           color: "primary.main",
         }}
       >
