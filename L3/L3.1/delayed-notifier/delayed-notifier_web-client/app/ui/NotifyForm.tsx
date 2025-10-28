@@ -3,8 +3,8 @@
 import { Button, Container, Paper, Stack, TextField } from "@mui/material"
 import { useState } from "react"
 import { useForm, Controller } from "react-hook-form"
-// import SendIcon from "@mui/icons-material/Send"
-// import { FieldRow } from "@/app/ui/FieldRow"
+import SendIcon from "@mui/icons-material/Send"
+import { FieldRow } from "@/app/ui/FieldRow"
 
 interface NotifyResponse {
   error?: string
@@ -31,6 +31,12 @@ export default function NotifyForm() {
     },
   })
 
+  const statusColor = (status: string) => {
+    if (status.includes("Ошибка")) return "error.main"
+    if (status.includes("успеш")) return "success.main"
+    return "primary.main"
+  }
+
   //Create
 
   const onCreateSubmit = async (formData: NotifyFormValues) => {
@@ -56,7 +62,7 @@ export default function NotifyForm() {
         }
       )
 
-      const data = await response.json()
+      const data: NotifyResponse = await response.json()
 
       if (!response.ok) {
         throw new Error(data.error || `HTTP error: ${response.status}`)
@@ -82,7 +88,7 @@ export default function NotifyForm() {
                 <TextField {...field} label="Сообщение уведомления" fullWidth />
               )}
             />
-             <Controller
+            <Controller
               name="sentAt"
               control={createForm.control}
               render={({ field }) => (
@@ -90,7 +96,11 @@ export default function NotifyForm() {
                   {...field}
                   type="datetime-local"
                   label="Дата и время уведомления"
-                  InputLabelProps={{ shrink: true }}
+                  slotProps={{
+                    inputLabel: {
+                      shrink: true,
+                    },
+                  }}
                   fullWidth
                 />
               )}
@@ -116,24 +126,26 @@ export default function NotifyForm() {
               <Button
                 type="submit"
                 variant="contained"
-                // startIcon={<SendIcon />}
+                startIcon={<SendIcon />}
               >
                 Добавить уведомление
               </Button>
 
               <Button
                 variant="outlined"
-                onClick={() => window.open("https://t.me/v_delayed_notifier_bot", "_blank")}
+                onClick={() =>
+                  window.open("https://t.me/v_delayed_notifier_bot", "_blank")
+                }
               >
                 Подписаться на Telegram-бота
               </Button>
             </Stack>
 
-            {/* <FieldRow
+            <FieldRow
               label="Результат"
               value={createStatus}
               statusColor={statusColor(createStatus)}
-            /> */}
+            />
           </Stack>
         </form>
       </Container>

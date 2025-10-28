@@ -1,5 +1,7 @@
+"use client"
+
 import { Container } from "@mui/material"
-import styles from "./page.module.css"
+// import styles from "./page.module.css"
 import NotifyForm from "./ui/NotifyForm"
 
 export default function Home() {
