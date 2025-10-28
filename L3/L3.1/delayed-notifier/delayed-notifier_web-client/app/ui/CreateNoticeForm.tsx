@@ -1,16 +1,10 @@
 "use client"
 
-import { Button, Container, Paper, Stack, TextField } from "@mui/material"
+import { Button, Paper, Stack, TextField, Typography } from "@mui/material"
 import { useState } from "react"
 import { useForm, Controller } from "react-hook-form"
 import SendIcon from "@mui/icons-material/Send"
 import { FieldRow } from "@/app/ui/FieldRow"
-
-// interface NotifyResponse {
-//   error?: string
-//   id?: string
-//   status?: string
-// }
 
 interface NotifyFormValues {
   message: string
@@ -52,7 +46,7 @@ export default function CreateNoticeForm() {
       }
 
       const response = await fetch(
-        "https://insecurely-fond-shiner.cloudpub.ru/notify",
+        "https://shamelessly-jaunty-chickadee.cloudpub.ru/notify",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -74,6 +68,9 @@ export default function CreateNoticeForm() {
   }
   return (
     <Paper sx={{ p: 3 }}>
+      <Typography variant="h2" sx={{ textAlign: "center",color: "primary.dark", mb: 3 }}>
+        Добавление уведомления
+      </Typography>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Stack spacing={2}>
           <Controller
@@ -110,10 +107,7 @@ export default function CreateNoticeForm() {
               <TextField {...field} label="E-mail" fullWidth />
             )}
           />
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-          >
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <Button type="submit" variant="contained" startIcon={<SendIcon />}>
               Добавить уведомление
             </Button>

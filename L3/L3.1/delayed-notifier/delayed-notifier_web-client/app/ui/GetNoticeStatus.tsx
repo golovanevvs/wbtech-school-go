@@ -6,6 +6,7 @@ import TextField from "@mui/material/TextField"
 import { useState } from "react"
 import { FieldRow } from "./FieldRow"
 import SearchIcon from "@mui/icons-material/Search"
+import { Typography } from "@mui/material"
 
 export default function GetNoticeStatus() {
   const [statusID, setStatusID] = useState("")
@@ -27,7 +28,7 @@ export default function GetNoticeStatus() {
 
     try {
       const response = await fetch(
-        `https://insecurely-fond-shiner.cloudpub.ru/notify/${statusID}`
+        `https://shamelessly-jaunty-chickadee.cloudpub.ru/notify/${statusID}`
       )
       const data = await response.json()
 
@@ -42,6 +43,12 @@ export default function GetNoticeStatus() {
   }
   return (
     <Paper sx={{ p: 3 }}>
+      <Typography
+        variant="h2"
+        sx={{ textAlign: "center", color: "primary.dark", mb: 3 }}
+      >
+        Получение статуса уведомления
+      </Typography>
       <Stack spacing={2}>
         <TextField
           label="ID уведомления"
@@ -59,7 +66,7 @@ export default function GetNoticeStatus() {
           }}
         />
         <FieldRow
-          label="Статус"
+          label="Результат"
           value={status}
           statusColor={statusColor(status)}
         />

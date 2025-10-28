@@ -1,7 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Paper, TextField, Stack, InputAdornment, IconButton } from "@mui/material"
+import {
+  Paper,
+  TextField,
+  Stack,
+  InputAdornment,
+  IconButton,
+  Typography,
+} from "@mui/material"
 import DeleteIcon from "@mui/icons-material/Delete"
 import { FieldRow } from "@/app/ui/FieldRow"
 
@@ -24,12 +31,16 @@ export default function DeleteNotification() {
     setStatus("Удаление уведомления...")
 
     try {
-      const response = await fetch(`https://insecurely-fond-shiner.cloudpub.ru/notify/${deleteId}`, {
-        method: "DELETE",
-      })
+      const response = await fetch(
+        `https://shamelessly-jaunty-chickadee.cloudpub.ru/notify/${deleteId}`,
+        {
+          method: "DELETE",
+        }
+      )
       const data = await response.json()
 
-      if (!response.ok) throw new Error(data.error || `HTTP error: ${response.status}`)
+      if (!response.ok)
+        throw new Error(data.error || `HTTP error: ${response.status}`)
 
       setStatus(`Уведомление успешно удалено`)
     } catch (err) {
@@ -40,6 +51,9 @@ export default function DeleteNotification() {
 
   return (
     <Paper sx={{ p: 3 }}>
+      <Typography variant="h2" sx={{ textAlign: "center", color: "primary.dark",mb: 3 }}>
+        Удаление уведомления
+      </Typography>
       <Stack spacing={2}>
         <TextField
           label="ID уведомления"
@@ -56,7 +70,11 @@ export default function DeleteNotification() {
             ),
           }}
         />
-        <FieldRow label="Результат" value={status} statusColor={statusColor(status)} />
+        <FieldRow
+          label="Результат"
+          value={status}
+          statusColor={statusColor(status)}
+        />
       </Stack>
     </Paper>
   )
