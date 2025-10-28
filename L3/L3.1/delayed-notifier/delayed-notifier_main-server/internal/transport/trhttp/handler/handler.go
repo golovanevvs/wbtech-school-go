@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -24,13 +25,13 @@ type Handler struct {
 	Rt *ginext.Engine
 }
 
-func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, host string) *Handler {
+func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, port int) *Handler {
 	lg := parentLg.With().Str("component", "handler").Logger()
 
 	rt := ginext.New(cfg.GinMode)
 
 	rt.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://insecurely-fond-shiner.cloudpub.ru"},
+		AllowOrigins:     []string{fmt.Sprintf("http://localhost:%d", port)},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

@@ -30,7 +30,7 @@ func New(cfg *Config, parentLg *zlog.Zerolog, rs *pkgRetry.Retry, sv IService) *
 		rs: rs,
 		httpsrv: &http.Server{
 			Addr:    fmt.Sprintf(":%d", cfg.Port),
-			Handler: handler.New(cfg.Handler, &lg, sv, cfg.PublicHost).Rt,
+			Handler: handler.New(cfg.Handler, &lg, sv, cfg.Port).Rt,
 		},
 	}
 }
