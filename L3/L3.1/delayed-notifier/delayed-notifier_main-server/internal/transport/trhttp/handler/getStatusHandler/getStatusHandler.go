@@ -24,7 +24,7 @@ type Handler struct {
 }
 
 func New(parentLg *zlog.Zerolog, rt *ginext.Engine, sv IService) *Handler {
-	lg := parentLg.With().Str("component", "addNoticeHandler").Logger()
+	lg := parentLg.With().Str("component", "getNoticeHandler").Logger()
 	return &Handler{
 		lg: &lg,
 		rt: rt,
