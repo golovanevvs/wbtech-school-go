@@ -9,8 +9,10 @@ export default function Home() {
     <Container
       disableGutters
       sx={{
-        width: "1800",
+        minWidth: "200px",
+        maxWidth: "1000px",
         bgcolor: "background.default",
+        p:2,
       }}
       >
         <NotifyForm/>
