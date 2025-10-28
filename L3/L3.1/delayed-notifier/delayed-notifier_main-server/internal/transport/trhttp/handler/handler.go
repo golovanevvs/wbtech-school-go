@@ -25,13 +25,17 @@ type Handler struct {
 	Rt *ginext.Engine
 }
 
-func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, port int) *Handler {
+func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string) *Handler {
 	lg := parentLg.With().Str("component", "handler").Logger()
 
 	rt := ginext.New(cfg.GinMode)
 
 	rt.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{fmt.Sprintf("http://localhost:%d", port)},
+		AllowOrigins: []string{
+			fmt.Sprintf("http://localhost:%d", cfg.WebClientPort),
+			fmt.Sprintf("http://127.0.0.1:%d", cfg.WebClientPort),
+			publicHost,
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},

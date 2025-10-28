@@ -7,3 +7,4 @@ app:
     http:
       handler:
         gin_mode: release
+        web_port: 7778
