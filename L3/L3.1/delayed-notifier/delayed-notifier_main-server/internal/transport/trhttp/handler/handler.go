@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"time"
+
+	"github.com/gin-contrib/cors"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/addNoticeHandler"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/deleteNoticeHandler"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/getStatusHandler"
@@ -21,10 +24,20 @@ type Handler struct {
 	Rt *ginext.Engine
 }
 
-func New(cfg *Config, parentLg *zlog.Zerolog, sv IService) *Handler {
+func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, host string) *Handler {
 	lg := parentLg.With().Str("component", "handler").Logger()
 
 	rt := ginext.New(cfg.GinMode)
+
+	rt.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"https://insecurely-fond-shiner.cloudpub.ru"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	hd := &Handler{
 		Rt: rt,
 	}
