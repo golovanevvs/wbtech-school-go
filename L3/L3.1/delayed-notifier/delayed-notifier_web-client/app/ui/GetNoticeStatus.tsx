@@ -26,10 +26,10 @@ export default function GetNoticeStatus() {
 
     setStatus("Получение статуса...")
 
+    const apiBase = process.env.NEXT_PUBLIC_API_URL
+
     try {
-      const response = await fetch(
-        `https://shamelessly-jaunty-chickadee.cloudpub.ru/notify/${statusID}`
-      )
+      const response = await fetch(`${apiBase}/notify/${statusID}`)
       const data = await response.json()
 
       if (!response.ok)

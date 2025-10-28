@@ -30,13 +30,12 @@ export default function DeleteNotification() {
 
     setStatus("Удаление уведомления...")
 
+    const apiBase = process.env.NEXT_PUBLIC_API_URL
+
     try {
-      const response = await fetch(
-        `https://shamelessly-jaunty-chickadee.cloudpub.ru/notify/${deleteId}`,
-        {
-          method: "DELETE",
-        }
-      )
+      const response = await fetch(`${apiBase}/notify/${deleteId}`, {
+        method: "DELETE",
+      })
       const data = await response.json()
 
       if (!response.ok)
@@ -51,7 +50,10 @@ export default function DeleteNotification() {
 
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h2" sx={{ textAlign: "center", color: "primary.dark",mb: 3 }}>
+      <Typography
+        variant="h2"
+        sx={{ textAlign: "center", color: "primary.dark", mb: 3 }}
+      >
         Удаление уведомления
       </Typography>
       <Stack spacing={2}>

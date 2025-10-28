@@ -1,0 +1,8 @@
+services:
+  nextjs:
+    build: .
+    container_name: delayed-notifier_web-client
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production

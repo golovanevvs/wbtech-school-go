@@ -34,6 +34,8 @@ export default function CreateNoticeForm() {
   const onSubmit = async (data: NotifyFormValues) => {
     setStatus("Отправка запроса...")
 
+    const apiBase = process.env.NEXT_PUBLIC_API_URL
+
     try {
       const payload = {
         user_id: 1,
@@ -45,14 +47,11 @@ export default function CreateNoticeForm() {
         sent_at: new Date(data.sentAt).toISOString(),
       }
 
-      const response = await fetch(
-        "https://shamelessly-jaunty-chickadee.cloudpub.ru/notify",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      )
+      const response = await fetch(`${apiBase}/notify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
 
       const resData = await response.json()
 
@@ -68,7 +67,10 @@ export default function CreateNoticeForm() {
   }
   return (
     <Paper sx={{ p: 3 }}>
-      <Typography variant="h2" sx={{ textAlign: "center",color: "primary.dark", mb: 3 }}>
+      <Typography
+        variant="h2"
+        sx={{ textAlign: "center", color: "primary.dark", mb: 3 }}
+      >
         Добавление уведомления
       </Typography>
       <form onSubmit={form.handleSubmit(onSubmit)}>
