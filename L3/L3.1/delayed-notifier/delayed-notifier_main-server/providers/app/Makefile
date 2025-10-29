@@ -34,7 +34,6 @@ else
 	MAKE_CMD = make
 endif
 
-PROJECT_NAME = ${APP_NAME}
 SERVICE_NAME = ${APP_NAME}
 
 # FOR LOCAL UP
