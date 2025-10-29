@@ -16,6 +16,7 @@ endif
 
 .PHONY: up logs stop restart rm down ps exec
 
+PROJECT_NAME = cloudpub
 NAME = Cloudpub
 SERVICE_NAME = ${CLOUDPUB_CONTAINER}
 
