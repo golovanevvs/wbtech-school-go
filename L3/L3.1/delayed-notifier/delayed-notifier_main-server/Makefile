@@ -293,3 +293,28 @@ grafana-ps:
 	$(MAKE_CMD) -C $(GRAFANA) ps
 grafana-exec:
 	$(MAKE_CMD) -C $(GRAFANA) exec
+
+# ========================
+# CLOUDPUB
+# ========================
+
+CLOUDPUB = providers/cloudpub
+
+.PHONY: cloudpub-up cloudpub-logs cloudpub-stop cloudpub-restart cloudpub-rm cloudpub-down cloudpub-ps cloudpub-exec
+
+cloudpub-up:
+	$(MAKE_CMD) -C $(CLOUDPUB) up
+cloudpub-logs:
+	$(MAKE_CMD) -C $(CLOUDPUB) logs
+cloudpub-stop:
+	$(MAKE_CMD) -C $(CLOUDPUB) stop
+cloudpub-restart:
+	$(MAKE_CMD) -C $(CLOUDPUB) restart
+cloudpub-rm:
+	$(MAKE_CMD) -C $(CLOUDPUB) rm
+cloudpub-down:
+	$(MAKE_CMD) -C $(CLOUDPUB) down
+cloudpub-ps:
+	$(MAKE_CMD) -C $(CLOUDPUB) ps
+cloudpub-exec:
+	$(MAKE_CMD) -C $(CLOUDPUB) exec

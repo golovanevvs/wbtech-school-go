@@ -11,9 +11,9 @@ type Config struct {
 	TrHTTP *trhttp.Config
 }
 
-func NewConfig(cfg *config.Config) *Config {
+func NewConfig(cfg *config.Config, env string) *Config {
 	return &Config{
-		TrHTTP: trhttp.NewConfig(cfg),
+		TrHTTP: trhttp.NewConfig(cfg, env),
 	}
 }
 

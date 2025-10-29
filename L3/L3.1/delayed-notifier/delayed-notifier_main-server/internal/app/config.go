@@ -66,7 +66,7 @@ func newConfig(env string) (*Config, error) {
 		rb: pkgRabbitmq.NewConfig(cfg),
 		tg: pkgTelegram.NewConfig(cfg),
 		em: pkgEmail.NewConfig(cfg),
-		tr: transport.NewConfig(cfg),
+		tr: transport.NewConfig(cfg, env),
 	}, nil
 }
 

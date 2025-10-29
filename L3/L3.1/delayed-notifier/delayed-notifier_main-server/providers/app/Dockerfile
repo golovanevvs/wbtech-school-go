@@ -1,4 +1,4 @@
-# ===== Stage 1: Build =====
+# Build
 
 FROM golang:1.25.2-alpine AS builder
 
@@ -7,7 +7,7 @@ RUN apk add --no-cache git ca-certificates
 WORKDIR /app
 
 ARG APP_NAME
-ARG APP_TRANSPORT_HTTP_PORT
+ARG APP_TRANSPORT_HTTP_PORT_EXT
 
 COPY go.mod go.sum ./
 
@@ -17,7 +17,7 @@ COPY . .
 
 RUN go build -o $APP_NAME ./cmd/$APP_NAME
 
-# ===== Stage 2: Runtime =====
+# Runtime
 
 FROM alpine:latest
 
@@ -27,6 +27,6 @@ WORKDIR /root/
 
 COPY --from=builder /app/$APP_NAME .
 
-EXPOSE $APP_TRANSPORT_HTTP_PORT
+EXPOSE $APP_TRANSPORT_HTTP_PORT_EXT
 
 ENTRYPOINT ["/root/delayed-notifier_main-server"]

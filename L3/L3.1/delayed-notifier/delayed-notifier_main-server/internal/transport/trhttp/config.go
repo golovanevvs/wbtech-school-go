@@ -13,10 +13,16 @@ type Config struct {
 	Handler    *handler.Config
 }
 
-func NewConfig(cfg *config.Config) *Config {
+func NewConfig(cfg *config.Config, env string) *Config {
+	var publicHost string
+	if env == "local" {
+		publicHost = cfg.GetString("app.transport.http.public_host")
+	} else {
+		publicHost = cfg.GetString("app.transport.http.public_host_docker")
+	}
 	return &Config{
 		Port:       cfg.GetInt("app.transport.http.port"),
-		PublicHost: cfg.GetString("app.transport.http.public_host"),
+		PublicHost: publicHost,
 		Handler:    handler.NewConfig(cfg),
 	}
 }
