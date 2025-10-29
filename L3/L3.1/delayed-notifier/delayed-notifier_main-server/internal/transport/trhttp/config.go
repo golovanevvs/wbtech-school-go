@@ -8,22 +8,26 @@ import (
 )
 
 type Config struct {
-	Port       int
-	PublicHost string
-	Handler    *handler.Config
+	Port          int
+	PublicHost    string
+	WebPublicHost string
+	Handler       *handler.Config
 }
 
 func NewConfig(cfg *config.Config, env string) *Config {
-	var publicHost string
+	var publicHost, webPublicHost string
 	if env == "local" {
 		publicHost = cfg.GetString("app.transport.http.public_host")
+		webPublicHost = cfg.GetString("app.transport.http.web_public_host")
 	} else {
 		publicHost = cfg.GetString("app.transport.http.public_host_docker")
+		webPublicHost = cfg.GetString("app.transport.http.web_public_host_docker")
 	}
 	return &Config{
-		Port:       cfg.GetInt("app.transport.http.port"),
-		PublicHost: publicHost,
-		Handler:    handler.NewConfig(cfg),
+		Port:          cfg.GetInt("app.transport.http.port"),
+		PublicHost:    publicHost,
+		WebPublicHost: webPublicHost,
+		Handler:       handler.NewConfig(cfg),
 	}
 }
 

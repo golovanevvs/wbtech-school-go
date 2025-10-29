@@ -25,7 +25,7 @@ type Handler struct {
 	Rt *ginext.Engine
 }
 
-func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string) *Handler {
+func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, webPublicHost string) *Handler {
 	lg := parentLg.With().Str("component", "handler").Logger()
 
 	rt := ginext.New(cfg.GinMode)
@@ -35,6 +35,7 @@ func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string) *H
 			fmt.Sprintf("http://localhost:%d", cfg.WebClientPort),
 			fmt.Sprintf("http://127.0.0.1:%d", cfg.WebClientPort),
 			publicHost,
+			webPublicHost,
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
