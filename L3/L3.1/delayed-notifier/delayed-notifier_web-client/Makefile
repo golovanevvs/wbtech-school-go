@@ -14,13 +14,19 @@ else
 	MAKE_CMD = make
 endif
 
-.PHONY: up logs stop restart rm down ps exec build rebuild
+.PHONY: up up-no-cache logs stop restart rm down ps exec build rebuild
 
 NAME = web-client
 SERVICE_NAME = web-client
 
 up:
 	@echo "Starting ${NAME}..."
+	docker compose -p $(PROJECT_NAME) up -d
+	@echo "${NAME} is up and running."
+
+up-no-cache:
+	@echo "Starting ${NAME}..."
+	docker compose -p $(PROJECT_NAME) build --no-cache
 	docker compose -p $(PROJECT_NAME) up -d
 	@echo "${NAME} is up and running."
 
