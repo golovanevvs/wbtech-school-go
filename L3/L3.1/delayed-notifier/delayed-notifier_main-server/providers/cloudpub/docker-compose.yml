@@ -4,7 +4,7 @@ services:
     container_name: ${CLOUDPUB_CONTAINER}
     environment:
       - TOKEN=${CLOUDPUB_TOKEN}
-      - HTTP=${CLOUDPUB_MAINSERVER_PORT},${CLOUDPUB_WEBCLIENT_PORT}
+      - HTTP=host.docker.internal:${CLOUDPUB_MAINSERVER_PORT},host.docker.internal:${CLOUDPUB_WEBCLIENT_PORT}
     command: run
     volumes:
       - cloudpub-config:/home/cloudpub
