@@ -34,9 +34,11 @@ func NewConfig(cfg *config.Config, env string) *Config {
 func (c Config) String() string {
 	return fmt.Sprintf(`http:
     %s: %s
+	%s: %s
     %s: %d
     %s`,
 		"public host", c.PublicHost,
+		"web public host", c.WebPublicHost,
 		"port", c.Port,
 		c.Handler.String(),
 	)

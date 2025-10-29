@@ -9,7 +9,7 @@ $(foreach file,$(ENV_FILES), \
   $(if $(wildcard $(file)), $(eval include $(file))) \
 )
 
-export APP_NAME APP_TRANSPORT_HTTP_PORT APP_TRANSPORT_HTTP_PORT_EXT APP_TRANSPORT_HTTP_PUBLIC_HOST APP_TRANSPORT_HTTP_PUBLIC_HOST_DOCKER
+export APP_NAME APP_TRANSPORT_HTTP_PORT APP_TRANSPORT_HTTP_PORT_EXT APP_TRANSPORT_HTTP_PUBLIC_HOST APP_TRANSPORT_HTTP_PUBLIC_HOST_DOCKER APP_TRANSPORT_HTTP_WEB_PUBLIC_HOST_DOCKER
 export EMAIL_SMTP_HOST EMAIL_SMTP_PORT EMAIL_USERNAME EMAIL_PASSWORD EMAIL_FROM
 export RABBITMQ_PORT RABBITMQ_VHOST RABBITMQ_USERNAME RABBITMQ_PASSWORD
 export REDIS_PORT REDIS_PASSWORD
@@ -65,6 +65,12 @@ local-build-up: local-build local-up
 
 # FOR DOCKER UP
 up:
+	@echo "Building and starting container $(APP_NAME)..."
+	docker compose -p $(PROJECT_NAME) build
+	docker compose -p $(PROJECT_NAME) up -d
+	@echo "Container is up"
+
+up-no-cache:
 	@echo "Building and starting container $(APP_NAME)..."
 	docker compose -p $(PROJECT_NAME) build --no-cache
 	docker compose -p $(PROJECT_NAME) up -d
@@ -152,7 +158,7 @@ mock-rd-savenotice-clean:
 
 # APP = providers/app
 
-# .PHONY: app-local-build app-local-up app-local-build-up app-up app-logs app-stop app-restart app-rm app-down app-ps app-exec
+# .PHONY: app-local-build app-local-up app-local-build-up app-up app-up-no-cache app-logs app-stop app-restart app-rm app-down app-ps app-exec app-test-cover
 
 # app-local-build:
 # 	$(MAKE_CMD) -C $(APP) local-build
@@ -162,6 +168,8 @@ mock-rd-savenotice-clean:
 # 	$(MAKE_CMD) -C $(APP) local-build-up
 # app-up:
 # 	$(MAKE_CMD) -C $(APP) up
+# app-up-no-cache:
+# 	$(MAKE_CMD) -C $(APP) up-no-cache
 # app-logs:
 # 	$(MAKE_CMD) -C $(APP) logs
 # app-stop:
@@ -182,6 +190,7 @@ mock-rd-savenotice-clean:
 # MOCKS
 
 # .PHONY: app-mock-rd-savenotice-gen app-mock-rd-savenotice-clean
+
 # app-mock-rd-savenotice-gen:
 # 	$(MAKE_CMD) -C $(APP) mock-rd-savenotice-gen
 # app-mock-rd-savenotice-clean:

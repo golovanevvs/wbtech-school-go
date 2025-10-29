@@ -61,7 +61,7 @@ func (h *HTTP) WaitForServer(host string) error {
 	fn := func() error {
 		resp, err := http.Get(fmt.Sprintf("%s/healthy", host))
 		if err != nil {
-			h.lg.Warn().Err(err).Str("addr", h.httpsrv.Addr).Msgf("%s failed to start http server", pkgConst.Warn)
+			h.lg.Warn().Err(err).Str("addr", h.httpsrv.Addr).Str("host", host).Msgf("%s failed to start http server", pkgConst.Warn)
 			return err
 		}
 		defer resp.Body.Close()

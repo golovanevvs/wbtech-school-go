@@ -18,6 +18,8 @@ endif
 # ALL
 # ========================
 
+.PHONY: all-local-up all-up all-up-no-cache all-deps-up all-rm all-down
+
 all-local-up:
 	$(MAKE_CMD) redis-up
 	$(MAKE_CMD) rabbitmq-up
@@ -28,6 +30,11 @@ all-up:
 	$(MAKE_CMD) all-deps-up
 	@sleep 3
 	$(MAKE_CMD) app-up
+
+all-up-no-cache:
+	$(MAKE_CMD) all-deps-up
+	@sleep 3
+	$(MAKE_CMD) app-up-no-cache
 
 all-deps-up: redis-up rabbitmq-up promtail-up loki-up grafana-up
 
@@ -41,7 +48,7 @@ all-down: app-down
 
 APP = providers/app
 
-.PHONY: app-local-build app-local-up app-local-build-up app-up app-logs app-stop app-restart app-rm app-down app-ps app-exec
+.PHONY: app-local-build app-local-up app-local-build-up app-up app-up-no-cache app-logs app-stop app-restart app-rm app-down app-ps app-exec app-test-cover
 
 app-local-build:
 	$(MAKE_CMD) -C $(APP) local-build
@@ -51,6 +58,8 @@ app-local-build-up:
 	$(MAKE_CMD) -C $(APP) local-build-up ARGS="$(ARGS)"
 app-up:
 	$(MAKE_CMD) -C $(APP) up
+app-up-no-cache:
+	$(MAKE_CMD) -C $(APP) up-no-cache
 app-logs:
 	$(MAKE_CMD) -C $(APP) logs
 app-stop:
