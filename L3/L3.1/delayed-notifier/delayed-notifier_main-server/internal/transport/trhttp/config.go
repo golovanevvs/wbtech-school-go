@@ -15,18 +15,10 @@ type Config struct {
 }
 
 func NewConfig(cfg *config.Config, env string) *Config {
-	var publicHost, webPublicHost string
-	if env == "local" {
-		publicHost = cfg.GetString("app.transport.http.public_host")
-		webPublicHost = cfg.GetString("app.transport.http.web_public_host")
-	} else {
-		publicHost = cfg.GetString("app.transport.http.public_host_docker")
-		webPublicHost = cfg.GetString("app.transport.http.web_public_host_docker")
-	}
 	return &Config{
 		Port:          cfg.GetInt("app.transport.http.port"),
-		PublicHost:    publicHost,
-		WebPublicHost: webPublicHost,
+		PublicHost:    cfg.GetString("app.transport.http.public_host"),
+		WebPublicHost: cfg.GetString("app.transport.http.web_public_host"),
 		Handler:       handler.NewConfig(cfg),
 	}
 }
