@@ -34,13 +34,15 @@ else
 	MAKE_CMD = make
 endif
 
-SERVICE_NAME = ${APP_NAME}
+NAME = ${APP_CONTAINER}
+PROJECT_NAME = ${APP_CONTAINER}
+SERVICE_NAME = ${APP_CONTAINER}
 
 # FOR LOCAL UP
 local-build:
-	@echo "Building app $(APP_NAME)..."
+	@echo "Building app $(NAME)..."
 	@cd $(PROJECT_DIR) && go build ./cmd/$(APP_NAME)
-	@echo "Building app $(APP_NAME) completed"
+	@echo "Building app $(NAME) completed"
 
 ifeq ($(OS),Windows_NT)
 	@echo "Creating run script $(APP_NAME).bat..."
@@ -51,61 +53,61 @@ ifeq ($(OS),Windows_NT)
 endif
 
 local-up:
-	@echo "Running app $(APP_NAME)..."
+	@echo "Running app $(NAME)..."
 # 	@cd $(PROJECT_DIR) && $(RUN_CMD) "./$(APP_NAME) $(ARGS)"
-# 	@echo "Running app $(APP_NAME) completed"
+# 	@echo "Running app $(NAME) completed"
 ifeq ($(OS),Windows_NT)
 	start powershell -NoExit -Command "cd '$(PROJECT_DIR)'; .\$(APP_NAME).exe $(ARGS)"
 else
 	@cd $(PROJECT_DIR) && $(RUN_CMD) "./$(APP_NAME) $(ARGS)"
 endif
-	@echo "Running app $(APP_NAME) completed"
+	@echo "Running app $(NAME) completed"
 
 local-build-up: local-build local-up
 
 # FOR DOCKER UP
 up:
-	@echo "Building and starting container $(APP_NAME)..."
+	@echo "Building and starting container $(NAME)..."
 	docker compose -p $(PROJECT_NAME) build
 	docker compose -p $(PROJECT_NAME) up -d
-	@echo "Container is up"
+	@echo "${NAME} is up and running."
 
 up-no-cache:
-	@echo "Building and starting container $(APP_NAME)..."
+	@echo "Building and starting container $(NAME)..."
 	docker compose -p $(PROJECT_NAME) build --no-cache
 	docker compose -p $(PROJECT_NAME) up -d
-	@echo "Container is up"
+	@echo "${NAME} is up and running."
 
 logs:
-	@echo "Showing logs for ${APP_NAME}..."
+	@echo "Showing logs for ${NAME}..."
 	docker compose -p $(PROJECT_NAME) logs -f
 
 stop:
-	@echo "Stopping ${APP_NAME}..."
+	@echo "Stopping ${NAME}..."
 	docker compose -p $(PROJECT_NAME) stop
-	@echo "${APP_NAME} stopped."
+	@echo "${NAME} stopped."
 
 restart:
-	@echo "Restarting ${APP_NAME}..."
+	@echo "Restarting ${NAME}..."
 	$(MAKE_CMD) stop
 	$(MAKE_CMD) up
 
 rm:
-	@echo "➡ Removing ${APP_NAME}..."
+	@echo "Removing ${NAME}..."
 	docker compose -p $(PROJECT_NAME) rm -f
 	@echo "${NAME} removed."
 
 down:
-	@echo "Full cleanup ${APP_NAME}: containers, volumes, networks, data..."
+	@echo "Full cleanup ${NAME}: containers, volumes, networks, data..."
 	docker compose -p $(PROJECT_NAME) down -v --remove-orphans
 	@echo "${NAME} cleaned."
 
 ps:
-    @echo "Status for ${APP_NAME}:"
+    @echo "Status for ${NAME}:"
 	docker compose -p $(PROJECT_NAME) ps
 
 exec:
-	@echo "Connecting to container ${APP_NAME}..."
+	@echo "Connecting to container ${NAME}..."
 	docker compose -p $(PROJECT_NAME) exec $(SERVICE_NAME) sh
 
 # TESTS

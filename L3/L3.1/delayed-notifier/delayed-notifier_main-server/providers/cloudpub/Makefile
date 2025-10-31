@@ -16,12 +16,12 @@ endif
 
 .PHONY: up logs stop restart rm down ps exec
 
-PROJECT_NAME = cloudpub
-NAME = Cloudpub
+PROJECT_NAME = ${CLOUDPUB_CONTAINER}
+NAME = ${CLOUDPUB_CONTAINER}
 SERVICE_NAME = ${CLOUDPUB_CONTAINER}
 
 up:
-	@echo "➡ Starting ${NAME}..."
+	@echo "Starting ${NAME}..."
 	docker compose -p $(PROJECT_NAME) up -d
 	@echo "${NAME} is up and running."
 

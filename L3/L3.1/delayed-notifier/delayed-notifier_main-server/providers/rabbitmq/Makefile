@@ -16,7 +16,8 @@ endif
 
 .PHONY: up logs stop restart rm down ps exec
 
-NAME = RabbitMQ
+NAME = ${RABBITMQ_CONTAINER}
+PROJECT_NAME = ${RABBITMQ_CONTAINER}
 SERVICE_NAME = ${RABBITMQ_CONTAINER}
 
 up:

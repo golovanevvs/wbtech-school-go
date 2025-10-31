@@ -16,7 +16,8 @@ endif
 
 .PHONY: up logs stop restart rm down ps exec
 
-NAME = Redis
+NAME = ${REDIS_CONTAINER}
+PROJECT_NAME = ${REDIS_CONTAINER}
 SERVICE_NAME = ${REDIS_CONTAINER}
 
 up:
