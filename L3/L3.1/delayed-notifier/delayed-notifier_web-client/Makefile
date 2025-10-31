@@ -16,8 +16,9 @@ endif
 
 .PHONY: up up-no-cache logs stop restart rm down ps exec build rebuild
 
-NAME = web-client
-SERVICE_NAME = web-client
+NAME = $(WEB-CLIENT_CONTAINER)
+PROJECT_NAME = $(WEB-CLIENT_CONTAINER)
+SERVICE_NAME = $(WEB-CLIENT_CONTAINER)
 
 up:
 	@echo "Starting ${NAME}..."
