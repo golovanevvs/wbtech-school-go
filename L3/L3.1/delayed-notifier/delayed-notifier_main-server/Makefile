@@ -38,9 +38,11 @@ all-up-no-cache:
 
 all-deps-up: redis-up rabbitmq-up promtail-up loki-up grafana-up
 
-all-rm: app-rm
+all-rm: app-rm rabbitmq-rm promtail-rm loki-rm grafana-rm
 
-all-down: app-down
+all-stop: app-stop redis-stop rabbitmq-stop promtail-stop loki-stop grafana-stop
+
+all-down: app-down redis-down rabbitmq-down promtail-down loki-down grafana-down
 
 # ========================
 # APP

@@ -16,11 +16,12 @@ endif
 
 .PHONY: up logs stop restart rm down ps exec
 
-NAME = Grafana
+NAME = ${GRAFANA_CONTAINER}
+PROJECT_NAME = ${GRAFANA_CONTAINER}
 SERVICE_NAME = ${GRAFANA_CONTAINER}
 
 up:
-	@echo "➡ Starting ${NAME}..."
+	@echo "Starting ${NAME}..."
 	docker compose -p $(PROJECT_NAME) up -d
 	@echo "${NAME} is up and running."
 
@@ -28,19 +29,19 @@ logs:
 	docker compose -p $(PROJECT_NAME) logs -f
 
 stop:
-	@echo "➡ Stopping ${NAME}..."
+	@echo "Stopping ${NAME}..."
 	docker compose -p $(PROJECT_NAME) stop
 	@echo "${NAME} stopped."
 
 restart: stop up
 
 rm:
-	@echo "➡ Removing ${NAME} (keeping data)..."
+	@echo "Removing ${NAME} (keeping data)..."
 	docker compose -p $(PROJECT_NAME) rm -f
 	@echo "${NAME} removed."
 
 down:
-	@echo "➡ Full cleanup ${NAME}: containers, volumes, networks, data..."
+	@echo "Full cleanup ${NAME}: containers, volumes, networks, data..."
 	docker compose -p $(PROJECT_NAME) down -v --remove-orphans
 	@echo "${NAME} cleaned."
 
