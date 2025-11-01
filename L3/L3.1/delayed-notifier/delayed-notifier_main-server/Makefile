@@ -329,3 +329,28 @@ cloudpub-ps:
 	$(MAKE_CMD) -C $(CLOUDPUB) ps
 cloudpub-exec:
 	$(MAKE_CMD) -C $(CLOUDPUB) exec
+
+# ========================
+# TRAEFIK
+# ========================
+
+TRAEFIK = providers/traefik
+
+.PHONY: traefik-up traefik-logs traefik-stop traefik-restart traefik-rm traefik-down traefik-ps traefik-exec
+
+traefik-up:
+	$(MAKE_CMD) -C $(TRAEFIK) up
+traefik-logs:
+	$(MAKE_CMD) -C $(TRAEFIK) logs
+traefik-stop:
+	$(MAKE_CMD) -C $(TRAEFIK) stop
+traefik-restart:
+	$(MAKE_CMD) -C $(TRAEFIK) restart
+traefik-rm:
+	$(MAKE_CMD) -C $(TRAEFIK) rm
+traefik-down:
+	$(MAKE_CMD) -C $(TRAEFIK) down
+traefik-ps:
+	$(MAKE_CMD) -C $(TRAEFIK) ps
+traefik-exec:
+	$(MAKE_CMD) -C $(TRAEFIK) exec
