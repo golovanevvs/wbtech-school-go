@@ -11,7 +11,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 RUN pnpm run build
 
@@ -30,8 +30,6 @@ COPY --from=builder /app/tsconfig.json ./
 COPY --from=builder /app/next.config.js ./
 
 RUN pnpm install --prod --frozen-lockfile
-
-EXPOSE 3000
 
 # start
 CMD ["pnpm", "start"]
