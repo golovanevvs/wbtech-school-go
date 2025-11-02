@@ -10,7 +10,9 @@
   flex-direction: column;
 
   font-family: var(--font-geist-sans);
-  min-width: 620;
+  min-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,6 +23,22 @@
 
     --button-primary-hover: #ccc;
     --button-secondary-hover: #1a1a1a;
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 16px;
+  }
+
+  .ctas {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .ctas a {
+    width: 100%;
+    text-align: center;
   }
 }
 

@@ -10,13 +10,12 @@ export default function Home() {
       sx={{
         width: "100%",
         maxWidth: 600,
-        minWidth: 250,
         mx: "auto", // центрирование
         bgcolor: "background.default",
-        p: 2,
+        p: { xs: 2, sm: 3 },
       }}
-      >
-        <NotifyForm/>
+    >
+      <NotifyForm />
     </Container>
   )
 }

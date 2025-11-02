@@ -12,6 +12,14 @@ export const baseTheme = createTheme({
   typography: {
     fontFamily: geist.style.fontFamily,
   },
+  h1: {
+    fontSize: "1.8rem",
+    "@media (max-width:600px)": { fontSize: "1.4rem" },
+  },
+  h2: {
+    fontSize: "1.2rem",
+    "@media (max-width:600px)": { fontSize: "1rem" },
+  },
   components: {
     MuiTypography: {
       styleOverrides: {
