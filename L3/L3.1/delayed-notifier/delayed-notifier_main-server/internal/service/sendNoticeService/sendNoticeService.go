@@ -54,9 +54,13 @@ func (sv *SendNoticeService) SendNotice(ctx context.Context, notice model.Notice
 		wg.Go(func() {
 			switch ch.Type {
 			case model.ChannelTelegram:
-				sv.SendNoticeToTelegram(ctx, ch.Value, notice)
+				if ch.Value != "" {
+					sv.SendNoticeToTelegram(ctx, ch.Value, notice)
+				}
 			case model.ChannelEmail:
-				sv.SendNoticeToEmail(ctx, ch.Value, notice)
+				if ch.Value != "" {
+					sv.SendNoticeToEmail(ctx, ch.Value, notice)
+				}
 			}
 		})
 	}
