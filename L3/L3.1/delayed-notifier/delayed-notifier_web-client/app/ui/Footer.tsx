@@ -10,7 +10,7 @@ export default function Footer() {
         textAlign: "center",
         fontSize: { xs: "0.75rem", sm: "0.875rem" },
         color: "text.secondary",
-        mt: 2,
+        mt: 0,
         mb: 2,
       }}
     >
