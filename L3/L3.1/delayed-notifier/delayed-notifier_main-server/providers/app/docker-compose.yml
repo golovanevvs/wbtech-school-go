@@ -4,13 +4,12 @@ services:
       context: ../..
       dockerfile: providers/app/Dockerfile
       args:
-        APP_NAME: ${APP_NAME}
-        APP_TRANSPORT_HTTP_PORT: ${APP_TRANSPORT_HTTP_PORT_EXT}
+        APP_NAME: ${APP_CONTAINER}
     container_name: ${APP_CONTAINER}
     environment:
       - ENV=prod
-      - APP_TRANSPORT_HTTP_PUBLIC_HOST=https://${APP_TRANSPORT_HTTP_PUBLIC_HOST_DOCKER}/${APP_CONTAINER}
-      - APP_TRANSPORT_HTTP_WEB_PUBLIC_HOST=https://${APP_TRANSPORT_HTTP_PUBLIC_HOST_DOCKER}/${WEB_CLIENT_CONTAINER}
+      - APP_TRANSPORT_HTTP_PUBLIC_HOST=https://${PUBLIC_HOST_DOCKER}/${APP_CONTAINER}
+      - APP_TRANSPORT_HTTP_WEB_PUBLIC_HOST=https://${PUBLIC_HOST_DOCKER}/${WEB_CLIENT_CONTAINER}
       - APP_TRANSPORT_HTTP_PORT=${APP_TRANSPORT_HTTP_PORT}
       - EMAIL_SMTP_HOST=${EMAIL_SMTP_HOST}
       - EMAIL_SMTP_PORT=${EMAIL_SMTP_PORT}
@@ -30,7 +29,7 @@ services:
       - proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.${APP_CONTAINER}.rule=Host(`${APP_TRANSPORT_HTTP_PUBLIC_HOST_DOCKER}`) && PathPrefix(`/${APP_CONTAINER}`)"
+      - "traefik.http.routers.${APP_CONTAINER}.rule=Host(`${PUBLIC_HOST_DOCKER}`) && PathPrefix(`/${APP_CONTAINER}`)"
       - "traefik.http.routers.${APP_CONTAINER}.entrypoints=web"
       - "traefik.http.services.${APP_CONTAINER}.loadbalancer.server.port=${APP_TRANSPORT_HTTP_PORT}"
       - "traefik.http.middlewares.${APP_CONTAINER}-strip.stripprefix.prefixes=/${APP_CONTAINER}"

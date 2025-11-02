@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -32,9 +31,7 @@ func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, we
 
 	rt.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
-			fmt.Sprintf("http://localhost:%d", cfg.WebClientPort),
-			fmt.Sprintf("http://127.0.0.1:%d", cfg.WebClientPort),
-			"https://www.verbally-unaffected-oyster.cloudpub.ru",
+			publicHost,
 			webPublicHost,
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

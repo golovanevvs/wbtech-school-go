@@ -1,5 +1,5 @@
 services:
-  nextjs:
+  web-client:
     build:
       context: .
       dockerfile: Dockerfile
@@ -13,8 +13,6 @@ services:
       - PORT=${PORT}
     networks:
       - proxy
-    ports:
-      - ${PORT}:${PORT}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.${WEB_CLIENT_CONTAINER}.rule=Host(`${PUBLIC_HOST_DOCKER}`) && PathPrefix(`/${WEB_CLIENT_CONTAINER}`)"

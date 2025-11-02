@@ -7,7 +7,6 @@ RUN apk add --no-cache git ca-certificates
 WORKDIR /app
 
 ARG APP_NAME
-ARG APP_TRANSPORT_HTTP_PORT_EXT
 
 COPY go.mod go.sum ./
 
@@ -26,7 +25,5 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /root/
 
 COPY --from=builder /app/$APP_NAME .
-
-EXPOSE $APP_TRANSPORT_HTTP_PORT_EXT
 
 ENTRYPOINT ["/root/delayed-notifier_main-server"]

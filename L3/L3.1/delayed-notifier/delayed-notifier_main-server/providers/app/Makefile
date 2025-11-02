@@ -3,12 +3,13 @@ MAKEFLAGS += --no-print-directory
 
 PROJECT_DIR := $(abspath ../..)
 
-ENV_FILES := .env ../email/.env ../rabbitmq/.env ../redis/.env ../telegram/.env 
+ENV_FILES := ../../../../../.env .env ../email/.env ../rabbitmq/.env ../redis/.env ../telegram/.env
 
 $(foreach file,$(ENV_FILES), \
   $(if $(wildcard $(file)), $(eval include $(file))) \
 )
 
+export PUBLIC_HOST_DOCKER
 export APP_NAME APP_TRANSPORT_HTTP_PORT APP_TRANSPORT_HTTP_PORT_EXT APP_TRANSPORT_HTTP_PUBLIC_HOST APP_TRANSPORT_HTTP_PUBLIC_HOST_DOCKER APP_TRANSPORT_HTTP_WEB_PUBLIC_HOST_DOCKER APP_TRANSPORT_HTTP_HOST
 export EMAIL_SMTP_HOST EMAIL_SMTP_PORT EMAIL_USERNAME EMAIL_PASSWORD EMAIL_FROM
 export RABBITMQ_PORT RABBITMQ_VHOST RABBITMQ_USERNAME RABBITMQ_PASSWORD
@@ -35,6 +36,7 @@ else
 endif
 
 NAME = ${APP_CONTAINER}
+APP_NAME = ${APP_CONTAINER}
 PROJECT_NAME = ${APP_CONTAINER}
 SERVICE_NAME = ${APP_CONTAINER}
 

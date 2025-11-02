@@ -2,7 +2,7 @@
 const nextConfig = {
   /* config options here */
   reactCompiler: true,
-  basePath: '/delayed-notifier_web-client',
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH || '',
 };
 
 module.exports = nextConfig;
