@@ -11,8 +11,9 @@ export default function Home() {
         width: "100%",
         maxWidth: 600,
         mx: "auto", // центрирование
+        px: { xs: 0, sm: 2 },
+        py: 2,
         bgcolor: "background.default",
-        p: { xs: 2, sm: 3 },
       }}
     >
       <NotifyForm />
