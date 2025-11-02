@@ -38,13 +38,15 @@ func (c Channels) Validate() error {
 		return ErrEmptyChannels
 	}
 
+	validCount := 0
 	for _, ch := range c {
-		if !ch.Type.IsValid() {
-			return ErrInvalidTypeBase
+		if ch.Type.IsValid() && ch.Value != "" {
+			validCount++
 		}
-		if ch.Value == "" {
-			return ErrEmptyValue
-		}
+	}
+
+	if validCount == 0 {
+		return ErrEmptyValue
 	}
 
 	return nil
