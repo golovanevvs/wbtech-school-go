@@ -2,11 +2,11 @@ MAKEFLAGS += --no-print-directory
 
 PROJECT_DIR := $(abspath ../..)
 
-ENV_FILE ?= .env
-ifneq (,$(wildcard $(ENV_FILE)))
-include $(ENV_FILE)
+ENV_FILES := .env ../../../../../.env
+$(foreach file,$(ENV_FILES), \
+  $(if $(wildcard $(file)), $(eval include $(file))) \
+)
 export
-endif
 
 ifeq ($(OS),Windows_NT)
 	MAKE_CMD = mingw32-make

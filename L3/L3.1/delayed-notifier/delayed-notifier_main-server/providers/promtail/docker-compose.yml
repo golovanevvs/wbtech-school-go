@@ -9,6 +9,11 @@ services:
       - promtail_data:/var/lib/promtail
  
     command: -config.file=/etc/promtail/config.yaml
+    networks:
+      - proxy
+networks:
+  proxy:
+    external: true
  
 volumes:
   promtail_data:
