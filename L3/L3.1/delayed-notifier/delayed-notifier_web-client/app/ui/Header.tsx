@@ -1,11 +1,19 @@
 "use client"
 
-import ThemeToggle from "@/app/ui/ThemeToggle"
+import { Typography } from "@mui/material"
 
 export default function Header() {
   return (
-    <div>
-      <ThemeToggle />
-    </div>
+    <Typography
+      variant="h1"
+      align="center"
+      sx={{
+        fontSize: { xs: "1.6rem", sm: "2rem" },
+        fontWeight: "bold",
+        mb: 4,
+      }}
+    >
+      Delayed notifier
+    </Typography>
   )
 }

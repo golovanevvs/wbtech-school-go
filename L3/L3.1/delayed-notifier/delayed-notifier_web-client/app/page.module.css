@@ -26,22 +26,6 @@
   }
 }
 
-@media (max-width: 600px) {
-  .page {
-    padding: 16px;
-  }
-
-  .ctas {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .ctas a {
-    width: 100%;
-    text-align: center;
-  }
-}
-
 .main {
   display: flex;
   flex-direction: column;
@@ -140,8 +124,8 @@ a.secondary {
 
 @media (max-width: 600px) {
   .page {
-    padding: 32px;
-    padding-bottom: 80px;
+    padding: 8px;
+    padding-bottom: 32px;
   }
 
   .main {
@@ -154,12 +138,15 @@ a.secondary {
 
   .ctas {
     flex-direction: column;
+    width: 100%;
   }
 
   .ctas a {
+    width: 100%;
     font-size: 14px;
     height: 40px;
     padding: 0 16px;
+    text-align: center;
   }
 
   a.secondary {
