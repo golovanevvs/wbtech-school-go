@@ -2,7 +2,7 @@ MAKEFLAGS += --no-print-directory
 
 PROJECT_DIR := $(abspath ../..)
 
-ENV_FILE ?= .env
+ENV_FILE ?= .env ../traefik/.env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
 export

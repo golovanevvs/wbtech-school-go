@@ -34,7 +34,7 @@ func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, we
 		AllowOrigins: []string{
 			fmt.Sprintf("http://localhost:%d", cfg.WebClientPort),
 			fmt.Sprintf("http://127.0.0.1:%d", cfg.WebClientPort),
-			publicHost,
+			"https://www.verbally-unaffected-oyster.cloudpub.ru",
 			webPublicHost,
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

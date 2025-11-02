@@ -1,8 +1,26 @@
 services:
   nextjs:
-    build: .
-    container_name: ${PROJECT_NAME}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://${PUBLIC_HOST_DOCKER}/${APP_CONTAINER}
+    container_name: ${WEB_CLIENT_CONTAINER}
     env_file:
       - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT}
+    networks:
+      - proxy
     ports:
-      - "${PORT}:${PORT}"
+      - ${PORT}:${PORT}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.${WEB_CLIENT_CONTAINER}.rule=Host(`${PUBLIC_HOST_DOCKER}`) && PathPrefix(`/${WEB_CLIENT_CONTAINER}`)"
+      - "traefik.http.routers.${WEB_CLIENT_CONTAINER}.entrypoints=web"
+      - "traefik.http.services.${WEB_CLIENT_CONTAINER}.loadbalancer.server.port=${PORT}"
+
+networks:
+  proxy:
+    external: true

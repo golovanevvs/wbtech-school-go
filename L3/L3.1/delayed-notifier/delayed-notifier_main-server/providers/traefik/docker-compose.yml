@@ -2,16 +2,18 @@ services:
   traefik:
     image: traefik:latest
     container_name: ${TRAEFIK_CONTAINER}
+    env_file:
+      - .env
     command:
       - "--api.dashboard=true"
       - "--providers.docker=true"
       - "--api.insecure=true" 
       - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.dashboard.address=:18080"
+      - "--entrypoints.web.address=:${TRAEFIK_HTTP_PORT_EXT}"
+      - "--entrypoints.dashboard.address=:${TRAEFIK_DASHBOARD_PORT_EXT}"
     ports:
-      - "80:80"
-      - "18080:8080"
+      - "${TRAEFIK_HTTP_PORT_EXT}:80"
+      - "${TRAEFIK_DASHBOARD_PORT_EXT}:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
