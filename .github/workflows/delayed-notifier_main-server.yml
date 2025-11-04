@@ -3,11 +3,11 @@ name: delayed-notifier_main-server  CI/CD
 on:
   push:
     paths:
-      - 'l3/l3.1/delayed-notifier/delayed-notifier_main-server/**'
+      - 'L3/L3.1/delayed-notifier/delayed-notifier_main-server/**'
       - '.github/workflows/delayed-notifier_main-server.yml'
   pull_request:
     paths:
-      - 'l3/l3.1/delayed-notifier/delayed-notifier_main-server/**'
+      - 'L3/L3.1/delayed-notifier/delayed-notifier_main-server/**'
 
 jobs:
   test:
@@ -16,7 +16,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: l3/l3.1/delayed-notifier/delayed-notifier_main-server
+        working-directory: L3/L3.1/delayed-notifier/delayed-notifier_main-server
     
     steps:
     - name: Checkout code
@@ -48,7 +48,7 @@ jobs:
         go-version: '1.25.2'
     
     - name: Build Go binary
-      working-directory: l3/l3.1/delayed-notifier/delayed-notifier_main-server
+      working-directory: L3/L3.1/delayed-notifier/delayed-notifier_main-server
       run: |
         go build -o delayed-notifier_main-server ./cmd/delayed-notifier_main-server
     
@@ -65,8 +65,8 @@ jobs:
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
-        context: l3/l3.1/delayed-notifier/delayed-notifier_main-server
-        file: l3/l3.1/delayed-notifier/delayed-notifier_main-server/providers/app/Dockerfile
+        context: L3/L3.1/delayed-notifier/delayed-notifier_main-server
+        file: L3/L3.1/delayed-notifier/delayed-notifier_main-server/providers/app/Dockerfile
         push: true
         tags: |
           ghcr.io/${{ github.repository_owner }}/delayed-notifier-main-server:latest
