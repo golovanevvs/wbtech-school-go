@@ -17,15 +17,15 @@ type IService interface {
 }
 
 type Handler struct {
-	lg zlog.Zerolog
+	lg *zlog.Zerolog
 	rt *ginext.Engine
 	sv IService
 }
 
-func New(rt *ginext.Engine, sv IService) *Handler {
-	lg := zlog.Logger.With().Str("component", "handler-telegramHandler").Logger()
+func New(parentLg *zlog.Zerolog, rt *ginext.Engine, sv IService) *Handler {
+	lg := parentLg.With().Str("component", "handler-telegramHandler").Logger()
 	return &Handler{
-		lg: lg,
+		lg: &lg,
 		rt: rt,
 		sv: sv,
 	}
@@ -42,7 +42,7 @@ func (hd *Handler) WebHookHandler(c *ginext.Context) {
 
 	lg.Trace().Msgf("%s checking content type...", pkgConst.OpStart)
 	if !strings.Contains(c.ContentType(), "application/json") {
-		lg.Warn().Str("content-type", c.ContentType()).Int("status", http.StatusBadRequest).Msg("invalid content-type")
+		lg.Warn().Str("content-type", c.ContentType()).Int("status", http.StatusBadRequest).Msgf("%s invalid content-type", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ginext.H{"error": pkgErrors.ErrContentTypeAJ.Error()})
 		return
 	}

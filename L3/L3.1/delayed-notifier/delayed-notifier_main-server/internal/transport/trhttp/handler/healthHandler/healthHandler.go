@@ -3,26 +3,29 @@ package healthHandler
 import (
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgConst"
+	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgPrometheus"
 	"github.com/wb-go/wbf/ginext"
 	"github.com/wb-go/wbf/zlog"
 )
 
 type Handler struct {
-	lg zlog.Zerolog
+	lg *zlog.Zerolog
 	rt *ginext.Engine
 }
 
-func New(rt *ginext.Engine) *Handler {
-	lg := zlog.Logger.With().Str("component", "healthHandler").Logger()
+func New(parentLg *zlog.Zerolog, rt *ginext.Engine) *Handler {
+	lg := parentLg.With().Str("component", "healthHandler").Logger()
 	return &Handler{
-		lg: lg,
+		lg: &lg,
 		rt: rt,
 	}
 }
 
 func (hd *Handler) RegisterRoutes() {
 	hd.rt.GET("/healthy", hd.HealthHandler)
+	hd.rt.GET("/metrics", gin.WrapH(pkgPrometheus.Handler()))
 }
 
 func (hd *Handler) HealthHandler(c *ginext.Context) {

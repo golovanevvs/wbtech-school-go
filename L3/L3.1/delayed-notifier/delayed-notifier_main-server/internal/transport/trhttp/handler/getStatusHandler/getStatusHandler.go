@@ -58,7 +58,7 @@ func (hd *Handler) GetNotice(c *ginext.Context) {
 	lg.Trace().Msgf("%s getting notice...", pkgConst.OpStart)
 	notice, err := hd.sv.GetNotice(c.Request.Context(), id)
 	if errors.Is(err, pkgErrors.ErrNoticeNotFound) {
-		lg.Warn().Err(err).Int("notice ID", id).Msgf("%s notice ID", pkgConst.Warn)
+		lg.Warn().Err(err).Int("notice ID", id).Msgf("%s notice not found", pkgConst.Warn)
 		c.JSON(http.StatusNotFound, ginext.H{"error": "notice with ID=" + idStr + " not found: " + err.Error()})
 		return
 	}

@@ -22,8 +22,8 @@ type Handler struct {
 	sv IService
 }
 
-func New(rt *ginext.Engine, sv IService) *Handler {
-	lg := zlog.Logger.With().Str("component", "deleteNoticeHandler").Logger()
+func New(parentLg *zlog.Zerolog, rt *ginext.Engine, sv IService) *Handler {
+	lg := parentLg.With().Str("component", "deleteNoticeHandler").Logger()
 
 	return &Handler{
 		lg: &lg,

@@ -354,3 +354,28 @@ traefik-ps:
 	$(MAKE_CMD) -C $(TRAEFIK) ps
 traefik-exec:
 	$(MAKE_CMD) -C $(TRAEFIK) exec
+
+# ========================
+# PROMETHEUS
+# ========================
+
+PROMETHEUS = providers/prometheus
+
+.PHONY: prometheus-up prometheus-logs prometheus-stop prometheus-restart prometheus-rm prometheus-down prometheus-ps prometheus-exec
+
+prometheus-up:
+	$(MAKE_CMD) -C $(PROMETHEUS) up
+prometheus-logs:
+	$(MAKE_CMD) -C $(PROMETHEUS) logs
+prometheus-stop:
+	$(MAKE_CMD) -C $(PROMETHEUS) stop
+prometheus-restart:
+	$(MAKE_CMD) -C $(PROMETHEUS) restart
+prometheus-rm:
+	$(MAKE_CMD) -C $(PROMETHEUS) rm
+prometheus-down:
+	$(MAKE_CMD) -C $(PROMETHEUS) down
+prometheus-ps:
+	$(MAKE_CMD) -C $(PROMETHEUS) ps
+prometheus-exec:
+	$(MAKE_CMD) -C $(PROMETHEUS) exec

@@ -34,6 +34,8 @@ services:
       - "traefik.http.services.${APP_CONTAINER}.loadbalancer.server.port=${APP_TRANSPORT_HTTP_PORT}"
       - "traefik.http.middlewares.${APP_CONTAINER}-strip.stripprefix.prefixes=/${APP_CONTAINER}"
       - "traefik.http.routers.${APP_CONTAINER}.middlewares=${APP_CONTAINER}-strip"
+    ports:
+      - 7777:${APP_TRANSPORT_HTTP_PORT}
 
 networks:
   proxy:

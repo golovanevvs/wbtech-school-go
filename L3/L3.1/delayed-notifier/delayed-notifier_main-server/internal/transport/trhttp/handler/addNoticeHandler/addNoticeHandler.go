@@ -42,7 +42,7 @@ func (hd *Handler) CreateNotice(c *ginext.Context) {
 
 	lg.Trace().Msgf("%s checking content type...", pkgConst.OpStart)
 	if !strings.Contains(c.ContentType(), "application/json") {
-		lg.Warn().Str("content-type", c.ContentType()).Int("status", http.StatusBadRequest).Msg("invalid content-type")
+		lg.Warn().Str("content-type", c.ContentType()).Int("status", http.StatusBadRequest).Msgf("%s invalid content-type", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ginext.H{"error": pkgErrors.ErrContentTypeAJ.Error()})
 		return
 	}
@@ -51,7 +51,7 @@ func (hd *Handler) CreateNotice(c *ginext.Context) {
 	lg.Trace().Msgf("%s unmarshaling json data to notice...", pkgConst.OpStart)
 	var req model.ReqNotice
 	if err := c.ShouldBindJSON(&req); err != nil {
-		lg.Warn().Err(err).Int("status", http.StatusBadRequest).Msg("failed to bind json")
+		lg.Warn().Err(err).Int("status", http.StatusBadRequest).Msgf("%s failed to bind json", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ginext.H{"error": "failed to bind json: " + err.Error()})
 		return
 	}
@@ -60,7 +60,7 @@ func (hd *Handler) CreateNotice(c *ginext.Context) {
 	lg.Trace().Msgf("%s adding notice...", pkgConst.OpStart)
 	id, err := hd.sv.AddNotice(c.Request.Context(), req)
 	if err != nil {
-		lg.Error().Err(err).Int("status", http.StatusInternalServerError).Msg("failed to add notice")
+		lg.Error().Err(err).Int("status", http.StatusInternalServerError).Msgf("%s failed to add notice", pkgConst.Error)
 		c.JSON(http.StatusInternalServerError, ginext.H{"error": "failed to add notice: " + err.Error()})
 		return
 	}
