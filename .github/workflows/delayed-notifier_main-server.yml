@@ -86,4 +86,4 @@ jobs:
         curl -X POST \
           -H "X-GitHub-Token: ${{ secrets.DEPLOY_TOKEN }}" \
           -H "Content-Type: application/json" \
-          https://${{ secrets.SERVER_HOST }}/webhook/deploy/hooks/delayed-notifier_main-server
+          https://${{secrets.SERVER_HOST}}/hooks/delayed-notifier_main-server

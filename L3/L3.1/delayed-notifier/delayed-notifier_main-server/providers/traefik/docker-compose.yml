@@ -9,13 +9,15 @@ services:
       - "--providers.docker=true"
       - "--api.insecure=true" 
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.filename=/etc/traefik/dynamic/webhook.yml"
+      - "--providers.file.watch=true"
       - "--entrypoints.web.address=:${TRAEFIK_HTTP_PORT_EXT}"
-      - "--entrypoints.dashboard.address=:${TRAEFIK_DASHBOARD_PORT_EXT}"
     ports:
       - "${TRAEFIK_HTTP_PORT_EXT}:80"
       - "${TRAEFIK_DASHBOARD_PORT_EXT}:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - ../webhook/traefik-webhook.yml:/etc/traefik/dynamic/webhook.yml:ro
     networks:
       - proxy
     # restart: unless-stopped

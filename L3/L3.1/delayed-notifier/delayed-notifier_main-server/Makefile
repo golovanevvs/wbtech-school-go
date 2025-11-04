@@ -331,6 +331,31 @@ cloudpub-exec:
 	$(MAKE_CMD) -C $(CLOUDPUB) exec
 
 # ========================
+# CLOUDPUB-WEBHOOK
+# ========================
+
+CLOUDPUB-WEBHOOK = providers/cloudpub-webhook
+
+.PHONY: cloudpub-webhook-up cloudpub-webhook-logs cloudpub-webhook-stop cloudpub-webhook-restart cloudpub-webhook-rm cloudpub-webhook-down cloudpub-webhook-ps cloudpub-webhook-exec
+
+cloudpub-webhook-up:
+	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) up
+cloudpub-webhook-logs:
+	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) logs
+cloudpub-webhook-stop:
+	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) stop
+cloudpub-webhook-restart:
+	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) restart
+cloudpub-webhook-rm:
+	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) rm
+cloudpub-webhook-down:
+	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) down
+cloudpub-webhook-ps:
+	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) ps
+cloudpub-webhook-exec:
+	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) exec
+
+# ========================
 # TRAEFIK
 # ========================
 

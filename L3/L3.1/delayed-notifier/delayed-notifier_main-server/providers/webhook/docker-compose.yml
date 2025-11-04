@@ -1,13 +1,13 @@
 services:
   webhook:
-    image: almir/webhook
+    image: almir/webhook:latest
     container_name: webhook-server
     command: -verbose -hooks=/etc/webhook/hooks.json -hotreload -ip=0.0.0.0 -port=9000
     volumes:
-      - ./hooks.json:/etc/webhook/hooks.json:ro
-      - ./deploy-script.sh:/etc/webhook/deploy-script.sh:ro
+      - /c/Golovanev/Dev/Projects/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/providers/webhook/hooks.json:/etc/webhook/hooks.json:ro
+      - /c/Golovanev/Dev/Projects/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/providers/webhook/deploy-script.sh:/etc/webhook/deploy-script.sh:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      - ../resources/deploy:/etc/webhook/deploy:ro
+      - /c/Golovanev/Dev/Projects/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/resources/deploy:/etc/webhook/deploy:ro
     ports:
       - "9000:9000"
     networks:
