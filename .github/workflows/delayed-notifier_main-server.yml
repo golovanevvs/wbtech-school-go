@@ -69,7 +69,7 @@ jobs:
       with:
         context: L3/L3.1/delayed-notifier/delayed-notifier_main-server
         file: L3/L3.1/delayed-notifier/delayed-notifier_main-server/providers/app/Dockerfile
-        push: false
+        push: true
         tags: |
           ghcr.io/${{ github.actor }}/delayed-notifier_main-server:latest
         build-args: |
