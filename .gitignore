@@ -37,3 +37,5 @@ node_modules
 
 # Volume data
 **/resources/data/
+/L3/L3.1/delayed-notifier/delayed-notifier_main-server/providers/webhook/hooks.json
+/L3/L3.1/delayed-notifier/delayed-notifier_main-server/resources/deploy
