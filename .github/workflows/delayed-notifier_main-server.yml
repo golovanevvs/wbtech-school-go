@@ -2,88 +2,107 @@ name: delayed-notifier_main-server  CI/CD
 
 on:
   push:
-    paths:
-      - 'L3/L3.1/delayed-notifier/delayed-notifier_main-server/**'
-      - '.github/workflows/delayed-notifier_main-server.yml'
+    tags:
+      - "delayed-notifier_main-server/v*"
   pull_request:
-    paths:
-      - 'L3/L3.1/delayed-notifier/delayed-notifier_main-server/**'
-
+    branches: [main]
 jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    
+
     defaults:
       run:
         working-directory: L3/L3.1/delayed-notifier/delayed-notifier_main-server
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.25.2'
-        cache-dependency-path: L3/L3.1/delayed-notifier/delayed-notifier_main-server/go.sum
-    
-    - name: Run tests
-      run: go test -v ./...
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.25.2"
+          cache-dependency-path: L3/L3.1/delayed-notifier/delayed-notifier_main-server/go.sum
+
+      - name: Run tests
+        run: go test -v ./...
+  
+  extract-tag-info:
+    name: Extract Tag Information
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract-version.outputs.version }}
+      tag-name: ${{ github.ref_name }}
+    steps:
+    - name: Extract version from tag
+      id: extract-version
+      run: |
+        TAG_NAME="${{ github.ref_name }}"
+        VERSION="${TAG_NAME#delayed-notifier_main-server/v}"
+        echo "Extracted version: $VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
 
   build-and-publish:
     name: Build and Publish
     runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
+    needs: [test, extract-tag-info]
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.25.2'
-        cache-dependency-path: L3/L3.1/delayed-notifier/delayed-notifier_main-server/go.sum
-    
-    - name: Build Go binary
-      working-directory: L3/L3.1/delayed-notifier/delayed-notifier_main-server
-      run: |
-        go build -o delayed-notifier_main-server ./cmd/delayed-notifier_main-server
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: L3/L3.1/delayed-notifier/delayed-notifier_main-server
-        file: L3/L3.1/delayed-notifier/delayed-notifier_main-server/providers/app/Dockerfile
-        push: true
-        tags: |
-          ghcr.io/${{ github.actor }}/delayed-notifier_main-server:latest
-        build-args: |
-          APP_NAME=delayed-notifier_main-server
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.25.2"
+          cache-dependency-path: L3/L3.1/delayed-notifier/delayed-notifier_main-server/go.sum
+
+      - name: Build Go binary
+        working-directory: L3/L3.1/delayed-notifier/delayed-notifier_main-server
+        run: |
+          go build -o delayed-notifier_main-server ./cmd/delayed-notifier_main-server
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: L3/L3.1/delayed-notifier/delayed-notifier_main-server
+          file: L3/L3.1/delayed-notifier/delayed-notifier_main-server/providers/app/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.actor }}/delayed-notifier_main-server:${{ needs.extract-tag-info.outputs.version }}
+            ghcr.io/${{ github.actor }}/delayed-notifier_main-server:latest
+          labels: |
+            version=${{ needs.extract-tag-info.outputs.version }}
+            commit=${{ github.sha }}
+          build-args: |
+            APP_NAME=delayed-notifier_main-server
+            APP_VERSION=${{ needs.extract-tag-info.outputs.version }}
   deploy:
     name: Deploy to Server
     runs-on: ubuntu-latest
-    needs: build-and-publish
+    needs: [build-and-publish, extract-tag-info]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-  
+
     steps:
-    - name: Trigger deployment via Webhook
-      run: |
-        curl -X POST \
-          -H "X-GitHub-Token: ${{ secrets.DEPLOY_TOKEN }}" \
-          -H "Content-Type: application/json" \
+      - name: Trigger deployment via Webhook
+        run: |
+          curl -X POST \
+            -H "X-GitHub-Token: ${{ secrets.DEPLOY_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"version": "${{ needs.extract-tag-info.outputs.version }}", "image": "ghcr.io/${{ github.actor }}/delayed-notifier_main-server:${{ needs.extract-tag-info.outputs.version }}"}' \
           https://${{secrets.SERVER_HOST}}/hooks/delayed-notifier_main-server
