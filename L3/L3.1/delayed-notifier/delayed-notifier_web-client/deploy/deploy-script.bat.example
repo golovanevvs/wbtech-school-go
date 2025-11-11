@@ -1,8 +1,8 @@
 @echo off
-echo ========================================
-echo    Starting Delayed Notifier Deployment
+echo =====================================================
+echo    Starting delayed-notifier_web-client deployment
 echo    Time: %date% %time%
-echo ========================================
+echo =====================================================
 echo.
 
 set VERSION=%~1
@@ -15,7 +15,7 @@ if "%VERSION%"=="" (
 )
 
 echo Changing to project directory...
-cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.1\delayed-notifier\delayed-notifier_main-server\resources\deploy"
+cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.1\delayed-notifier\delayed-notifier_web-client\deploy"
 
 echo Stopping existing containers...
 docker compose down
@@ -24,11 +24,11 @@ echo Pulling image...
 docker compose pull
 
 echo Starting new containers with version: %APP_VERSION%
-docker compose -p delayed-notifier_main-server up -d
+docker compose -p delayed-notifier_web-client up -d
 
 echo.
 echo Checking container status...
-docker ps --filter "name=delayed-notifier_main-server"
+docker ps --filter "name=delayed-notifier_web-client"
 
 echo.
 echo ========================================
