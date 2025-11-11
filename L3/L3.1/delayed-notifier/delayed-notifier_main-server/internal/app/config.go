@@ -14,7 +14,7 @@ import (
 	"github.com/wb-go/wbf/config"
 )
 
-// test workflow v.1.0.2
+// test workflow v.1.0.3
 
 type Config struct {
 	lg *pkgLogger.Config
