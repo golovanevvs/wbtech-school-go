@@ -60,7 +60,7 @@ jobs:
             version=${{ needs.extract-tag-info.outputs.version }}
             commit=${{ github.sha }}
           build-args: |
-            NEXT_PUBLIC_API_URL=https://${{secrets.SERVER_HOST}}/delayed-notifier_main-server
+            NEXT_PUBLIC_API_URL=https://incompletely-elemental-moonfish.cloudpub.ru/delayed-notifier_main-server
 
   deploy:
     name: Deploy to Server
