@@ -1,0 +1,13 @@
+services:
+  delayed-notifier_web-client:
+    image: ghcr.io/golovanevvs/delayed-notifier_web-client:${APP_VERSION:-latest}
+    container_name: ${WEB_CLIENT_CONTAINER}
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT}
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
