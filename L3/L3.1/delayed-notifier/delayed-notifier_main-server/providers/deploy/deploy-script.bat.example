@@ -1,12 +1,12 @@
 @echo off
-echo ========================================
-echo    Starting Delayed Notifier Deployment
+echo ======================================================
+echo    Starting delayed-notifier_main-server deployment
 echo    Time: %date% %time%
-echo ========================================
+echo ======================================================
 echo.
 
 echo Changing to project directory...
-cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.1\delayed-notifier\delayed-notifier_main-server\resources\deploy"
+cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.1\delayed-notifier\delayed-notifier_main-server\providers\deploy"
 
 echo Stopping existing containers...
 docker compose down
