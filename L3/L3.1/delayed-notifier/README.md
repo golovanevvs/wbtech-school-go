@@ -9,6 +9,6 @@
 
 Работу сервиса можно протестировать по ссылке:
 
-[https://virtually-treasured-iguana.cloudpub.ru/delayed-notifier_web-client](https://virtually-treasured-iguana.cloudpub.ru/delayed-notifier_web-client) (доступно по мере работы сервера).
+[https://incompletely-elemental-moonfish.cloudpub.ru/delayed-notifier_web-client](https://incompletely-elemental-moonfish.cloudpub.ru/delayed-notifier_web-client) (доступно по мере работы сервера).
 
 Для получения уведомления на Telegram предварительно необходимо подписаться на telegram-бота. Аккаунт Telegram необходимо указывать **без** символа "@".
