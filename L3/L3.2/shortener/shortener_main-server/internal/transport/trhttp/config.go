@@ -3,7 +3,7 @@ package trhttp
 import (
 	"fmt"
 
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/transport/trhttp/handler"
 	"github.com/wb-go/wbf/config"
 )
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgErrors"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgErrors"
 )
 
 func (a *App) Run(cancel context.CancelFunc) error {

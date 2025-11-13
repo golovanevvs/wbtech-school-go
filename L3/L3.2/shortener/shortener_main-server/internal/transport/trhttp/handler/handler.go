@@ -4,21 +4,16 @@ import (
 	"time"
 
 	"github.com/gin-contrib/cors"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/pkg/pkgPrometheus"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/addNoticeHandler"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/deleteNoticeHandler"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/getStatusHandler"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/healthHandler"
-	"github.com/golovanevvs/wbtech-school-go/L3/L3.1/delayed-notifier/delayed-notifier_main-server/internal/transport/trhttp/handler/telegramHandler"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgPrometheus"
 	"github.com/wb-go/wbf/ginext"
 	"github.com/wb-go/wbf/zlog"
 )
 
 type IService interface {
-	addNoticeHandler.IService
-	deleteNoticeHandler.IService
-	getStatusHandler.IService
-	telegramHandler.IService
+	// addNoticeHandler.IService
+	// deleteNoticeHandler.IService
+	// getStatusHandler.IService
+	// telegramHandler.IService
 }
 
 type Handler struct {
@@ -26,7 +21,7 @@ type Handler struct {
 }
 
 func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, webPublicHost string) *Handler {
-	lg := parentLg.With().Str("component", "handler").Logger()
+	// lg := parentLg.With().Str("component", "handler").Logger()
 
 	rt := ginext.New(cfg.GinMode)
 
@@ -49,20 +44,20 @@ func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, we
 		Rt: rt,
 	}
 
-	addNoticeHandler := addNoticeHandler.New(&lg, rt, sv)
-	addNoticeHandler.RegisterRoutes()
+	// addNoticeHandler := addNoticeHandler.New(&lg, rt, sv)
+	// addNoticeHandler.RegisterRoutes()
 
-	deleteNoticeHandler := deleteNoticeHandler.New(&lg, rt, sv)
-	deleteNoticeHandler.RegisterRoutes()
+	// deleteNoticeHandler := deleteNoticeHandler.New(&lg, rt, sv)
+	// deleteNoticeHandler.RegisterRoutes()
 
-	getStatusHandler := getStatusHandler.New(&lg, rt, sv)
-	getStatusHandler.RegisterRoutes()
+	// getStatusHandler := getStatusHandler.New(&lg, rt, sv)
+	// getStatusHandler.RegisterRoutes()
 
-	telegramHandler := telegramHandler.New(&lg, rt, sv)
-	telegramHandler.RegisterRoutes()
+	// telegramHandler := telegramHandler.New(&lg, rt, sv)
+	// telegramHandler.RegisterRoutes()
 
-	healthHandler := healthHandler.New(&lg, rt)
-	healthHandler.RegisterRoutes()
+	// healthHandler := healthHandler.New(&lg, rt)
+	// healthHandler.RegisterRoutes()
 
 	return hd
 }
