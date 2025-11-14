@@ -3,35 +3,36 @@ package pkgPostgres
 import (
 	"fmt"
 
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRedis"
 	"github.com/wb-go/wbf/dbpg"
 )
 
-func New(rd *pkgRedis.Client) (*Repository, error) {
-	masterDSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.Postgres.Master.Host, cfg.Postgres.Master.Port, cfg.Postgres.Master.User, cfg.Postgres.Master.Password, cfg.Postgres.Master.DBName)
+type Postgres struct {
+	DB *dbpg.DB
+}
 
-	slave1DSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.Postgres.Slave1.Host, cfg.Postgres.Slave1.Port, cfg.Postgres.Slave1.User, cfg.Postgres.Slave1.Password, cfg.Postgres.Slave1.DBName)
-
-	slave2DSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		cfg.Postgres.Slave2.Host, cfg.Postgres.Slave2.Port, cfg.Postgres.Slave2.User, cfg.Postgres.Slave2.Password, cfg.Postgres.Slave2.DBName)
+func New(cfg *Config) (*Postgres, error) {
+	masterDSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		cfg.Master.Host, cfg.Master.Port, cfg.User, cfg.Password, cfg.DBName, cfg.SSLMode)
 
 	opts := &dbpg.Options{
-		MaxOpenConns:    cfg.Postgres.MaxOpenConns,
-		MaxIdleConns:    cfg.Postgres.MaxIdleConns,
-		ConnMaxLifetime: cfg.Postgres.ConnMaxLifetime,
+		MaxOpenConns:    cfg.MaxOpenConns,
+		MaxIdleConns:    cfg.MaxIdleConns,
+		ConnMaxLifetime: cfg.ConnMaxLifetime,
 	}
 
-	db, err := dbpg.New(masterDSN, []string{slave1DSN, slave2DSN}, opts)
+	db, err := dbpg.New(masterDSN, nil, opts)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create db: %w", err)
+		return nil, fmt.Errorf("failed to create DB instance: %w", err)
 	}
 
-	return &Repository{
-		Postgres: db,
+	return &Postgres{
+		DB: db,
 	}, nil
-	return &Repository{
-		postgres: postgres.New(),
-	}, nil
+}
+
+func (p *Postgres) Close() error {
+	if err := p.DB.Master.Close(); err != nil {
+		return err
+	}
+	return nil
 }

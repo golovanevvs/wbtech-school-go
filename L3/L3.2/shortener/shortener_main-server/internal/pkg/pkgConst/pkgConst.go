@@ -23,6 +23,7 @@ var (
 	Telegram  = emoji.MobilePhoneWithArrow
 	RabbitMQ  = emoji.RabbitFace
 	Redis     = emoji.FloppyDisk
+	Postgres  = emoji.ComputerDisk
 	Retry     = emoji.RecyclingSymbol
 	Transport = emoji.Bus
 )

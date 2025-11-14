@@ -1,19 +1,23 @@
 package app
 
 import (
+	"fmt"
+
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgConst"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgErrors"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgPostgres"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRetry"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/service"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/transport"
+	"github.com/wb-go/wbf/retry"
 	"github.com/wb-go/wbf/zlog"
 )
 
 type dependencies struct {
 	rs *pkgRetry.Retry
-	postgres
-	// rd *pkgRedis.Client
+	rd *pkgRedis.Client
+	pg *pkgPostgres.Postgres
 	rp *repository.Repository
 	sv *service.Service
 	tr *transport.Transport
@@ -43,7 +47,7 @@ func (b *dependencyBuilder) initLogger() error {
 	err := zlog.SetLevel(b.cfg.lg.Level)
 
 	if err != nil {
-		return pkgErrors.Wrap(err, "set log level")
+		return fmt.Errorf("set log level: %w", err)
 	}
 
 	b.lg = &zlog.Logger
@@ -59,34 +63,54 @@ func (b *dependencyBuilder) InitRetry() {
 	b.deps.rs = pkgRetry.New(b.cfg.rs)
 }
 
-// func (b *dependencyBuilder) initRedis() error {
-// 	var rd *pkgRedis.Client
-// 	var err error
-// 	fn := func() error {
-// 		rd, err = pkgRedis.New(b.cfg.rd)
-// 		if err != nil {
-// 			b.lg.Warn().Err(err).Int("port", b.cfg.rd.Port).Msgf("%s failed to initialize Redis", pkgConst.Warn)
-// 			return err
-// 		}
-// 		return nil
-// 	}
-// 	if err := retry.Do(fn, retry.Strategy(*b.deps.rs)); err != nil {
-// 		return pkgErrors.Wrapf(err, "initialize Redis, port: %d, attempts: %d", b.cfg.rd.Port, b.cfg.rs.Attempts)
-// 	}
+func (b *dependencyBuilder) initRedis() error {
+	fn := func() error {
+		rd, err := pkgRedis.New(b.cfg.rd)
+		if err != nil {
+			b.lg.Warn().Err(err).Int("port", b.cfg.rd.Port).Msgf("%s failed to initialize Redis", pkgConst.Warn)
+			return err
+		}
+		b.deps.rd = rd
+		return nil
+	}
+	if err := retry.Do(fn, retry.Strategy(*b.deps.rs)); err != nil {
+		return fmt.Errorf("initialize Redis, port: %d: %w", b.cfg.rd.Port, err)
+	}
 
-// 	b.lg.Debug().Msgf("%s Redis has been initialized", pkgConst.Info)
-// 	b.deps.rd = rd
-// 	b.rm.addResource(resource{
-// 		name:      "Redis client",
-// 		closeFunc: func() error { return b.deps.rd.Close() },
-// 	})
-// 	return nil
-// }
+	b.lg.Debug().Msgf("%s Redis has been initialized", pkgConst.Info)
+	b.rm.addResource(resource{
+		name:      "Redis client",
+		closeFunc: func() error { return b.deps.rd.Close() },
+	})
+	return nil
+}
+
+func (b *dependencyBuilder) InitPostgres() error {
+	fn := func() error {
+		pg, err := pkgPostgres.New(b.cfg.pg)
+		if err != nil {
+			b.lg.Warn().Err(err).Int("port", b.cfg.pg.Master.Port).Msgf("%s failed to initialize Postgres", pkgConst.Warn)
+			return err
+		}
+		b.deps.pg = pg
+		return nil
+	}
+	if err := retry.Do(fn, retry.Strategy(*b.deps.rs)); err != nil {
+		return fmt.Errorf("initialize Postgres, port: %d: %w", b.cfg.pg.Master.Port, err)
+	}
+
+	b.lg.Debug().Msgf("%s Postgres has been initialized", pkgConst.Info)
+	b.rm.addResource(resource{
+		name:      "Postgres",
+		closeFunc: func() error { return b.deps.pg.Close() },
+	})
+	return nil
+}
 
 func (b *dependencyBuilder) initRepository() error {
-	rp, err := repository.New()
+	rp, err := repository.New(b.deps.pg)
 	if err != nil {
-		return pkgErrors.Wrap(err, "initialize repository")
+		return fmt.Errorf("initialize repository: %w", err)
 	}
 	b.lg.Debug().Msgf("%s repository has been initialized", pkgConst.Info)
 	b.deps.rp = rp
@@ -109,9 +133,9 @@ func (b *dependencyBuilder) build() (*dependencies, *resourceManager, error) {
 		return nil, b.rm, err
 	}
 	b.InitRetry()
-	// if err := b.initRedis(); err != nil {
-	// 	return nil, b.rm, err
-	// }
+	if err := b.initRedis(); err != nil {
+		return nil, b.rm, err
+	}
 	if err := b.initRepository(); err != nil {
 		return nil, b.rm, err
 	}
