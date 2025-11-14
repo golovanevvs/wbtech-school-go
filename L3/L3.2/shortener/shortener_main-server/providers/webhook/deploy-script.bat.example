@@ -1,0 +1,39 @@
+@echo off
+echo ========================================
+echo    Starting Delayed Notifier Deployment
+echo    Time: %date% %time%
+echo ========================================
+echo.
+
+set VERSION=%~1
+if "%VERSION%"=="" (
+    echo No version specified, using 'latest'
+    set APP_VERSION=latest
+) else (
+    echo Deploying version: %VERSION%
+    set APP_VERSION=%VERSION%
+)
+
+echo Changing to project directory...
+cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.1\delayed-notifier\delayed-notifier_main-server\resources\deploy"
+
+echo Stopping existing containers...
+docker compose down
+
+echo Pulling image...
+docker compose pull
+
+echo Starting new containers with version: %APP_VERSION%
+docker compose -p delayed-notifier_main-server up -d
+
+echo.
+echo Checking container status...
+docker ps --filter "name=delayed-notifier_main-server"
+
+echo.
+echo ========================================
+echo    Deployment completed successfully!
+echo ========================================
+echo.
+
+ping -n 3 127.0.0.1 > nul

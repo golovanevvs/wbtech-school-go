@@ -41,7 +41,7 @@ export default function URLShortenerForm() {
     setError(null);
     setResult(null);
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    const apiBase = process.env.NEXT_PUBLIC_API_URL;
 
     try {
       const payload: { url: string; custom_code?: string } = {

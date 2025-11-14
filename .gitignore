@@ -39,3 +39,4 @@ node_modules
 **/resources/data/
 /L3/L3.1/delayed-notifier/delayed-notifier_main-server/providers/webhook/hooks.json
 /L3/L3.1/delayed-notifier/delayed-notifier_main-server/resources/deploy
+/L3/L3.2/shortener/shortener_web-client/.env.local

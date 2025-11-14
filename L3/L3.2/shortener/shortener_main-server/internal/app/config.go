@@ -15,6 +15,7 @@ type Config struct {
 	lg *pkgLogger.Config
 	rs *pkgRetry.Config
 	rd *pkgRedis.Config
+	// postgres *
 	tr *transport.Config
 }
 
@@ -62,12 +63,6 @@ func (a *Config) String() string {
 		return "appConfig: <nil>"
 	}
 	return fmt.Sprintf(`%s Configuration:
-%s %s
-
-%s %s
-
-%s %s
-
 %s %s
 
 %s %s

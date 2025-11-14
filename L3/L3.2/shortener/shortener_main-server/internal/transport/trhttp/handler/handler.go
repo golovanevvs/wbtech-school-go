@@ -5,15 +5,14 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgPrometheus"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/transport/trhttp/handler/addShortURL"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/transport/trhttp/handler/healthHandler"
 	"github.com/wb-go/wbf/ginext"
 	"github.com/wb-go/wbf/zlog"
 )
 
 type IService interface {
-	// addNoticeHandler.IService
-	// deleteNoticeHandler.IService
-	// getStatusHandler.IService
-	// telegramHandler.IService
+	addShortURL.IAddShortURLService
 }
 
 type Handler struct {
@@ -21,7 +20,7 @@ type Handler struct {
 }
 
 func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, webPublicHost string) *Handler {
-	// lg := parentLg.With().Str("component", "handler").Logger()
+	lg := parentLg.With().Str("component", "handler").Logger()
 
 	rt := ginext.New(cfg.GinMode)
 
@@ -44,20 +43,11 @@ func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, we
 		Rt: rt,
 	}
 
-	// addNoticeHandler := addNoticeHandler.New(&lg, rt, sv)
-	// addNoticeHandler.RegisterRoutes()
+	addShortURLHandler := addShortURL.New(&lg, rt, sv)
+	addShortURLHandler.RegisterRoutes()
 
-	// deleteNoticeHandler := deleteNoticeHandler.New(&lg, rt, sv)
-	// deleteNoticeHandler.RegisterRoutes()
-
-	// getStatusHandler := getStatusHandler.New(&lg, rt, sv)
-	// getStatusHandler.RegisterRoutes()
-
-	// telegramHandler := telegramHandler.New(&lg, rt, sv)
-	// telegramHandler.RegisterRoutes()
-
-	// healthHandler := healthHandler.New(&lg, rt)
-	// healthHandler.RegisterRoutes()
+	healthHandler := healthHandler.New(&lg, rt)
+	healthHandler.RegisterRoutes()
 
 	return hd
 }

@@ -2,25 +2,18 @@ package app
 
 import (
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgConst"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgEmail"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgErrors"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRabbitmq"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRedis"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRetry"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgTelegram"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/service"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/transport"
-	"github.com/wb-go/wbf/retry"
 	"github.com/wb-go/wbf/zlog"
 )
 
 type dependencies struct {
 	rs *pkgRetry.Retry
-	rd *pkgRedis.Client
-	rb *pkgRabbitmq.Client
-	tg *pkgTelegram.Client
-	em *pkgEmail.Client
+	postgres
+	// rd *pkgRedis.Client
 	rp *repository.Repository
 	sv *service.Service
 	tr *transport.Transport
@@ -66,32 +59,32 @@ func (b *dependencyBuilder) InitRetry() {
 	b.deps.rs = pkgRetry.New(b.cfg.rs)
 }
 
-func (b *dependencyBuilder) initRedis() error {
-	var rd *pkgRedis.Client
-	var err error
-	fn := func() error {
-		rd, err = pkgRedis.New(b.cfg.rd)
-		if err != nil {
-			b.lg.Warn().Err(err).Int("port", b.cfg.rd.Port).Msgf("%s failed to initialize Redis", pkgConst.Warn)
-			return err
-		}
-		return nil
-	}
-	if err := retry.Do(fn, retry.Strategy(*b.deps.rs)); err != nil {
-		return pkgErrors.Wrapf(err, "initialize Redis, port: %d, attempts: %d", b.cfg.rd.Port, b.cfg.rs.Attempts)
-	}
+// func (b *dependencyBuilder) initRedis() error {
+// 	var rd *pkgRedis.Client
+// 	var err error
+// 	fn := func() error {
+// 		rd, err = pkgRedis.New(b.cfg.rd)
+// 		if err != nil {
+// 			b.lg.Warn().Err(err).Int("port", b.cfg.rd.Port).Msgf("%s failed to initialize Redis", pkgConst.Warn)
+// 			return err
+// 		}
+// 		return nil
+// 	}
+// 	if err := retry.Do(fn, retry.Strategy(*b.deps.rs)); err != nil {
+// 		return pkgErrors.Wrapf(err, "initialize Redis, port: %d, attempts: %d", b.cfg.rd.Port, b.cfg.rs.Attempts)
+// 	}
 
-	b.lg.Debug().Msgf("%s Redis has been initialized", pkgConst.Info)
-	b.deps.rd = rd
-	b.rm.addResource(resource{
-		name:      "Redis client",
-		closeFunc: func() error { return b.deps.rd.Close() },
-	})
-	return nil
-}
+// 	b.lg.Debug().Msgf("%s Redis has been initialized", pkgConst.Info)
+// 	b.deps.rd = rd
+// 	b.rm.addResource(resource{
+// 		name:      "Redis client",
+// 		closeFunc: func() error { return b.deps.rd.Close() },
+// 	})
+// 	return nil
+// }
 
 func (b *dependencyBuilder) initRepository() error {
-	rp, err := repository.New(b.deps.rd)
+	rp, err := repository.New()
 	if err != nil {
 		return pkgErrors.Wrap(err, "initialize repository")
 	}
@@ -101,7 +94,7 @@ func (b *dependencyBuilder) initRepository() error {
 }
 
 func (b *dependencyBuilder) initService() {
-	sv := service.New(b.deps.rs, b.deps.rp, b.deps.rb, b.deps.tg, b.deps.em)
+	sv := service.New(b.deps.rs, b.deps.rp)
 	b.lg.Debug().Msgf("%s service has been initialized", pkgConst.Info)
 	b.deps.sv = sv
 }
@@ -116,9 +109,9 @@ func (b *dependencyBuilder) build() (*dependencies, *resourceManager, error) {
 		return nil, b.rm, err
 	}
 	b.InitRetry()
-	if err := b.initRedis(); err != nil {
-		return nil, b.rm, err
-	}
+	// if err := b.initRedis(); err != nil {
+	// 	return nil, b.rm, err
+	// }
 	if err := b.initRepository(); err != nil {
 		return nil, b.rm, err
 	}
