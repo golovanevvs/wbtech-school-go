@@ -5,6 +5,7 @@ import ThemeProvider from "@/app/ui/ThemeProvider"
 import styles from "./page.module.css"
 import ThemeToggle from "./ui/ThemeToggle"
 import Footer from "./ui/Footer"
+import Header from "./ui/Header"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,6 +36,7 @@ export default function RootLayout({
         <AppRouterCacheProvider>
           <ThemeProvider>
             <ThemeToggle />
+            <Header />
             <main className={styles.page}>{children}</main>
             <Footer />
           </ThemeProvider>

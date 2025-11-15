@@ -13,7 +13,7 @@ export default function Header() {
         mb: 4,
       }}
     >
-      Delayed notifier
+      Shortener
     </Typography>
   )
 }

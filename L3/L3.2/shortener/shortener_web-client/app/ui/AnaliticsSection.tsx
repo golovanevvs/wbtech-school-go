@@ -46,6 +46,15 @@ function Row(props: { row: AnalyticsData['clicks'][0] }) {
         <TableCell>
           {row.user_agent.length > 50 ? `${row.user_agent.substring(0, 50)}...` : row.user_agent}
         </TableCell>
+        <TableCell
+          sx={{
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
+            maxWidth: { xs: "150px", sm: "200px" },
+          }}
+        >
+          {row.user_agent}
+        </TableCell>
       </TableRow>
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
@@ -88,7 +97,7 @@ export default function AnalyticsSection() {
     setError(null);
     setAnalytics(null);
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    const apiBase = process.env.NEXT_PUBLIC_API_URL;
     const shortCode = data.shortCode.trim();
 
     if (!shortCode) {

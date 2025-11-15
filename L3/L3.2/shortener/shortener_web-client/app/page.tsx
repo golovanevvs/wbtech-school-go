@@ -10,9 +10,9 @@ export default function Home() {
       disableGutters
       sx={{
         width: "100%",
-        maxWidth: 800,
-        mx: "auto", // центрирование
-        px: { xs: 2, sm: 3 },
+        maxWidth: 600,
+        mx: "auto",
+        px: { xs: 0, sm: 2 },
         py: 2,
         bgcolor: "background.default",
       }}
