@@ -2,17 +2,25 @@ package rpPostgres
 
 import (
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgPostgres"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRetry"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository/rpPostgres/loadAnalytics"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository/rpPostgres/loadOriginalURL"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository/rpPostgres/saveClickEvent"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository/rpPostgres/saveShortURL"
-	"github.com/wb-go/wbf/zlog"
 )
 
 type RpPostgres struct {
 	*saveShortURL.RpPostgresSaveShortURL
+	*loadOriginalURL.RpPostgresLoadOriginalURL
+	*saveClickEvent.RpPostgresSaveClickEvent
+	*loadAnalytics.RpPostgresLoadAnalytics
 }
 
-func New(parentLg *zlog.Zerolog, pg *pkgPostgres.Postgres) *RpPostgres {
-	lg := parentLg.With().Str("component", "RpPostgres").Logger()
+func New(pg *pkgPostgres.Postgres, rs *pkgRetry.Retry) *RpPostgres {
 	return &RpPostgres{
-		RpPostgresSaveShortURL: saveShortURL.New(&lg, pg),
+		RpPostgresSaveShortURL:    saveShortURL.New(pg, rs),
+		RpPostgresLoadOriginalURL: loadOriginalURL.New(pg, rs),
+		RpPostgresLoadAnalytics:   loadAnalytics.New(pg, rs),
+		RpPostgresSaveClickEvent:  saveClickEvent.New(pg, rs),
 	}
 }

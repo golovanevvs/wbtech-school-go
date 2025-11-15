@@ -1,0 +1,19 @@
+services:
+  web-client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: https://${PUBLIC_HOST_DOCKER}/${APP_CONTAINER}
+    container_name: ${WEB_CLIENT_CONTAINER}
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=${PORT}
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

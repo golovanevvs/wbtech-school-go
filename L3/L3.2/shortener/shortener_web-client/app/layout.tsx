@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Delayed notifier",
-  description: "Delayed notifier",
+  title: "Shortener",
+  description: "Shortener",
 }
 
 export default function RootLayout({

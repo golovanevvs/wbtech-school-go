@@ -28,4 +28,4 @@ COPY --from=builder /app/$APP_NAME .
 
 COPY --from=builder /app/providers ./providers/
 
-ENTRYPOINT ["/root/delayed-notifier_main-server"]
+ENTRYPOINT ["/root/shortener_main-server"]

@@ -1,4 +1,3 @@
-// app/ui/AnalyticsSection.tsx
 "use client";
 
 import { useState } from "react";
@@ -23,25 +22,13 @@ import {
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { AnalyticsData } from "@/app/lib/types";
 
 interface AnalyticsFormValues {
   shortCode: string;
 }
 
-interface ClickEvent {
-  id: number;
-  created_at: string;
-  user_agent: string;
-  ip: string;
-  referer: string;
-}
-
-interface AnalyticsData {
-  total_clicks: number;
-  clicks: ClickEvent[];
-}
-
-function Row(props: { row: ClickEvent }) {
+function Row(props: { row: AnalyticsData['clicks'][0] }) {
   const { row } = props;
   const [open, setOpen] = useState(false);
 
@@ -71,10 +58,6 @@ function Row(props: { row: ClickEvent }) {
                 <Box display="flex" justifyContent="space-between">
                   <Typography variant="body2" color="text.secondary">IP:</Typography>
                   <Typography variant="body2">{row.ip || "Неизвестен"}</Typography>
-                </Box>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">Referer:</Typography>
-                  <Typography variant="body2">{row.referer || "Неизвестен"}</Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between">
                   <Typography variant="body2" color="text.secondary">User Agent:</Typography>
@@ -176,7 +159,7 @@ export default function AnalyticsSection() {
           <Typography variant="h6" gutterBottom>
             Всего переходов: <Chip label={analytics.total_clicks} color="primary" />
           </Typography>
-          {analytics.clicks.length > 0 ? (
+          {analytics.clicks && Array.isArray(analytics.clicks) && analytics.clicks.length > 0 ? (
             <TableContainer>
               <Table size="small">
                 <TableHead>

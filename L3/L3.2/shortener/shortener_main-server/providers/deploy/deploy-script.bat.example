@@ -1,12 +1,12 @@
 @echo off
-echo ======================================================
-echo    Starting delayed-notifier_main-server deployment
+echo ===============================================
+echo    Starting shortener_main-server deployment
 echo    Time: %date% %time%
-echo ======================================================
+echo ===============================================
 echo.
 
 echo Changing to project directory...
-cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.1\delayed-notifier\delayed-notifier_main-server\providers\deploy"
+cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.2\shortener\shortener_main-server\providers\deploy"
 
 echo Stopping existing containers...
 docker compose down
@@ -15,11 +15,11 @@ echo Pulling latest image...
 docker compose pull
 
 echo Starting new containers...
-docker compose -p delayed-notifier_main-server up -d
+docker compose -p shortener_main-server up -d
 
 echo.
 echo Checking container status...
-docker ps --filter "name=delayed-notifier_main-server"
+docker ps --filter "name=shortener_main-server"
 
 echo.
 echo ========================================

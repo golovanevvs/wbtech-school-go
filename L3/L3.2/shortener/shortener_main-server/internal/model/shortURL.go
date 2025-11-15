@@ -4,7 +4,7 @@ import "time"
 
 type ShortURL struct {
 	ID        int
-	Original  string `validate:"required,url"`
+	Original  string
 	Short     string
 	Custom    bool
 	CreatedAt time.Time

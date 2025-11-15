@@ -2,6 +2,7 @@ package addShortURL
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -50,13 +51,30 @@ func (hd *Handler) AddShortURL(c *ginext.Context) {
 		return
 	}
 
-	id, shortURL, err := hd.svAddShortURL.AddShortURL(c.Request.Context(), req.Original, req.Short)
+	id, short, err := hd.svAddShortURL.AddShortURL(c.Request.Context(), req.Original, req.Short)
 	if err != nil {
 		lg.Error().Err(err).Int("status", http.StatusInternalServerError).Msgf("%s failed to add short URL", pkgConst.Error)
 		c.JSON(http.StatusInternalServerError, response{Error: err.Error()})
 		return
 	}
-	lg.Debug().Int("ID", id).Str("original", req.Original).Str("shortURL", shortURL).Msgf("%s short URL added successfully", pkgConst.OpSuccess)
 
-	c.JSON(http.StatusOK, response{ShortURL: shortURL})
+	fullShortURL := fmt.Sprintf("%s/s/%s", getBaseURL(c), short)
+
+	lg.Debug().Int("ID", id).Str("original", req.Original).Str("shortURL", short).Msgf("%s short URL added successfully", pkgConst.OpSuccess)
+
+	c.JSON(http.StatusOK, response{Short: fullShortURL})
+}
+
+func getBaseURL(c *ginext.Context) string {
+	proto := c.GetHeader("X-Forwarded-Proto")
+	if proto == "" {
+		proto = "http"
+	}
+
+	host := c.GetHeader("X-Forwarded-Host")
+	if host == "" {
+		host = c.Request.Host
+	}
+
+	return fmt.Sprintf("%s://%s", proto, host)
 }

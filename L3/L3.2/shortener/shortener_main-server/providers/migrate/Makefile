@@ -2,7 +2,7 @@ MAKEFLAGS += --no-print-directory
 
 PROJECT_DIR := $(abspath ../..)
 
-ENV_FILE ?= $(PROJECT_DIR)/.env
+ENV_FILE ?= $(PROJECT_DIR)/providers/postgres/.env
 ifneq (,$(wildcard $(ENV_FILE)))
 include $(ENV_FILE)
 export

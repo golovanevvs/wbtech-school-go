@@ -108,7 +108,7 @@ func (b *dependencyBuilder) InitPostgres() error {
 }
 
 func (b *dependencyBuilder) initRepository() error {
-	rp, err := repository.New(b.deps.pg)
+	rp, err := repository.New(b.deps.pg, b.deps.rs)
 	if err != nil {
 		return fmt.Errorf("initialize repository: %w", err)
 	}
@@ -134,6 +134,9 @@ func (b *dependencyBuilder) build() (*dependencies, *resourceManager, error) {
 	}
 	b.InitRetry()
 	if err := b.initRedis(); err != nil {
+		return nil, b.rm, err
+	}
+	if err := b.InitPostgres(); err != nil {
 		return nil, b.rm, err
 	}
 	if err := b.initRepository(); err != nil {

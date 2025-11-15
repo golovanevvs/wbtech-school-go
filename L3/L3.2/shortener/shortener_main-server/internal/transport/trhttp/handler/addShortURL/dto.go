@@ -6,6 +6,6 @@ type request struct {
 }
 
 type response struct {
-	ShortURL string `json:"short_url,omitempty"`
-	Error    string `json:"error,omitempty"`
+	Short string `json:"short,omitempty"`
+	Error string `json:"error,omitempty"`
 }

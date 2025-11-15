@@ -1,4 +1,3 @@
-// app/ui/URLShortenerForm.tsx
 "use client";
 
 import { useState } from "react";
@@ -11,7 +10,6 @@ import {
   Typography,
   Box,
   Alert,
-  InputAdornment,
   IconButton,
   Link,
 } from "@mui/material";
@@ -41,15 +39,15 @@ export default function URLShortenerForm() {
     setError(null);
     setResult(null);
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL;
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
     try {
-      const payload: { url: string; custom_code?: string } = {
-        url: data.originalUrl,
+      const payload: { original: string; short?: string } = {
+        original: data.originalUrl,
       };
 
       if (data.customCode.trim()) {
-        payload.custom_code = data.customCode.trim();
+        payload.short = data.customCode.trim();
       }
 
       const response = await fetch(`${apiBase}/shorten`, {
@@ -66,7 +64,7 @@ export default function URLShortenerForm() {
       }
 
       const resData = await response.json();
-      const shortUrl = `${window.location.origin}/s/${resData.short_code}`;
+      const shortUrl = resData.short;
       setResult({ shortUrl, originalUrl: data.originalUrl });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Неизвестная ошибка";

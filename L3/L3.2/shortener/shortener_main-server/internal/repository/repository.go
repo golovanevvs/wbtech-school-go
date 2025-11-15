@@ -2,18 +2,17 @@ package repository
 
 import (
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgPostgres"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRetry"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository/rpPostgres"
-	"github.com/wb-go/wbf/zlog"
 )
 
 type Repository struct {
 	*rpPostgres.RpPostgres
 }
 
-func New(pg *pkgPostgres.Postgres) (*Repository, error) {
-	lg := zlog.Logger.With().Str("layer", "repository").Logger()
+func New(pg *pkgPostgres.Postgres, rs *pkgRetry.Retry) (*Repository, error) {
 	return &Repository{
-		RpPostgres: rpPostgres.New(&lg, pg),
+		RpPostgres: rpPostgres.New(pg, rs),
 	}, nil
 
 }
