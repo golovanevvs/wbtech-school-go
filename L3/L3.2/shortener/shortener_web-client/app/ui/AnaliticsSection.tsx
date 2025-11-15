@@ -10,75 +10,12 @@ import {
   Typography,
   Box,
   Alert,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Chip,
-  Collapse,
-  IconButton,
 } from "@mui/material";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { AnalyticsData } from "@/app/lib/types";
 
 interface AnalyticsFormValues {
   shortCode: string;
-}
-
-function Row(props: { row: AnalyticsData['clicks'][0] }) {
-  const { row } = props;
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <TableRow sx={{ "& > *": { borderBottom: "unset" } }}>
-        <TableCell>
-          <IconButton size="small" onClick={() => setOpen(!open)}>
-            {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-          </IconButton>
-        </TableCell>
-        <TableCell component="th" scope="row">
-          {new Date(row.created_at).toLocaleString()}
-        </TableCell>
-        <TableCell>
-          {row.user_agent.length > 50 ? `${row.user_agent.substring(0, 50)}...` : row.user_agent}
-        </TableCell>
-        <TableCell
-          sx={{
-            wordBreak: "break-word",
-            overflowWrap: "break-word",
-            maxWidth: { xs: "150px", sm: "200px" },
-          }}
-        >
-          {row.user_agent}
-        </TableCell>
-      </TableRow>
-      <TableRow>
-        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-          <Collapse in={open} timeout="auto" unmountOnExit>
-            <Box sx={{ margin: 1 }}>
-              <Typography variant="h6" gutterBottom component="div">
-                Детали
-              </Typography>
-              <Stack spacing={1}>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">IP:</Typography>
-                  <Typography variant="body2">{row.ip || "Неизвестен"}</Typography>
-                </Box>
-                <Box display="flex" justifyContent="space-between">
-                  <Typography variant="body2" color="text.secondary">User Agent:</Typography>
-                  <Typography variant="body2">{row.user_agent}</Typography>
-                </Box>
-              </Stack>
-            </Box>
-          </Collapse>
-        </TableCell>
-      </TableRow>
-    </>
-  );
 }
 
 export default function AnalyticsSection() {
@@ -169,22 +106,29 @@ export default function AnalyticsSection() {
             Всего переходов: <Chip label={analytics.total_clicks} color="primary" />
           </Typography>
           {analytics.clicks && Array.isArray(analytics.clicks) && analytics.clicks.length > 0 ? (
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell />
-                    <TableCell>Дата и время</TableCell>
-                    <TableCell>User Agent</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {analytics.clicks.map((click) => (
-                    <Row key={click.id} row={click} />
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <Stack spacing={2}>
+              {analytics.clicks.map((click) => (
+                <Paper key={click.id} sx={{ p: 2 }}>
+                  <Box sx={{ mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary">Дата и время</Typography>
+                    <Typography variant="body1">{new Date(click.created_at).toLocaleString()}</Typography>
+                  </Box>
+                  <Box sx={{ mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary">User Agent</Typography>
+                    <Typography variant="body1" sx={{
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                    }}>
+                      {click.user_agent}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary">IP</Typography>
+                    <Typography variant="body1">{click.ip || "Неизвестен"}</Typography>
+                  </Box>
+                </Paper>
+              ))}
+            </Stack>
           ) : (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Нет данных о переходах.
