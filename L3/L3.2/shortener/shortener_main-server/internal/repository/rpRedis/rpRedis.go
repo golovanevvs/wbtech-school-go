@@ -1,33 +1,31 @@
 package rpRedis
 
-// import (
-// 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRedis"
-// 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository/rpRedis/rpRedisDeleteNotice"
-// 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository/rpRedis/rpRedisLoadNotice"
-// 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository/rpRedis/rpRedisLoadTelChatID"
-// 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository/rpRedis/rpRedisSaveNotice"
-// 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository/rpRedis/rpRedisSaveTelChatID"
-// 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/repository/rpRedis/rpRedisUpdateNotice"
-// 	"github.com/wb-go/wbf/zlog"
-// )
+import (
+	"context"
+	"errors"
 
-// type RpRedis struct {
-// 	*rpRedisSaveNotice.RpRedisSaveNotice
-// 	*rpRedisLoadNotice.RpRedisLoadNotice
-// 	*rpRedisDeleteNotice.RpRedisDeleteNotice
-// 	*rpRedisUpdateNotice.RpRedisUpdateNotice
-// 	*rpRedisSaveTelChatID.RpRedisSaveChatID
-// 	*rpRedisLoadTelChatID.RpRedisLoadTelChatID
-// }
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgErrors"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRedis"
+	"github.com/redis/go-redis/v9"
+)
 
-// func New(parentLg *zlog.Zerolog, rd *pkgRedis.Client) *RpRedis {
-// 	lg := parentLg.With().Str("component", "RpRedis").Logger()
-// 	return &RpRedis{
-// 		RpRedisSaveNotice:    rpRedisSaveNotice.New(&lg, rd),
-// 		RpRedisLoadNotice:    rpRedisLoadNotice.New(&lg, rd),
-// 		RpRedisDeleteNotice:  rpRedisDeleteNotice.New(&lg, rd),
-// 		RpRedisUpdateNotice:  rpRedisUpdateNotice.New(&lg, rd),
-// 		RpRedisSaveChatID:    rpRedisSaveTelChatID.New(&lg, rd),
-// 		RpRedisLoadTelChatID: rpRedisLoadTelChatID.New(&lg, rd),
-// 	}
-// }
+type RpRedis struct {
+	client *pkgRedis.Client
+}
+
+func New(rd *pkgRedis.Client) *RpRedis {
+	return &RpRedis{
+		client: rd,
+	}
+}
+
+func (rd *RpRedis) GetOriginalURL(ctx context.Context, short string) (string, error) {
+	url, err := rd.client.Get(ctx, "url:"+short)
+	if errors.Is(err, redis.Nil) {
+		return "", nil
+	}
+	if err != nil {
+		return "", pkgErrors.Wrap(err, "get original URL from Redis")
+	}
+	return url, nil
+}
