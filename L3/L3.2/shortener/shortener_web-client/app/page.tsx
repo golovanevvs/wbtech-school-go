@@ -3,6 +3,7 @@
 import { Container, Stack } from "@mui/material"
 import URLShortenerForm from "./ui/URLShortenerForm"
 import AnalyticsSection from "./ui/AnaliticsSection"
+import Header from "./ui/Header"
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
       }}
     >
       <Stack spacing={4}>
+        <Header />
         <URLShortenerForm />
         <AnalyticsSection />
       </Stack>

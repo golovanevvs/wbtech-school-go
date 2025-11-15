@@ -14,8 +14,9 @@ export const FieldRow = ({ label, value, statusColor }: FieldRowProps) => {
     <Box
       sx={{
         display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
         mb: 1,
-        alignItems: "center",
+        alignItems: "flex-start",
       }}
     >
       <Box
@@ -23,6 +24,7 @@ export const FieldRow = ({ label, value, statusColor }: FieldRowProps) => {
           fontWeight: "bold",
           minWidth: "100px",
           color: "primary.main",
+          mb: { xs: 0.5, sm: 0 },
         }}
       >
         {label}:

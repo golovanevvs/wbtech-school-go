@@ -78,6 +78,15 @@ export default function URLShortenerForm() {
     navigator.clipboard.writeText(text);
   };
 
+  const getShortCode = (fullUrl: string): string => {
+  try {
+    const url = new URL(fullUrl);
+    return url.pathname.split('/').pop() || '';
+  } catch {
+    return '';
+  }
+};
+
   return (
     <Paper>
       <Typography variant="h2" sx={{ textAlign: "center", color: "primary.dark", mb: 3 }}>
@@ -132,16 +141,25 @@ export default function URLShortenerForm() {
           <FieldRow
             label="Короткая ссылка"
             value={
-              <Box display="flex" alignItems="center">
-                <Link href={result.shortUrl} target="_blank" rel="noopener noreferrer" sx={{ mr: 1 }}>
+              <Box>
+                <Link href={result.shortUrl} target="_blank" rel="noopener noreferrer" sx={{ display: "block", mb: 1 }}>
                   {result.shortUrl}
                 </Link>
-                <IconButton size="small" onClick={() => handleCopy(result.shortUrl)}>
-                  <ContentCopyIcon fontSize="small" />
-                </IconButton>
-                <IconButton size="small" href={result.shortUrl} target="_blank" rel="noopener noreferrer">
-                  <OpenInNewIcon fontSize="small" />
-                </IconButton>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  <IconButton size="small" onClick={() => handleCopy(result.shortUrl)}>
+                    <ContentCopyIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" href={result.shortUrl} target="_blank" rel="noopener noreferrer">
+                    <OpenInNewIcon fontSize="small" />
+                  </IconButton>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => handleCopy(getShortCode(result.shortUrl))}
+                  >
+                    Скопировать код
+                  </Button>
+                </Box>
               </Box>
             }
           />
