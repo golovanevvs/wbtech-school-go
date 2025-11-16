@@ -1,5 +1,5 @@
 services:
-  delayed-notifier_main-server:
+  shortener_main-server:
     image: ghcr.io/golovanevvs/shortener_main-server:${APP_VERSION:-latest}
     container_name: ${APP_CONTAINER}
     environment:
