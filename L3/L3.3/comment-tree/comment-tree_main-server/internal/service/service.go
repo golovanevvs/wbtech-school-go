@@ -1,32 +1,52 @@
 package service
 
 import (
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRetry"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/service/addClickEvent"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/service/addShortURL"
-	getAnalytics "github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/service/getAnalitycs"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/service/getOriginalURL"
+	"context"
+
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/model"
 )
 
 type iRepository interface {
-	addShortURL.ISaveShortURLRepository
-	getOriginalURL.ILoadOriginalURLRepository
-	getAnalytics.ILoadAnalyticsRepository
-	addClickEvent.ISaveClickEventRepository
+	Save(ctx context.Context, comment *model.Comment) error
+	LoadByID(ctx context.Context, id int) (*model.Comment, error)
+	LoadChildren(ctx context.Context, parentID *int) ([]*model.Comment, error)
+	Delete(ctx context.Context, id int) error
+	Search(ctx context.Context, q string) ([]*model.Comment, error)
 }
 
 type Service struct {
-	*addShortURL.AddShortURLService
-	*getOriginalURL.GetOriginalURLService
-	*addClickEvent.AddClickEventService
-	*getAnalytics.GetAnalyticsService
+	rp iRepository
 }
 
-func New(rs *pkgRetry.Retry, rp iRepository) *Service {
-	return &Service{
-		AddShortURLService:    addShortURL.New(rp),
-		GetOriginalURLService: getOriginalURL.New(rp),
-		GetAnalyticsService:   getAnalytics.New(rp),
-		AddClickEventService:  addClickEvent.New(rp),
+func New(rp iRepository) *Service {
+	return &Service{rp: rp}
+}
+
+func (s *Service) AddComment(ctx context.Context, comment *model.Comment) error {
+	return s.rp.Save(ctx, comment)
+}
+
+func (s *Service) GetCommentsTree(ctx context.Context, parentID *int) ([]*model.Comment, error) {
+	comments, err := s.rp.LoadChildren(ctx, parentID)
+	if err != nil {
+		return nil, err
 	}
+
+	for _, comment := range comments {
+		children, err := s.GetCommentsTree(ctx, &comment.ID)
+		if err != nil {
+			return nil, err
+		}
+		comment.Children = children
+	}
+
+	return comments, nil
+}
+
+func (s *Service) RemoveComment(ctx context.Context, id int) error {
+	return s.rp.Delete(ctx, id)
+}
+
+func (s *Service) FindComments(ctx context.Context, query string) ([]*model.Comment, error) {
+	return s.rp.Search(ctx, query)
 }

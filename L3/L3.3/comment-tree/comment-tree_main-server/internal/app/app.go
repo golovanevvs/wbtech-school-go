@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgConst"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/pkg/pkgConst"
 	"github.com/wb-go/wbf/zlog"
 )
 

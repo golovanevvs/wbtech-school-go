@@ -1,6 +1,6 @@
 services:
   delayed-notifier_main-server:
-    image: ghcr.io/golovanevvs/shortener_main-server:${APP_VERSION:-latest}
+    image: ghcr.io/golovanevvs/comment-tree_main-server:${APP_VERSION:-latest}
     container_name: ${APP_CONTAINER}
     environment:
       - ENV=prod
@@ -13,13 +13,10 @@ services:
       - POSTGRES_MASTER_PORT=${POSTGRES_MASTER_PORT}
       - POSTGRES_MASTER_HOST=${POSTGRES_MASTER_HOST}
       - POSTGRES_DB=${POSTGRES_DB}
-      - REDIS_HOST=host.docker.internal
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
     networks:
       - proxy
     ports:
-      - 7779:${APP_TRANSPORT_HTTP_PORT}
+      - 7781:${APP_TRANSPORT_HTTP_PORT}
 
 networks:
   proxy:

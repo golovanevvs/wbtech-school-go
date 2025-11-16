@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Paper, Stack, TextField, Button, Alert } from "@mui/material";
+import { useCommentContext } from "@/app/lib/CommentContext";
 
 interface CommentFormValues {
   text: string;
@@ -11,6 +12,7 @@ interface CommentFormValues {
 export default function CommentForm({ parentId }: { parentId: number | null }) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { fetchComments } = useCommentContext();
 
   const form = useForm<CommentFormValues>({
     defaultValues: { text: "" },
@@ -42,7 +44,7 @@ export default function CommentForm({ parentId }: { parentId: number | null }) {
       }
 
       form.reset();
-      // Здесь можно вызвать обновление дерева комментариев
+      await fetchComments(); // Обновляем дерево
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Неизвестная ошибка";
       setError(msg);

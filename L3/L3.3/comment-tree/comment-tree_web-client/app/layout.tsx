@@ -5,6 +5,7 @@ import ThemeProvider from "@/app/ui/ThemeProvider";
 import styles from "./page.module.css";
 import ThemeToggle from "./ui/ThemeToggle";
 import Footer from "./ui/Footer";
+import { CommentProvider } from "./lib/CommentContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,9 +35,11 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AppRouterCacheProvider>
           <ThemeProvider>
-            <ThemeToggle />
-            <main className={styles.page}>{children}</main>
-            <Footer />
+            <CommentProvider>
+              <ThemeToggle />
+              <main className={styles.page}>{children}</main>
+              <Footer />
+            </CommentProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

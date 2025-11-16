@@ -6,15 +6,13 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/pkg/pkgPrometheus"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/transport/trhttp/handler/healthHandler"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/transport/trhttp/handler/mainHandlers"
 	"github.com/wb-go/wbf/ginext"
 	"github.com/wb-go/wbf/zlog"
 )
 
 type IService interface {
-	addShortURL.IAddShortURLService
-	getOriginalURL.IGetOriginalURLService
-	getOriginalURL.IAddClickEventService
-	getAnalytics.IGetAnalyticsService
+	mainHandlers.IService
 }
 
 type Handler struct {
@@ -45,14 +43,8 @@ func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, we
 		Rt: rt,
 	}
 
-	addShortURLHandler := addShortURL.New(&lg, rt, sv)
+	addShortURLHandler := mainHandlers.New(&lg, rt, sv)
 	addShortURLHandler.RegisterRoutes()
-
-	getOriginalURLHandler := getOriginalURL.New(&lg, rt, sv, sv)
-	getOriginalURLHandler.RegisterRoutes()
-
-	getAnalyticsHandler := getAnalytics.New(&lg, rt, sv)
-	getAnalyticsHandler.RegisterRoutes()
 
 	healthHandler := healthHandler.New(&lg, rt)
 	healthHandler.RegisterRoutes()

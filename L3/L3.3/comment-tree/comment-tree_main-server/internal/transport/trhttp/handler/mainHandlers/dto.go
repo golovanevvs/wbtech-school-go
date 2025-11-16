@@ -1,11 +1,16 @@
 package mainHandlers
 
 type request struct {
-	Original string `json:"original"`
-	Short    string `json:"short"`
+	ParentID *int   `json:"parent_id"`
+	Text     string `json:"text" binding:"required"`
 }
 
 type response struct {
-	Short string `json:"short,omitempty"`
-	Error string `json:"error,omitempty"`
+	ID        int         `json:"id,omitempty"`
+	ParentID  *int        `json:"parent_id,omitempty"`
+	Text      string      `json:"text,omitempty"`
+	CreatedAt string      `json:"created_at,omitempty"`
+	UpdatedAt *string     `json:"updated_at,omitempty"`
+	Children  []*response `json:"children,omitempty"`
+	Error     string      `json:"error,omitempty"`
 }

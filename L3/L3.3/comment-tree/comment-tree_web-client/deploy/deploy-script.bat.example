@@ -1,6 +1,6 @@
 @echo off
 echo ==============================================
-echo    Starting shortener_web-client deployment
+echo    Starting comment-tree_web-client deployment
 echo    Time: %date% %time%
 echo ==============================================
 echo.
@@ -15,7 +15,7 @@ if "%VERSION%"=="" (
 )
 
 echo Changing to project directory...
-cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.2\shortener\shortener_web-client\deploy"
+cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.3\comment-tree\comment-tree_web-client\deploy"
 
 echo Stopping existing containers...
 docker compose down
@@ -24,11 +24,11 @@ echo Pulling image...
 docker compose pull
 
 echo Starting new containers with version: %APP_VERSION%
-docker compose -p shortener_web-client up -d
+docker compose -p comment-tree_web-client up -d
 
 echo.
 echo Checking container status...
-docker ps --filter "name=shortener_web-client"
+docker ps --filter "name=comment-tree_web-client"
 
 echo.
 echo ========================================

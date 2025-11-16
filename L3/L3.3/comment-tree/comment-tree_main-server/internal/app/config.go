@@ -3,19 +3,17 @@ package app
 import (
 	"fmt"
 
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgConst"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgLogger"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgPostgres"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRedis"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgRetry"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/transport"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/pkg/pkgConst"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/pkg/pkgLogger"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/pkg/pkgPostgres"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/pkg/pkgRetry"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/transport"
 	"github.com/wb-go/wbf/config"
 )
 
 type Config struct {
 	lg *pkgLogger.Config
 	rs *pkgRetry.Config
-	rd *pkgRedis.Config
 	pg *pkgPostgres.Config
 	tr *transport.Config
 }
@@ -27,7 +25,6 @@ func newConfig(env string) (*Config, error) {
 		if err := cfg.LoadEnvFiles(
 			".env",
 			"providers/app/.env",
-			"providers/redis/.env",
 			"providers/postgres/.env",
 		); err != nil {
 			return nil, fmt.Errorf("failed to load env files: %w", err)
@@ -39,7 +36,6 @@ func newConfig(env string) (*Config, error) {
 	if err := cfg.LoadConfigFiles(
 		"providers/app/config.yaml",
 		"providers/logger/config.yaml",
-		"providers/redis/config.yaml",
 	); err != nil {
 		return nil, fmt.Errorf("failed to load config files: %w", err)
 	}
@@ -52,7 +48,6 @@ func newConfig(env string) (*Config, error) {
 	return &Config{
 		lg: pkgLogger.NewConfig(cfg),
 		rs: pkgRetry.NewConfig(cfg),
-		rd: pkgRedis.NewConfig(cfg),
 		pg: pkgPostgres.NewConfig(cfg),
 		tr: transport.NewConfig(cfg, env),
 	}, nil
@@ -70,13 +65,10 @@ func (a *Config) String() string {
 %s %s
 
 %s %s
-
-%s %s
 `,
 		pkgConst.Config,
 		pkgConst.Logger, a.lg.String(),
 		pkgConst.Retry, a.rs.String(),
-		pkgConst.Redis, a.rd.String(),
 		pkgConst.Postgres, a.pg.String(),
 		pkgConst.Transport, a.tr.String(),
 	)
