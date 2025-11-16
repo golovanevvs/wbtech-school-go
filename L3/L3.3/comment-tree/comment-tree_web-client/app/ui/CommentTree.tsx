@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { Stack } from "@mui/material";
-import CommentItem from "./CommentItem";
-import { useCommentContext } from "@/app/lib/CommentContext";
+import { useEffect } from "react"
+import { Stack } from "@mui/material"
+import CommentItem from "./CommentItem"
+import { useCommentContext } from "@/app/lib/CommentContext"
 
 export default function CommentTree() {
-  const { comments, fetchComments } = useCommentContext();
+  const { comments, fetchComments } = useCommentContext()
 
   useEffect(() => {
-    fetchComments();
-  }, [fetchComments]);
+    fetchComments()
+  }, [fetchComments])
 
   return (
     <Stack spacing={1}>
@@ -18,5 +18,5 @@ export default function CommentTree() {
         <CommentItem key={comment.id} comment={comment} />
       ))}
     </Stack>
-  );
+  )
 }

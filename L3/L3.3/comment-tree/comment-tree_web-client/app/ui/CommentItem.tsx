@@ -1,42 +1,51 @@
-import { useState } from "react";
-import { Paper, Typography, Box, IconButton, Stack, Divider } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import DeleteIcon from "@mui/icons-material/Delete";
-import ReplyIcon from "@mui/icons-material/Reply"; // <--- Добавили
-import CommentForm from "./CommentForm";
-import { Comment } from "@/app/lib/types";
-import { useCommentContext } from "@/app/lib/CommentContext";
+"use client"
+
+import { useState } from "react"
+import {
+  Paper,
+  Typography,
+  Box,
+  IconButton,
+  Stack,
+  Divider,
+} from "@mui/material"
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
+import ExpandLessIcon from "@mui/icons-material/ExpandLess"
+import DeleteIcon from "@mui/icons-material/Delete"
+import ReplyIcon from "@mui/icons-material/Reply" // <--- Добавили
+import CommentForm from "./CommentForm"
+import { Comment } from "@/app/lib/types"
+import { useCommentContext } from "@/app/lib/CommentContext"
 
 interface CommentItemProps {
-  comment: Comment;
-  depth?: number;
+  comment: Comment
+  depth?: number
 }
 
 export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
-  const [showReply, setShowReply] = useState(false);
-  const [deleted, setDeleted] = useState(false);
-  const [expanded, setExpanded] = useState(true);
-  const { fetchComments } = useCommentContext();
+  const [showReply, setShowReply] = useState(false)
+  const [deleted, setDeleted] = useState(false)
+  const [expanded, setExpanded] = useState(true)
+  const { fetchComments } = useCommentContext()
 
-  if (deleted) return null;
+  if (deleted) return null
 
   const handleDelete = async () => {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL;
+    const apiBase = process.env.NEXT_PUBLIC_API_URL
     try {
       const response = await fetch(`${apiBase}/comments/${comment.id}`, {
         method: "DELETE",
-      });
+      })
       if (response.ok) {
-        setDeleted(true);
-        await fetchComments();
+        setDeleted(true)
+        await fetchComments()
       } else {
-        alert("Ошибка при удалении");
+        alert("Ошибка при удалении")
       }
     } catch (err) {
-      alert("Ошибка сети при удалении");
+      alert("Ошибка сети при удалении")
     }
-  };
+  }
 
   return (
     <Paper
@@ -48,7 +57,11 @@ export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
         borderLeft: depth > 0 ? "2px solid #ccc" : "none",
       }}
     >
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="flex-start"
+      >
         <Box>
           <Typography variant="body2" color="textSecondary">
             {new Date(comment.created_at).toLocaleString()}
@@ -81,5 +94,5 @@ export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
         </Box>
       )}
     </Paper>
-  );
+  )
 }

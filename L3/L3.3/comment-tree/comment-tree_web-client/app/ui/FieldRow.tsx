@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { Box } from "@mui/material";
-import { ReactNode } from "react";
+import { Box } from "@mui/material"
+import { ReactNode } from "react"
 
 interface FieldRowProps {
-  label: string;
-  value: string | number | null | ReactNode;
-  statusColor?: string;
+  label: string
+  value: string | number | null | ReactNode
+  statusColor?: string
 }
 
 export const FieldRow = ({ label, value, statusColor }: FieldRowProps) => {
@@ -42,5 +42,5 @@ export const FieldRow = ({ label, value, statusColor }: FieldRowProps) => {
         {value}
       </Box>
     </Box>
-  );
-};
+  )
+}

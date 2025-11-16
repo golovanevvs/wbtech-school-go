@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { createTheme } from "@mui/material/styles";
-import { Geist } from "next/font/google";
+import { createTheme } from "@mui/material/styles"
+import { Geist } from "next/font/google"
 
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
-});
+})
 
 export const baseTheme = createTheme({
   typography: {
@@ -60,7 +60,7 @@ export const baseTheme = createTheme({
       },
     },
   },
-});
+})
 
 export const lightTheme = createTheme({
   ...baseTheme,
@@ -87,7 +87,7 @@ export const lightTheme = createTheme({
       paper: "#ffffff",
     },
   },
-});
+})
 
 export const darkTheme = createTheme({
   ...baseTheme,
@@ -114,4 +114,4 @@ export const darkTheme = createTheme({
       paper: "#2c1b2f",
     },
   },
-});
+})
