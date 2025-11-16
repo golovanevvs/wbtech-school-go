@@ -1,5 +1,5 @@
 services:
-  delayed-notifier_web-client:
+  shortener_web-client:
     image: ghcr.io/golovanevvs/shortener_web-client:${APP_VERSION:-latest}
     container_name: ${WEB_CLIENT_CONTAINER}
     environment:
