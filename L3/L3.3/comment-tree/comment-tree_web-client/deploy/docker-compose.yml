@@ -1,6 +1,6 @@
 services:
-  delayed-notifier_web-client:
-    image: ghcr.io/golovanevvs/shortener_web-client:${APP_VERSION:-latest}
+  comment-tree_web-client:
+    image: ghcr.io/golovanevvs/comment-tree_web-client:${APP_VERSION:-latest}
     container_name: ${WEB_CLIENT_CONTAINER}
     environment:
       - NODE_ENV=production
