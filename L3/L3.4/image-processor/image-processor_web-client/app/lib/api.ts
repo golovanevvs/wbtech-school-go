@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+
+import { Image } from "./types"
 
 export const uploadImage = async (file: File): Promise<{ id: string }> => {
   const formData = new FormData()
@@ -18,7 +20,7 @@ export const getImageStatus = async (id: string): Promise<Image> => {
 }
 
 export const deleteImage = async (id: string): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/image/{id}`, {
+  const res = await fetch(`${API_BASE_URL}/image/${id}`, {
     method: "DELETE",
   })
   if (!res.ok) throw new Error("Delete failed")

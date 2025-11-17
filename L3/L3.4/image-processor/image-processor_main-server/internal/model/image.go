@@ -15,6 +15,6 @@ type Image struct {
 	ID            int
 	Status        ImageStatus
 	OriginalPath  string
-	ProcessedPath string
+	ProcessedPath *string
 	CreatedAt     time.Time
 }

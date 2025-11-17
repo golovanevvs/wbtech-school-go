@@ -11,20 +11,20 @@ type ProcessImageMessage struct {
 	ImageID string `json:"image_id"`
 }
 
-type Kafka struct {
+type KafkaProducer struct {
 	producer *kafka.Producer
 	topic    string
 }
 
-func New(brokers []string, topic string) *Kafka {
+func NewProducer(brokers []string, topic string) *KafkaProducer {
 	producer := kafka.NewProducer(brokers, topic)
-	return &Kafka{
+	return &KafkaProducer{
 		producer: producer,
 		topic:    topic,
 	}
 }
 
-func (kq *Kafka) SendProcessTask(ctx context.Context, imageID string) error {
+func (kq *KafkaProducer) SendProcessTask(ctx context.Context, imageID string) error {
 	msg := ProcessImageMessage{
 		ImageID: imageID,
 	}
@@ -37,6 +37,6 @@ func (kq *Kafka) SendProcessTask(ctx context.Context, imageID string) error {
 	return kq.producer.Send(ctx, nil, value)
 }
 
-func (kq *Kafka) Close() error {
+func (kq *KafkaProducer) Close() error {
 	return kq.producer.Close()
 }

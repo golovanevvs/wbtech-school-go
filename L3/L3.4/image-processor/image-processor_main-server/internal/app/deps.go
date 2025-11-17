@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgConst"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgKafka"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgPostgres"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgRetry"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/repository"
@@ -15,6 +16,7 @@ import (
 
 type dependencies struct {
 	rs *pkgRetry.Retry
+	kp *pkgKafka.KafkaProducer
 	pg *pkgPostgres.Postgres
 	rp *repository.Repository
 	sv *service.Service
@@ -61,6 +63,15 @@ func (b *dependencyBuilder) InitRetry() {
 	b.deps.rs = pkgRetry.New(b.cfg.rs)
 }
 
+func (b *dependencyBuilder) InitKafkaProducer() {
+	b.deps.kp = pkgKafka.NewProducer(b.cfg.kf.Brokers, b.cfg.kf.Topic)
+	b.lg.Debug().Msgf("%s Kafka producer has been initialized", pkgConst.Info)
+	b.rm.addResource(resource{
+		name:      "Kafka producer",
+		closeFunc: func() error { return b.deps.kp.Close() },
+	})
+}
+
 func (b *dependencyBuilder) InitPostgres() error {
 	fn := func() error {
 		pg, err := pkgPostgres.New(b.cfg.pg)
@@ -84,7 +95,7 @@ func (b *dependencyBuilder) InitPostgres() error {
 }
 
 func (b *dependencyBuilder) initRepository() error {
-	rp, err := repository.New(b.deps.pg, b.deps.rs)
+	rp, err := repository.New(b.cfg.rp, b.deps.pg, b.deps.rs)
 	if err != nil {
 		return fmt.Errorf("initialize repository: %w", err)
 	}
@@ -94,7 +105,7 @@ func (b *dependencyBuilder) initRepository() error {
 }
 
 func (b *dependencyBuilder) initService() {
-	sv := service.New(b.deps.rp)
+	sv := service.New(b.deps.rp, b.deps.rp, b.deps.kp)
 	b.lg.Debug().Msgf("%s service has been initialized", pkgConst.Info)
 	b.deps.sv = sv
 }

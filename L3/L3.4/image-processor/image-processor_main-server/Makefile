@@ -15,73 +15,26 @@ else
 endif
 
 # ========================
-# ALL
-# ========================
-
-.PHONY: all-local-up all-up all-up-no-cache all-deps-up all-rm all-down
-
-all-local-up:
-	$(MAKE_CMD) redis-up
-	$(MAKE_CMD) rabbitmq-up
-	@sleep 3
-	$(MAKE_CMD) app-local-build-up ARGS="$(ARGS)"
-
-all-up:
-	$(MAKE_CMD) all-deps-up
-	@sleep 3
-	$(MAKE_CMD) app-up
-
-all-up-no-cache:
-	$(MAKE_CMD) all-deps-up
-	@sleep 3
-	$(MAKE_CMD) app-up-no-cache
-
-all-deps-up: redis-up rabbitmq-up promtail-up loki-up grafana-up
-
-all-rm: app-rm rabbitmq-rm promtail-rm loki-rm grafana-rm
-
-all-stop: app-stop redis-stop rabbitmq-stop promtail-stop loki-stop grafana-stop
-
-all-down: app-down redis-down rabbitmq-down promtail-down loki-down grafana-down
-
-# ========================
 # APP
 # ========================
 
 APP = providers/app
 
-.PHONY: app-local-build app-local-up app-local-build-up app-up app-up-no-cache app-logs app-stop app-restart app-rm app-down app-ps app-exec app-test-cover
+.PHONY: app-build app-up app-build-up app-test-cover
 
-app-local-build:
-	$(MAKE_CMD) -C $(APP) local-build
-app-local-up:
-	$(MAKE_CMD) -C $(APP) local-up ARGS="$(ARGS)"
-app-local-build-up:
-	$(MAKE_CMD) -C $(APP) local-build-up ARGS="$(ARGS)"
+app-build:
+	$(MAKE_CMD) -C $(APP) build
 app-up:
 	$(MAKE_CMD) -C $(APP) up
-app-up-no-cache:
-	$(MAKE_CMD) -C $(APP) up-no-cache
-app-logs:
-	$(MAKE_CMD) -C $(APP) logs
-app-stop:
-	$(MAKE_CMD) -C $(APP) stop
-app-restart:
-	$(MAKE_CMD) -C $(APP) restart
-app-rm:
-	$(MAKE_CMD) -C $(APP) rm
-app-down:
-	$(MAKE_CMD) -C $(APP) down
-app-ps:
-	$(MAKE_CMD) -C $(APP) ps
-app-exec:
-	$(MAKE_CMD) -C $(APP) exec
+app-build-up:
+	$(MAKE_CMD) -C $(APP) build-up
 app-test-cover:
 	$(MAKE_CMD) -C $(APP) test-cover
 
 # MOCKS
 
 .PHONY: app-mock-rd-savenotice-gen app-mock-rd-savenotice-clean
+
 app-mock-rd-savenotice-gen:
 	$(MAKE_CMD) -C $(APP) mock-rd-savenotice-gen
 app-mock-rd-savenotice-clean:
@@ -117,197 +70,3 @@ postgres-show-table:
 	$(MAKE_CMD) -C $(POSTGRES) show-table TABLE="$(TABLE)"
 postgres-drop-db:
 	$(MAKE_CMD) -C $(POSTGRES) drop-db
-
-# ========================
-# REDIS
-# ========================
-
-REDIS = providers/redis
-
-.PHONY: redis-up redis-logs redis-stop redis-restart redis-rm redis-down redis-ps redis-exec
-
-redis-up:
-	$(MAKE_CMD) -C $(REDIS) up
-redis-logs:
-	$(MAKE_CMD) -C $(REDIS) logs
-redis-stop:
-	$(MAKE_CMD) -C $(REDIS) stop
-redis-restart:
-	$(MAKE_CMD) -C $(REDIS) restart
-redis-rm:
-	$(MAKE_CMD) -C $(REDIS) rm
-redis-down:
-	$(MAKE_CMD) -C $(REDIS) down
-redis-ps:
-	$(MAKE_CMD) -C $(REDIS) ps
-redis-exec:
-	$(MAKE_CMD) -C $(REDIS) exec
-
-# ========================
-# PROMTAIL
-# ========================
-
-PROMTAIL = providers/promtail
-
-promtail-up:
-	$(MAKE_CMD) -C $(PROMTAIL) up
-promtail-logs:
-	$(MAKE_CMD) -C $(PROMTAIL) logs
-promtail-stop:
-	$(MAKE_CMD) -C $(PROMTAIL) stop
-promtail-restart:
-	$(MAKE_CMD) -C $(PROMTAIL) restart
-promtail-rm:
-	$(MAKE_CMD) -C $(PROMTAIL) rm
-promtail-down:
-	$(MAKE_CMD) -C $(PROMTAIL) down
-promtail-ps:
-	$(MAKE_CMD) -C $(PROMTAIL) ps
-promtail-exec:
-	$(MAKE_CMD) -C $(PROMTAIL) exec
-
-# ========================
-# LOKI
-# ========================
-
-LOKI = providers/loki
-
-loki-up:
-	$(MAKE_CMD) -C $(LOKI) up
-loki-logs:
-	$(MAKE_CMD) -C $(LOKI) logs
-loki-stop:
-	$(MAKE_CMD) -C $(LOKI) stop
-loki-restart:
-	$(MAKE_CMD) -C $(LOKI) restart
-loki-rm:
-	$(MAKE_CMD) -C $(LOKI) rm
-loki-down:
-	$(MAKE_CMD) -C $(LOKI) down
-loki-ps:
-	$(MAKE_CMD) -C $(LOKI) ps
-loki-exec:
-	$(MAKE_CMD) -C $(LOKI) exec
-
-# ========================
-# GRAFANA
-# ========================
-
-GRAFANA = providers/grafana
-
-grafana-up:
-	$(MAKE_CMD) -C $(GRAFANA) up
-grafana-logs:
-	$(MAKE_CMD) -C $(GRAFANA) logs
-grafana-stop:
-	$(MAKE_CMD) -C $(GRAFANA) stop
-grafana-restart:
-	$(MAKE_CMD) -C $(GRAFANA) restart
-grafana-rm:
-	$(MAKE_CMD) -C $(GRAFANA) rm
-grafana-down:
-	$(MAKE_CMD) -C $(GRAFANA) down
-grafana-ps:
-	$(MAKE_CMD) -C $(GRAFANA) ps
-grafana-exec:
-	$(MAKE_CMD) -C $(GRAFANA) exec
-
-# ========================
-# CLOUDPUB
-# ========================
-
-CLOUDPUB = providers/cloudpub
-
-.PHONY: cloudpub-up cloudpub-logs cloudpub-stop cloudpub-restart cloudpub-rm cloudpub-down cloudpub-ps cloudpub-exec
-
-cloudpub-up:
-	$(MAKE_CMD) -C $(CLOUDPUB) up
-cloudpub-logs:
-	$(MAKE_CMD) -C $(CLOUDPUB) logs
-cloudpub-stop:
-	$(MAKE_CMD) -C $(CLOUDPUB) stop
-cloudpub-restart:
-	$(MAKE_CMD) -C $(CLOUDPUB) restart
-cloudpub-rm:
-	$(MAKE_CMD) -C $(CLOUDPUB) rm
-cloudpub-down:
-	$(MAKE_CMD) -C $(CLOUDPUB) down
-cloudpub-ps:
-	$(MAKE_CMD) -C $(CLOUDPUB) ps
-cloudpub-exec:
-	$(MAKE_CMD) -C $(CLOUDPUB) exec
-
-# ========================
-# CLOUDPUB-WEBHOOK
-# ========================
-
-CLOUDPUB-WEBHOOK = providers/cloudpub-webhook
-
-.PHONY: cloudpub-webhook-up cloudpub-webhook-logs cloudpub-webhook-stop cloudpub-webhook-restart cloudpub-webhook-rm cloudpub-webhook-down cloudpub-webhook-ps cloudpub-webhook-exec
-
-cloudpub-webhook-up:
-	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) up
-cloudpub-webhook-logs:
-	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) logs
-cloudpub-webhook-stop:
-	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) stop
-cloudpub-webhook-restart:
-	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) restart
-cloudpub-webhook-rm:
-	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) rm
-cloudpub-webhook-down:
-	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) down
-cloudpub-webhook-ps:
-	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) ps
-cloudpub-webhook-exec:
-	$(MAKE_CMD) -C $(CLOUDPUB-WEBHOOK) exec
-
-# ========================
-# TRAEFIK
-# ========================
-
-TRAEFIK = providers/traefik
-
-.PHONY: traefik-up traefik-logs traefik-stop traefik-restart traefik-rm traefik-down traefik-ps traefik-exec
-
-traefik-up:
-	$(MAKE_CMD) -C $(TRAEFIK) up
-traefik-logs:
-	$(MAKE_CMD) -C $(TRAEFIK) logs
-traefik-stop:
-	$(MAKE_CMD) -C $(TRAEFIK) stop
-traefik-restart:
-	$(MAKE_CMD) -C $(TRAEFIK) restart
-traefik-rm:
-	$(MAKE_CMD) -C $(TRAEFIK) rm
-traefik-down:
-	$(MAKE_CMD) -C $(TRAEFIK) down
-traefik-ps:
-	$(MAKE_CMD) -C $(TRAEFIK) ps
-traefik-exec:
-	$(MAKE_CMD) -C $(TRAEFIK) exec
-
-# ========================
-# PROMETHEUS
-# ========================
-
-PROMETHEUS = providers/prometheus
-
-.PHONY: prometheus-up prometheus-logs prometheus-stop prometheus-restart prometheus-rm prometheus-down prometheus-ps prometheus-exec
-
-prometheus-up:
-	$(MAKE_CMD) -C $(PROMETHEUS) up
-prometheus-logs:
-	$(MAKE_CMD) -C $(PROMETHEUS) logs
-prometheus-stop:
-	$(MAKE_CMD) -C $(PROMETHEUS) stop
-prometheus-restart:
-	$(MAKE_CMD) -C $(PROMETHEUS) restart
-prometheus-rm:
-	$(MAKE_CMD) -C $(PROMETHEUS) rm
-prometheus-down:
-	$(MAKE_CMD) -C $(PROMETHEUS) down
-prometheus-ps:
-	$(MAKE_CMD) -C $(PROMETHEUS) ps
-prometheus-exec:
-	$(MAKE_CMD) -C $(PROMETHEUS) exec

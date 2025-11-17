@@ -42,3 +42,4 @@ node_modules
 /L3/L3.2/shortener/shortener_web-client/.env.local
 /L3/L3.4/image-processor/image-processor_web-client/.env.local
 /L3/L3.4/image-processor/image-processor_web-client/.env.production
+/L3/L3.4/image-processor/image-processor_main-server/providers/app/filestorage

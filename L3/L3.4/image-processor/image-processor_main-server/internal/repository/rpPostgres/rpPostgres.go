@@ -29,11 +29,12 @@ func (rp *RpPostgres) CreateImage(ctx context.Context, originalPath string, form
 	`
 
 	var img model.Image
+	var processedPath *string
 	err := rp.pg.DB.QueryRowContext(ctx, query, model.StatusUploading, originalPath, format).Scan(
 		&img.ID,
 		&img.Status,
 		&img.OriginalPath,
-		&img.ProcessedPath,
+		&processedPath,
 		&img.CreatedAt,
 	)
 	if err != nil {
@@ -47,11 +48,12 @@ func (rp *RpPostgres) GetImage(ctx context.Context, id int) (*model.Image, error
 	query := `SELECT id, status, original_path, processed_path, created_at FROM image WHERE id = $1`
 
 	var img model.Image
+	var processedPath *string
 	err := rp.pg.DB.QueryRowContext(ctx, query, id).Scan(
 		&img.ID,
 		&img.Status,
 		&img.OriginalPath,
-		&img.ProcessedPath,
+		&processedPath,
 		&img.CreatedAt,
 	)
 	if err != nil {
@@ -67,6 +69,17 @@ func (rp *RpPostgres) UpdateImageStatus(ctx context.Context, id int, status mode
 	_, err := rp.pg.DB.ExecContext(ctx, query, status, id)
 	if err != nil {
 		return fmt.Errorf("failed to update image status: %w", err)
+	}
+
+	return nil
+}
+
+func (rp *RpPostgres) UpdateOriginalPath(ctx context.Context, id int, originalPath string) error {
+	query := `UPDATE image SET original_path = $1 WHERE id = $2`
+
+	_, err := rp.pg.DB.ExecContext(ctx, query, originalPath, id)
+	if err != nil {
+		return fmt.Errorf("failed to update original path: %w", err)
 	}
 
 	return nil

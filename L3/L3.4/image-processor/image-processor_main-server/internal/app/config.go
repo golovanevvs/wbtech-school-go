@@ -4,9 +4,11 @@ import (
 	"fmt"
 
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgConst"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgKafka"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgLogger"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgPostgres"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgRetry"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/repository"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/transport"
 	"github.com/wb-go/wbf/config"
 )
@@ -14,7 +16,9 @@ import (
 type Config struct {
 	lg *pkgLogger.Config
 	rs *pkgRetry.Config
+	kf *pkgKafka.Config
 	pg *pkgPostgres.Config
+	rp *repository.Config
 	tr *transport.Config
 }
 
@@ -36,6 +40,7 @@ func newConfig(env string) (*Config, error) {
 	if err := cfg.LoadConfigFiles(
 		"providers/app/config.yaml",
 		"providers/logger/config.yaml",
+		"providers/kafka/config.yaml",
 	); err != nil {
 		return nil, fmt.Errorf("failed to load config files: %w", err)
 	}
@@ -48,7 +53,9 @@ func newConfig(env string) (*Config, error) {
 	return &Config{
 		lg: pkgLogger.NewConfig(cfg),
 		rs: pkgRetry.NewConfig(cfg),
+		kf: pkgKafka.NewConfig(cfg),
 		pg: pkgPostgres.NewConfig(cfg),
+		rp: repository.NewConfig(cfg),
 		tr: transport.NewConfig(cfg, env),
 	}, nil
 }
@@ -65,11 +72,17 @@ func (a *Config) String() string {
 %s %s
 
 %s %s
+
+%s %s
+
+%s %s
 `,
 		pkgConst.Config,
 		pkgConst.Logger, a.lg.String(),
 		pkgConst.Retry, a.rs.String(),
+		pkgConst.RabbitMQ, a.kf.String(),
 		pkgConst.Postgres, a.pg.String(),
+		pkgConst.Postgres, a.rp.String(),
 		pkgConst.Transport, a.tr.String(),
 	)
 }
