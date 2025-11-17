@@ -22,7 +22,7 @@ export default function CommentForm({ parentId }: { parentId: number | null }) {
     setIsSubmitting(true)
     setError(null)
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+    const apiBase = process.env.NEXT_PUBLIC_API_URL
 
     try {
       const payload: { text: string; parent_id?: number } = {
