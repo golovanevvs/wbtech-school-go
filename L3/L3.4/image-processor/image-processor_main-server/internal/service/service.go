@@ -2,51 +2,83 @@ package service
 
 import (
 	"context"
+	"io"
 
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/model"
 )
 
-type iRepository interface {
-	Save(ctx context.Context, comment *model.Comment) error
-	LoadByID(ctx context.Context, id int) (*model.Comment, error)
-	LoadChildren(ctx context.Context, parentID *int) ([]*model.Comment, error)
-	Delete(ctx context.Context, id int) error
-	Search(ctx context.Context, q string) ([]*model.Comment, error)
+type iMetaRepository interface {
+	CreateImage(ctx context.Context, originalPath, format string) (*model.Image, error)
+	GetImage(ctx context.Context, id int) (*model.Image, error)
+	UpdateImageStatus(ctx context.Context, id int, status model.ImageStatus) error
+	UpdateImageProcessedPath(ctx context.Context, id int, processedPath string) error
+	DeleteImage(ctx context.Context, id int) error
+}
+
+type iFileRepository interface {
+	SaveOriginal(file io.Reader, originalFilename string) (string, error)
+	SaveProcessed(data []byte, id int) (string, error)
+	DeleteOriginal(path string) error
+	DeleteProcessed(path string) error
+}
+
+type iQueueProducer interface {
+	SendProcessTask(ctx context.Context, imageID string) error
 }
 
 type Service struct {
-	rp iRepository
+	rpMeta   iMetaRepository
+	rpFile   iFileRepository
+	producer iQueueProducer
 }
 
-func New(rp iRepository) *Service {
-	return &Service{rp: rp}
+func New(repo iMetaRepository, storage iFileRepository, producer iQueueProducer) *Service {
+	return &Service{
+		rpMeta:   repo,
+		rpFile:   storage,
+		producer: producer,
+	}
 }
 
-func (s *Service) AddComment(ctx context.Context, comment *model.Comment) error {
-	return s.rp.Save(ctx, comment)
-}
+func (s *Service) UploadImage(ctx context.Context, file io.Reader, filename string) (int, error) {
+	format := "jpg"
 
-func (s *Service) GetCommentsTree(ctx context.Context, parentID *int) ([]*model.Comment, error) {
-	comments, err := s.rp.LoadChildren(ctx, parentID)
+	originalPath, err := s.rpFile.SaveOriginal(file, filename)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	for _, comment := range comments {
-		children, err := s.GetCommentsTree(ctx, &comment.ID)
-		if err != nil {
-			return nil, err
-		}
-		comment.Children = children
+	img, err := s.rpMeta.CreateImage(ctx, originalPath, format)
+	if err != nil {
+		return 0, err
 	}
 
-	return comments, nil
+	err = s.rpMeta.UpdateImageStatus(ctx, img.ID, model.StatusProcessing)
+	if err != nil {
+		return 0, err
+	}
+
+	err = s.producer.SendProcessTask(ctx, string(img.ID))
+	if err != nil {
+		_ = s.rpMeta.UpdateImageStatus(ctx, img.ID, model.StatusFailed)
+		return 0, err
+	}
+
+	return img.ID, nil
 }
 
-func (s *Service) RemoveComment(ctx context.Context, id int) error {
-	return s.rp.Delete(ctx, id)
+func (s *Service) GetImage(ctx context.Context, id int) (*model.Image, error) {
+	return s.rpMeta.GetImage(ctx, id)
 }
 
-func (s *Service) FindComments(ctx context.Context, query string) ([]*model.Comment, error) {
-	return s.rp.Search(ctx, query)
+func (s *Service) DeleteImage(ctx context.Context, id int) error {
+	img, err := s.rpMeta.GetImage(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	_ = s.rpFile.DeleteOriginal(img.OriginalPath)
+	_ = s.rpFile.DeleteProcessed(img.ProcessedPath)
+
+	return s.rpMeta.DeleteImage(ctx, id)
 }

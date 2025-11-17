@@ -4,9 +4,10 @@ import (
 	"time"
 
 	"github.com/gin-contrib/cors"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/pkg/pkgPrometheus"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/transport/trhttp/handler/healthHandler"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.3/comment-tree/comment-tree_main-server/internal/transport/trhttp/handler/mainHandlers"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgPrometheus"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/transport/trhttp/handler/healthHandler"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/transport/trhttp/handler/mainHandlers"
+
 	"github.com/wb-go/wbf/ginext"
 	"github.com/wb-go/wbf/zlog"
 )
