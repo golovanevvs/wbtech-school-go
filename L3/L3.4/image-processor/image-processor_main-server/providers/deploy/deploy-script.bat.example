@@ -1,0 +1,30 @@
+@echo off
+echo ==================================================
+echo    Starting comment-tree_main-server deployment
+echo    Time: %date% %time%
+echo ==================================================
+echo.
+
+echo Changing to project directory...
+cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.3\comment-tree\comment-tree_main-server\providers\deploy"
+
+echo Stopping existing containers...
+docker compose down
+
+echo Pulling latest image...
+docker compose pull
+
+echo Starting new containers...
+docker compose -p comment-tree_main-server up -d
+
+echo.
+echo Checking container status...
+docker ps --filter "name=comment-tree_main-server"
+
+echo.
+echo ========================================
+echo    Deployment completed successfully!
+echo ========================================
+echo.
+
+ping -n 3 127.0.0.1 > nul
