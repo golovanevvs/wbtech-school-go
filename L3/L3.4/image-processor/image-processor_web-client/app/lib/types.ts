@@ -1,7 +1,7 @@
-export interface Comment {
-  id: number
-  parent_id: number | null
-  text: string
-  created_at: string
-  children: Comment[]
+export interface Image {
+  id: string;
+  status: 'uploading' | 'processing' | 'completed' | 'failed';
+  originalUrl?: string;
+  processedUrl?: string;
+  createdAt: string;
 }

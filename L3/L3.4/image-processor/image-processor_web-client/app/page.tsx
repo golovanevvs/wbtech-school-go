@@ -1,12 +1,19 @@
-"use client"
+"use client";
 
-import { Container, Stack } from "@mui/material"
-import Header from "./ui/Header"
-import SearchBar from "@/app/ui/SearchBar"
-import CommentTree from "@/app/ui/CommentTree"
-import CommentForm from "@/app/ui/CommentForm"
+import { useState } from "react";
+import { Container, Stack } from "@mui/material";
+import Header from "./ui/Header";
+import ImageUploadForm from "./ui/ImageUploadForm";
+import ImageGallery from "./ui/ImageGallery";
+import { Image } from "./lib/types";
 
 export default function Home() {
+  const [images, setImages] = useState<Image[]>([]);
+
+  const handleUpload = (newImage: { id: string; status: string }) => {
+    setImages((prev) => [...prev, { id: newImage.id, status: newImage.status } as Image]);
+  };
+
   return (
     <Container
       disableGutters
@@ -21,10 +28,9 @@ export default function Home() {
     >
       <Stack spacing={4}>
         <Header />
-        <SearchBar />
-        <CommentForm parentId={null} />
-        <CommentTree />
+        <ImageUploadForm onUpload={handleUpload} />
+        <ImageGallery initialImages={images} />
       </Stack>
     </Container>
-  )
+  );
 }
