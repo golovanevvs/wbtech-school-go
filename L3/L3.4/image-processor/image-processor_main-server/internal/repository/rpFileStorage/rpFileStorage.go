@@ -35,20 +35,6 @@ func (fs *RpFileStorage) SaveOriginalWithID(file io.Reader, id int, originalFile
 	return filename, nil
 }
 
-func (fs *RpFileStorage) SaveProcessed(data []byte, originalPath string) (string, error) {
-	ext := filepath.Ext(originalPath)
-	nameWithoutExt := strings.TrimSuffix(filepath.Base(originalPath), ext)
-
-	processedName := strings.Replace(originalPath, nameWithoutExt+ext, nameWithoutExt+"_processed"+ext, 1)
-
-	err := os.WriteFile(processedName, data, 0644)
-	if err != nil {
-		return "", err
-	}
-
-	return processedName, nil
-}
-
 func (fs *RpFileStorage) DeleteOriginal(path string) error {
 	return os.Remove(path)
 }

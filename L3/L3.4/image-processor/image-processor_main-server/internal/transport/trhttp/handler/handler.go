@@ -20,7 +20,7 @@ type Handler struct {
 	Rt *ginext.Engine
 }
 
-func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, webPublicHost string) *Handler {
+func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, webPublicHost string, fileStorageDir string) *Handler {
 	lg := parentLg.With().Str("component", "handler").Logger()
 
 	rt := ginext.New(cfg.GinMode)
@@ -44,7 +44,7 @@ func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, we
 		Rt: rt,
 	}
 
-	addShortURLHandler := mainHandlers.New(&lg, rt, sv)
+	addShortURLHandler := mainHandlers.New(&lg, rt, sv, fileStorageDir)
 	addShortURLHandler.RegisterRoutes()
 
 	healthHandler := healthHandler.New(&lg, rt)

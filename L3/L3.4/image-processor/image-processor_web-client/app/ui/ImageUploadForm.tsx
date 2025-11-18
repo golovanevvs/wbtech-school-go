@@ -12,7 +12,7 @@ import {
 import { uploadImage } from "../lib/api"
 
 interface Props {
-  onUpload: (image: { id: string; status: string }) => void
+  onUpload: (image: { id: number; status: string }) => void
 }
 
 export default function ImageUploadForm({ onUpload }: Props) {
@@ -43,7 +43,7 @@ export default function ImageUploadForm({ onUpload }: Props) {
     setLoading(true)
     try {
       const { id } = await uploadImage(file, { resize, thumbnail, watermark })
-      onUpload({ id, status: "uploading" })
+      onUpload({ id: parseInt(id), status: "uploading" })
       setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ""
     } catch (err: unknown) {

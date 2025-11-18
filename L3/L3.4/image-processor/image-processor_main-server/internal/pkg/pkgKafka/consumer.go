@@ -3,7 +3,6 @@ package pkgKafka
 import (
 	"context"
 	"encoding/json"
-	"log"
 
 	kafkago "github.com/segmentio/kafka-go"
 	"github.com/wb-go/wbf/kafka"
@@ -28,11 +27,9 @@ func NewConsumer(brokers []string, topic, groupID string, rs *retry.Strategy) *K
 }
 
 func (kc *KafkaConsumer) StartConsuming(ctx context.Context, handler func(msg ProcessImageMessage) error) error {
-	defer log.Println("Defer: consumer stopped!!!")
 	msgChan := make(chan kafkago.Message)
 
 	kc.consumer.StartConsuming(ctx, msgChan, *kc.rs)
-	log.Println("consumer started!!!")
 
 	for {
 		select {

@@ -1,9 +1,9 @@
 export interface Image {
-  id: string
+  id: number
   status: "uploading" | "processing" | "completed" | "failed"
-  originalUrl?: string
-  processedUrl?: string
-  createdAt: string
+  original_path?: string
+  processed_url?: string
+  created_at: string
   operations?: {
     resize?: boolean
     thumbnail?: boolean

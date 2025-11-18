@@ -14,10 +14,10 @@ type Transport struct {
 	HTTP *trhttp.HTTP
 }
 
-func New(cfg *Config, rs *pkgRetry.Retry, sv iService) *Transport {
+func New(cfg *Config, rs *pkgRetry.Retry, sv iService, fileStorageDir string) *Transport {
 	lg := zlog.Logger.With().Str("layer", "transport").Logger()
 
 	return &Transport{
-		HTTP: trhttp.New(cfg.TrHTTP, &lg, rs, sv),
+		HTTP: trhttp.New(cfg.TrHTTP, &lg, rs, sv, fileStorageDir),
 	}
 }

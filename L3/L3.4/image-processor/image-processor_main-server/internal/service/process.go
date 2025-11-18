@@ -1,21 +1,24 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"embed"
 	"fmt"
 	"image"
-	"image/color"
-	"image/draw"
-	"log"
+	"math"
 	"os"
 	"strconv"
 
+	"github.com/disintegration/imaging"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/model"
 	"github.com/nfnt/resize"
 )
 
+//go:embed watermark.png
+var watermarkFile embed.FS
+
 func (sv *Service) ProcessImage(ctx context.Context, imageID string) error {
-	log.Printf("Processing image: %s", imageID)
 
 	id, err := strconv.Atoi(imageID)
 	if err != nil {
@@ -96,18 +99,49 @@ func decodeImage(file *os.File) (image.Image, string, error) {
 	return img, format, nil
 }
 
-func addWatermark(img image.Image) image.Image {
-	bounds := img.Bounds()
-	wmImg := image.NewRGBA(bounds)
-	draw.Draw(wmImg, bounds, img, bounds.Min, draw.Src)
-
-	// Простой водяной знак — прямоугольник в правом нижнем углу
-	wmBounds := image.Rect(bounds.Dx()-100, bounds.Dy()-30, bounds.Dx(), bounds.Dy())
-	draw.Draw(wmImg, wmBounds, &image.Uniform{color.RGBA{255, 255, 255, 128}}, image.Point{}, draw.Over)
-
-	return wmImg
-}
-
 func createThumbnail(img image.Image) image.Image {
 	return resize.Resize(150, 150, img, resize.Lanczos3)
+}
+
+func addWatermark(img image.Image) image.Image {
+	// Загружаем водяной знак
+	watermarkFileData, err := watermarkFile.ReadFile("watermark.png")
+	if err != nil {
+		return img
+	}
+
+	watermark, _, err := image.Decode(bytes.NewReader(watermarkFileData))
+	if err != nil {
+		return img
+	}
+
+	// Размеры основного изображения
+	imgWidth := img.Bounds().Dx()
+	imgHeight := img.Bounds().Dy()
+
+	// Размеры водяного знака
+	wmWidth := watermark.Bounds().Dx()
+	wmHeight := watermark.Bounds().Dy()
+
+	// Вычисляем коэффициент масштабирования по ширине и высоте
+	scaleW := float64(imgWidth) / float64(wmWidth)
+	scaleH := float64(imgHeight) / float64(wmHeight)
+
+	// Выбираем минимальный масштаб, чтобы водяной знак полностью помещался
+	scale := math.Min(scaleW, scaleH)
+
+	newWmWidth := int(float64(wmWidth) * scale)
+	newWmHeight := int(float64(wmHeight) * scale)
+
+	// Масштабируем водяной знак
+	scaledWatermark := resize.Resize(uint(newWmWidth), uint(newWmHeight), watermark, resize.Lanczos3)
+
+	// Позиция по центру
+	x := (imgWidth - newWmWidth) / 2
+	y := (imgHeight - newWmHeight) / 2
+
+	// Накладываем с низкой непрозрачностью (0.2 = 20%)
+	result := imaging.Overlay(img, scaledWatermark, image.Point{X: x, Y: y}, 0.2)
+
+	return result
 }

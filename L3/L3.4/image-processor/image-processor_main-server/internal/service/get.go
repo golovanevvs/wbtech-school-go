@@ -9,3 +9,7 @@ import (
 func (sv *Service) GetImage(ctx context.Context, id int) (*model.Image, error) {
 	return sv.rpMeta.GetImage(ctx, id)
 }
+
+func (s *Service) GetAllImages(ctx context.Context) ([]model.Image, error) {
+	return s.rpMeta.GetAllImages(ctx)
+}

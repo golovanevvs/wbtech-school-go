@@ -24,41 +24,7 @@ func New(pg *pkgPostgres.Postgres, rs *pkgRetry.Retry) *RpPostgres {
 	}
 }
 
-func (rp *RpPostgres) CreateImage(ctx context.Context, originalPath string, format string) (*model.Image, error) {
-	query := `
-		INSERT INTO image (status, original_path, format)
-		VALUES ($1, $2, $3)
-		RETURNING id, status, original_path, processed_path, created_at, operations
-	`
-
-	var img model.Image
-	var processedPath *string
-	var opsData []byte
-
-	err := rp.pg.DB.QueryRowContext(ctx, query, model.StatusUploading, originalPath, format).Scan(
-		&img.ID,
-		&img.Status,
-		&img.OriginalPath,
-		&processedPath,
-		&img.CreatedAt,
-		&opsData,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create image: %w", err)
-	}
-
-	img.ProcessedPath = processedPath
-	if opsData != nil {
-		err = json.Unmarshal(opsData, &img.Operations)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal operations: %w", err)
-		}
-	}
-
-	return &img, nil
-}
-
-func (rp *RpPostgres) CreateImageWithOperations(ctx context.Context, originalPath, format string, options model.ProcessOptions) (*model.Image, error) {
+func (rp *RpPostgres) CreateImage(ctx context.Context, originalPath, format string, options model.ProcessOptions) (*model.Image, error) {
 	opsJSON, err := json.Marshal(options)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal operations: %w", err)
@@ -126,6 +92,48 @@ func (rp *RpPostgres) GetImage(ctx context.Context, id int) (*model.Image, error
 	}
 
 	return &img, nil
+}
+
+func (rp *RpPostgres) GetAllImages(ctx context.Context) ([]model.Image, error) {
+	query := `SELECT id, status, original_path, processed_path, created_at, operations FROM image ORDER BY created_at DESC`
+
+	rows, err := rp.pg.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get all images: %w", err)
+	}
+	defer rows.Close()
+
+	var images []model.Image
+	for rows.Next() {
+		var img model.Image
+		var processedPath *string
+		var opsData []byte
+
+		err := rows.Scan(
+			&img.ID,
+			&img.Status,
+			&img.OriginalPath,
+			&processedPath,
+			&img.CreatedAt,
+			&opsData,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan image: %w", err)
+		}
+
+		img.ProcessedPath = processedPath
+
+		if opsData != nil {
+			err = json.Unmarshal(opsData, &img.Operations)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal operations: %w", err)
+			}
+		}
+
+		images = append(images, img)
+	}
+
+	return images, nil
 }
 
 func (rp *RpPostgres) UpdateImageStatus(ctx context.Context, id int, status model.ImageStatus) error {

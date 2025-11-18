@@ -9,9 +9,9 @@ import (
 )
 
 type iMetaRepository interface {
-	CreateImage(ctx context.Context, originalPath, format string) (*model.Image, error)
-	CreateImageWithOperations(ctx context.Context, originalPath, format string, options model.ProcessOptions) (*model.Image, error)
+	CreateImage(ctx context.Context, originalPath, format string, options model.ProcessOptions) (*model.Image, error)
 	GetImage(ctx context.Context, id int) (*model.Image, error)
+	GetAllImages(ctx context.Context) ([]model.Image, error)
 	UpdateImageStatus(ctx context.Context, id int, status model.ImageStatus) error
 	UpdateImageProcessedPath(ctx context.Context, id int, processedPath string) error
 	UpdateOriginalPath(ctx context.Context, id int, originalPath string) error
@@ -20,7 +20,6 @@ type iMetaRepository interface {
 
 type iFileRepository interface {
 	SaveOriginalWithID(file io.Reader, id int, originalFilename string) (string, error)
-	SaveProcessed(data []byte, originalPath string) (string, error)
 	SaveProcessedFromImage(img image.Image, originalPath string) (string, error)
 	SaveThumbnail(img image.Image, originalPath string) (string, error)
 	DeleteOriginal(path string) error

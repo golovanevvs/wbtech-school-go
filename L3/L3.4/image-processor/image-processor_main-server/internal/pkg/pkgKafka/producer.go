@@ -3,7 +3,6 @@ package pkgKafka
 import (
 	"context"
 	"encoding/json"
-	"log"
 
 	"github.com/wb-go/wbf/kafka"
 )
@@ -22,7 +21,6 @@ func NewProducer(brokers []string, topic string) *KafkaProducer {
 }
 
 func (kq *KafkaProducer) SendProcessTask(ctx context.Context, imageID string) error {
-	log.Printf("Sending task to Kafka: %s", imageID)
 
 	msg := ProcessImageMessage{
 		ImageID: imageID,

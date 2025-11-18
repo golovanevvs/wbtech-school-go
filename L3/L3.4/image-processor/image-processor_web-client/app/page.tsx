@@ -1,21 +1,36 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Container, Stack } from "@mui/material";
-import Header from "./ui/Header";
-import ImageUploadForm from "./ui/ImageUploadForm";
-import ImageGallery from "./ui/ImageGallery";
+import { useState, useEffect } from "react"
+import { Container, Stack } from "@mui/material"
+import Header from "./ui/Header"
+import ImageUploadForm from "./ui/ImageUploadForm"
+import ImageGallery from "./ui/ImageGallery"
+import { getAllImages } from "./lib/api";
 
 export default function Home() {
-  const [imageIds, setImageIds] = useState<string[]>([]);
+  const [imageIds, setImageIds] = useState<number[]>([])
 
-  const handleUpload = (newImage: { id: string; status: string }) => {
-    setImageIds((prev) => [...prev, newImage.id]);
-  };
+  const handleUpload = (newImage: { id: number; status: string }) => {
+    setImageIds((prev) => [newImage.id, ...prev])
+  }
 
-  const handleRemove = (id: string) => {
-    setImageIds((prev) => prev.filter(imgId => imgId !== id));
-  };
+  const handleRemove = (id: number) => {
+    setImageIds((prev) => prev.filter((imgId) => imgId !== id))
+  }
+
+  useEffect(() => {
+    const fetchAllImages = async () => {
+      try {
+        const images = await getAllImages()
+        const ids = images.map((img) => img.id)
+        setImageIds(ids)
+      } catch (err) {
+        console.error("Failed to load images:", err)
+      }
+    }
+
+    fetchAllImages()
+  }, [])
 
   return (
     <Container
@@ -35,5 +50,5 @@ export default function Home() {
         <ImageGallery imageIds={imageIds} onRemove={handleRemove} />
       </Stack>
     </Container>
-  );
+  )
 }

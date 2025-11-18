@@ -1,79 +1,114 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useRef } from "react";
-import { Box, Card, CardMedia, CardContent, CardActions, Typography, IconButton } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { getImageStatus, deleteImage } from "../lib/api";
-import { Image } from "../lib/types";
+import { useState, useEffect, useRef } from "react"
+import {
+  Box,
+  Card,
+  CardMedia,
+  CardContent,
+  CardActions,
+  Typography,
+  IconButton,
+} from "@mui/material"
+import DeleteIcon from "@mui/icons-material/Delete"
+import { getImageStatus, deleteImage } from "../lib/api"
+import { Image } from "../lib/types"
 
 interface Props {
-  id: string;
-  onRemove: (id: string) => void;
+  id: number // ✅ id как number
+  onRemove: (id: number) => void // ✅ onRemove как (id: number) => void
 }
 
 export default function ImageCard({ id, onRemove }: Props) {
-  const [image, setImage] = useState<Image | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState<Image | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const isMountedRef = useRef(true);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isMountedRef = useRef(true)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     const fetchStatus = async () => {
-      if (!isMountedRef.current) return;
+      console.log("fetchStatus called for id:", id)
+      if (!isMountedRef.current) return
 
       try {
-        const data = await getImageStatus(id);
-        if (!isMountedRef.current) return;
+        const data = await getImageStatus(id.toString()) // ✅ преобразуем к string для API
+        console.log("getImageStatus response received:", data)
 
-        setImage(data);
+        if (!isMountedRef.current) {
+          console.log("Component unmounted, exiting")
+          return
+        }
+
+        // Проверим тип вручную
+        console.log("Checking data types...")
+        if (typeof data.id !== "number" || typeof data.status !== "string") {
+          console.error("Invalid data format:", data)
+          setError("Invalid data format")
+          return
+        }
+        console.log("Data types are valid")
+
+        console.log("Before setImage:", { id: data.id, status: data.status })
+
+        setImage(data)
+        console.log("After setImage")
 
         if (data.status === "completed" || data.status === "failed") {
-          return;
+          console.log("Status is final, not polling")
+          return
         }
 
-        timerRef.current = setTimeout(fetchStatus, 2000);
+        timerRef.current = setTimeout(fetchStatus, 2000)
       } catch (err: unknown) {
-        if (!isMountedRef.current) return;
+        console.log("Error in fetchStatus:", err)
+        if (!isMountedRef.current) return
 
-        let message = "Не удалось получить статус изображения";
+        let message = "Не удалось получить статус изображения"
         if (err instanceof Error) {
-          message = err.message;
+          message = err.message
         }
-        setError(message);
+        setError(message)
       }
-    };
+    }
 
-    fetchStatus();
+    fetchStatus()
 
     return () => {
-      isMountedRef.current = false;
+      isMountedRef.current = false
       if (timerRef.current) {
-        clearTimeout(timerRef.current);
+        clearTimeout(timerRef.current)
       }
-    };
-  }, [id]);
+    }
+  }, [id])
+
+  console.log("ImageCard render, image:", image, "error:", error)
 
   const handleDelete = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
-      await deleteImage(id);
-      onRemove(id);
+      await deleteImage(id.toString()) // ✅ преобразуем к string для API
+      onRemove(id)
     } catch (err: unknown) {
-      let message = "Ошибка удаления";
+      let message = "Ошибка удаления"
       if (err instanceof Error) {
-        message = err.message;
+        message = err.message
       }
-      alert(message);
+      alert(message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  if (error) return <Box color="error.main">❌ Ошибка: {error}</Box>;
+  if (error) return <Box color="error.main">❌ Ошибка: {error}</Box>
 
-  if (!image) return <Box>⏳ Загрузка...</Box>;
+  if (!image) {
+    console.log("Image is null, showing loading")
+    return <Box>⏳ Загрузка...</Box>
+  }
+
+  console.log("Image is not null, showing card")
 
   return (
     <Card sx={{ maxWidth: 345, margin: "10px" }}>
@@ -86,11 +121,11 @@ export default function ImageCard({ id, onRemove }: Props) {
         </Typography>
       </CardContent>
 
-      {image.status === "completed" && image.processedUrl && (
+      {image.status === "completed" && image.processed_url && (
         <CardMedia
           component="img"
           height="140"
-          image={image.processedUrl}
+          image={image.processed_url}
           alt="Обработанное изображение"
         />
       )}
@@ -123,5 +158,5 @@ export default function ImageCard({ id, onRemove }: Props) {
         </IconButton>
       </CardActions>
     </Card>
-  );
+  )
 }

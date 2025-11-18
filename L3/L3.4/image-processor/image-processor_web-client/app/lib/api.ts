@@ -25,9 +25,37 @@ export const uploadImage = async (
 }
 
 export const getImageStatus = async (id: string): Promise<Image> => {
+  console.log("getImageStatus called for id:", id)
+
   const res = await fetch(`${API_BASE_URL}/image/${id}`)
-  if (!res.ok) throw new Error("Failed to fetch image status")
-  return res.json()
+
+  if (!res.ok) {
+    const errorText = await res.text()
+    console.error("API Error:", errorText)
+    throw new Error(`Failed to fetch image status: ${errorText}`)
+  }
+
+  const data = await res.json() // ✅ Читаем один раз
+  console.log("getImageStatus response:", res.status, data)
+
+  return data
+}
+
+export const getAllImages = async (): Promise<Image[]> => {
+  console.log("getAllImages called")
+
+  const res = await fetch(`${API_BASE_URL}/images`)
+
+  if (!res.ok) {
+    const errorText = await res.text()
+    console.error("API Error:", errorText)
+    throw new Error(`Failed to fetch all images: ${errorText}`)
+  }
+
+  const data = await res.json()
+  console.log("getAllImages response:", res.status, data)
+
+  return data
 }
 
 export const deleteImage = async (id: string): Promise<void> => {
