@@ -70,3 +70,14 @@ postgres-show-table:
 	$(MAKE_CMD) -C $(POSTGRES) show-table TABLE="$(TABLE)"
 postgres-drop-db:
 	$(MAKE_CMD) -C $(POSTGRES) drop-db
+
+# ========================
+# KAFKA
+# ========================
+
+KAFKA = providers/kafka
+
+.PHONY: kafka-create-topic
+
+kafka-create-topic:
+	$(MAKE_CMD) -C $(KAFKA) create-topic

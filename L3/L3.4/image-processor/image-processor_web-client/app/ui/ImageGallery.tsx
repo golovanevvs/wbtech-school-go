@@ -1,29 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Stack } from "@mui/material"
-import ImageCard from "./ImageCard"
-import { Image } from "../lib/types"
+import { Stack } from "@mui/material";
+import ImageCard from "./ImageCard";
 
-interface Props {
-  initialImages: Image[]
-}
-
-export default function ImageGallery({ initialImages }: Props) {
-  const [images, setImages] = useState<Image[]>(initialImages)
-
-  const handleImageAdded = (newImage: { id: string; status: string }) => {
-    setImages((prev) => [
-      ...prev,
-      { id: newImage.id, status: newImage.status } as Image,
-    ])
-  }
-
+export default function ImageGallery({
+  imageIds,
+  onRemove,
+}: {
+  imageIds: string[];
+  onRemove: (id: string) => void;
+}) {
   return (
     <Stack spacing={2} direction="row" flexWrap="wrap" justifyContent="center">
-      {images.map((img) => (
-        <ImageCard key={img.id} id={img.id} />
+      {imageIds.map((id) => (
+        <ImageCard key={id} id={id} onRemove={onRemove} />
       ))}
     </Stack>
-  )
+  );
 }

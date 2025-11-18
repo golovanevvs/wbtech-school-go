@@ -2,6 +2,9 @@ package rpFileStorage
 
 import (
 	"fmt"
+	"image"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"os"
 	"path/filepath"
@@ -55,4 +58,60 @@ func (fs *RpFileStorage) DeleteProcessed(path string) error {
 		return os.Remove(path)
 	}
 	return nil
+}
+
+func (fs *RpFileStorage) SaveProcessedFromImage(img image.Image, originalPath string) (string, error) {
+	ext := filepath.Ext(originalPath)
+	nameWithoutExt := strings.TrimSuffix(filepath.Base(originalPath), ext)
+
+	processedName := strings.Replace(originalPath, nameWithoutExt+ext, nameWithoutExt+"_processed"+ext, 1)
+
+	out, err := os.Create(processedName)
+	if err != nil {
+		return "", err
+	}
+	defer out.Close()
+
+	switch strings.ToLower(ext) {
+	case ".jpg", ".jpeg":
+		err = jpeg.Encode(out, img, &jpeg.Options{Quality: 90})
+	case ".png":
+		err = png.Encode(out, img)
+	default:
+		err = jpeg.Encode(out, img, &jpeg.Options{Quality: 90})
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return processedName, nil
+}
+
+func (fs *RpFileStorage) SaveThumbnail(img image.Image, originalPath string) (string, error) {
+	ext := filepath.Ext(originalPath)
+	nameWithoutExt := strings.TrimSuffix(filepath.Base(originalPath), ext)
+
+	thumbName := strings.Replace(originalPath, nameWithoutExt+ext, nameWithoutExt+"_thumbnail"+ext, 1)
+
+	out, err := os.Create(thumbName)
+	if err != nil {
+		return "", err
+	}
+	defer out.Close()
+
+	switch strings.ToLower(ext) {
+	case ".jpg", ".jpeg":
+		err = jpeg.Encode(out, img, &jpeg.Options{Quality: 90})
+	case ".png":
+		err = png.Encode(out, img)
+	default:
+		err = jpeg.Encode(out, img, &jpeg.Options{Quality: 90})
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return thumbName, nil
 }

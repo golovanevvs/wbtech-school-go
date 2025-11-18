@@ -17,6 +17,7 @@ import (
 type dependencies struct {
 	rs *pkgRetry.Retry
 	kp *pkgKafka.KafkaProducer
+	kc *pkgKafka.KafkaConsumer
 	pg *pkgPostgres.Postgres
 	rp *repository.Repository
 	sv *service.Service
@@ -72,6 +73,15 @@ func (b *dependencyBuilder) InitKafkaProducer() {
 	})
 }
 
+func (b *dependencyBuilder) InitKafkaConsumer() {
+	b.deps.kc = pkgKafka.NewConsumer(b.cfg.kf.Brokers, b.cfg.kf.Topic, "1", (*retry.Strategy)(b.deps.rs))
+	b.lg.Debug().Msgf("%s Kafka consumer has been initialized", pkgConst.Info)
+	b.rm.addResource(resource{
+		name:      "Kafka consumer",
+		closeFunc: func() error { return b.deps.kc.Close() },
+	})
+}
+
 func (b *dependencyBuilder) InitPostgres() error {
 	fn := func() error {
 		pg, err := pkgPostgres.New(b.cfg.pg)
@@ -123,6 +133,8 @@ func (b *dependencyBuilder) build() (*dependencies, *resourceManager, error) {
 	if err := b.InitPostgres(); err != nil {
 		return nil, b.rm, err
 	}
+	b.InitKafkaProducer()
+	b.InitKafkaConsumer()
 	if err := b.initRepository(); err != nil {
 		return nil, b.rm, err
 	}

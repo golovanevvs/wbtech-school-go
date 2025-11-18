@@ -2,9 +2,12 @@ package rpPostgres
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgErrors"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgPostgres"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgRetry"
 )
@@ -25,39 +28,101 @@ func (rp *RpPostgres) CreateImage(ctx context.Context, originalPath string, form
 	query := `
 		INSERT INTO image (status, original_path, format)
 		VALUES ($1, $2, $3)
-		RETURNING id, status, original_path, processed_path, created_at
+		RETURNING id, status, original_path, processed_path, created_at, operations
 	`
 
 	var img model.Image
 	var processedPath *string
+	var opsData []byte
+
 	err := rp.pg.DB.QueryRowContext(ctx, query, model.StatusUploading, originalPath, format).Scan(
 		&img.ID,
 		&img.Status,
 		&img.OriginalPath,
 		&processedPath,
 		&img.CreatedAt,
+		&opsData,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create image: %w", err)
+	}
+
+	img.ProcessedPath = processedPath
+	if opsData != nil {
+		err = json.Unmarshal(opsData, &img.Operations)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal operations: %w", err)
+		}
+	}
+
+	return &img, nil
+}
+
+func (rp *RpPostgres) CreateImageWithOperations(ctx context.Context, originalPath, format string, options model.ProcessOptions) (*model.Image, error) {
+	opsJSON, err := json.Marshal(options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal operations: %w", err)
+	}
+
+	query := `
+		INSERT INTO image (status, original_path, format, operations)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, status, original_path, processed_path, created_at, operations
+	`
+
+	var img model.Image
+	var processedPath *string
+	var opsData []byte
+
+	err = rp.pg.DB.QueryRowContext(ctx, query, model.StatusUploading, originalPath, format, opsJSON).Scan(
+		&img.ID,
+		&img.Status,
+		&img.OriginalPath,
+		&processedPath,
+		&img.CreatedAt,
+		&opsData,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create image with operations: %w", err)
+	}
+
+	img.ProcessedPath = processedPath
+	err = json.Unmarshal(opsData, &img.Operations)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal operations: %w", err)
 	}
 
 	return &img, nil
 }
 
 func (rp *RpPostgres) GetImage(ctx context.Context, id int) (*model.Image, error) {
-	query := `SELECT id, status, original_path, processed_path, created_at FROM image WHERE id = $1`
+	query := `SELECT id, status, original_path, processed_path, created_at, operations FROM image WHERE id = $1`
 
 	var img model.Image
 	var processedPath *string
+	var opsData []byte
+
 	err := rp.pg.DB.QueryRowContext(ctx, query, id).Scan(
 		&img.ID,
 		&img.Status,
 		&img.OriginalPath,
 		&processedPath,
 		&img.CreatedAt,
+		&opsData,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("image with id %d not found: %w", id, pkgErrors.ErrNotFound)
+		}
 		return nil, fmt.Errorf("failed to get image: %w", err)
+	}
+
+	img.ProcessedPath = processedPath
+	if opsData != nil {
+		err = json.Unmarshal(opsData, &img.Operations)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal operations: %w", err)
+		}
 	}
 
 	return &img, nil

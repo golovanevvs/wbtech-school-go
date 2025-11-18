@@ -6,6 +6,7 @@ import (
 
 var (
 	ErrContentTypeAJ  = errors.New("content type must be application/json")
+	ErrNotFound       = errors.New("not found")
 	ErrBindJSON       = errors.New("failed to bind JSON")
 	ErrEmptyUserID    = errors.New("user_id must not be empty")
 	ErrEmptyID        = errors.New("id must not be empty")

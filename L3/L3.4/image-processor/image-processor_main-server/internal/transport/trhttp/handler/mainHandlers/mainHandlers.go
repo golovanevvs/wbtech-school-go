@@ -2,18 +2,23 @@ package mainHandlers
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/model"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgConst"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/pkg/pkgErrors"
 	"github.com/wb-go/wbf/ginext"
 	"github.com/wb-go/wbf/zlog"
 )
 
 type IService interface {
 	UploadImage(ctx context.Context, file io.Reader, filename string) (int, error)
+	UploadImageWithOperations(ctx context.Context, file io.Reader, filename string, options model.ProcessOptions) (int, error)
 	GetImage(ctx context.Context, id int) (*model.Image, error)
 	DeleteImage(ctx context.Context, id int) error
 }
@@ -37,6 +42,7 @@ func (hd *ImageHandlers) RegisterRoutes() {
 	hd.rt.POST("/upload", hd.UploadImage)
 	hd.rt.GET("/image/:id", hd.GetImage)
 	hd.rt.DELETE("/image/:id", hd.DeleteImage)
+	hd.rt.Static("/uploads", "C:\\Golovanev\\dev\\projects\\wbtech-school-go\\L3\\L3.4\\image-processor\\image-processor_main-server\\providers\\app\\filestorage\\uploads")
 }
 
 func (hd *ImageHandlers) UploadImage(c *ginext.Context) {
@@ -49,6 +55,23 @@ func (hd *ImageHandlers) UploadImage(c *ginext.Context) {
 		return
 	}
 
+	opsStr := c.PostForm("options")
+	var options model.ProcessOptions
+
+	if opsStr != "" {
+		if err := json.Unmarshal([]byte(opsStr), &options); err != nil {
+			lg.Warn().Err(err).Int("status", http.StatusBadRequest).Msgf("%s invalid options", pkgConst.Warn)
+			c.JSON(http.StatusBadRequest, uploadResponse{Error: "invalid options"})
+			return
+		}
+	} else {
+		options = model.ProcessOptions{
+			Resize:    true,
+			Thumbnail: false,
+			Watermark: false,
+		}
+	}
+
 	src, err := file.Open()
 	if err != nil {
 		lg.Warn().Err(err).Int("status", http.StatusBadRequest).Msgf("%s could not open file", pkgConst.Warn)
@@ -57,7 +80,7 @@ func (hd *ImageHandlers) UploadImage(c *ginext.Context) {
 	}
 	defer src.Close()
 
-	id, err := hd.sv.UploadImage(c.Request.Context(), src, file.Filename)
+	id, err := hd.sv.UploadImageWithOperations(c.Request.Context(), src, file.Filename, options)
 	if err != nil {
 		lg.Error().Err(err).Int("status", http.StatusInternalServerError).Msgf("%s failed to upload image", pkgConst.Error)
 		c.JSON(http.StatusInternalServerError, uploadResponse{Error: err.Error()})
@@ -104,6 +127,12 @@ func (hd *ImageHandlers) DeleteImage(c *ginext.Context) {
 	}
 
 	if err := hd.sv.DeleteImage(c.Request.Context(), id); err != nil {
+		if errors.Is(err, pkgErrors.ErrNotFound) {
+			lg.Warn().Int("image_id", id).Int("status", http.StatusNotFound).Msgf("%s image not found", pkgConst.Warn)
+			c.JSON(http.StatusNotFound, deleteResponse{Error: "image not found"})
+			return
+		}
+
 		lg.Error().Err(err).Int("status", http.StatusInternalServerError).Msgf("%s failed to delete image", pkgConst.Error)
 		c.JSON(http.StatusInternalServerError, deleteResponse{Error: err.Error()})
 		return
@@ -115,16 +144,17 @@ func (hd *ImageHandlers) DeleteImage(c *ginext.Context) {
 }
 
 func convertToImageResponse(img *model.Image) *imageResponse {
-	var processedPath string
+	var processedUrl string
 	if img.ProcessedPath != nil {
-		processedPath = *img.ProcessedPath
+		processedUrl = "/uploads/" + filepath.Base(*img.ProcessedPath)
 	}
 
 	return &imageResponse{
-		ID:            img.ID,
-		Status:        string(img.Status),
-		OriginalPath:  img.OriginalPath,
-		ProcessedPath: processedPath,
-		CreatedAt:     img.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		ID:           img.ID,
+		Status:       string(img.Status),
+		OriginalPath: img.OriginalPath,
+		ProcessedUrl: processedUrl,
+		CreatedAt:    img.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		Operations:   img.Operations,
 	}
 }

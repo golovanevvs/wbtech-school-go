@@ -12,11 +12,7 @@ else
 	MAKE_CMD = make
 endif
 
-.PHONY: create-db list-db list-tables show-table
-
-NAME = ${POSTGRES_CONTAINER}
-PROJECT_NAME = ${POSTGRES_CONTAINER}
-SERVICE_NAME = ${POSTGRES_CONTAINER}
+.PHONY: create-db list-tables show-table drop-db
 
 VORTEX = ../../../../../../../vortex
 
@@ -36,33 +32,15 @@ drop-db:
 # POSTGRES
 # ========================
 
-# POSTGRES = postgres
+# POSTGRES = providers/postgres
 
 # .PHONY: postgres-create-db postgres-list-tables postgres-show-table postgres-drop-db
 
-# postgres-up:
-# 	$(MAKE_CMD) -C $(POSTGRES) up
-# postgres-logs:
-# 	$(MAKE_CMD) -C $(POSTGRES) logs
-# postgres-stop:
-# 	$(MAKE_CMD) -C $(POSTGRES) stop
-# postgres-restart:
-# 	$(MAKE_CMD) -C $(POSTGRES) restart
-# postgres-rm:
-# 	$(MAKE_CMD) -C $(POSTGRES) rm
-# postgres-down:
-# 	$(MAKE_CMD) -C $(POSTGRES) down
-# postgres-ps:
-# 	$(MAKE_CMD) -C $(POSTGRES) ps
-# postgres-exec:
-# 	$(MAKE_CMD) -C $(POSTGRES) exec
 # postgres-create-db:
-# 	$(MAKE_CMD) -C $(POSTGRES) create-db DB="$(DB)"
-# postgres-list-db:
-# 	$(MAKE_CMD) -C $(POSTGRES) list-db"
+# 	$(MAKE_CMD) -C $(POSTGRES) create-db
 # postgres-list-tables:
-# 	$(MAKE_CMD) -C $(POSTGRES) list-tables DB="$(DB)"
+# 	$(MAKE_CMD) -C $(POSTGRES) list-tables
 # postgres-show-table:
-# 	$(MAKE_CMD) -C $(POSTGRES) show-table DB="$(DB)" TABLE="$(TABLE)"
+# 	$(MAKE_CMD) -C $(POSTGRES) show-table TABLE="$(TABLE)"
 # postgres-drop-db:
-# 	$(MAKE_CMD) -C $(POSTGRES) drop-db DB="$(DB)"
+# 	$(MAKE_CMD) -C $(POSTGRES) drop-db

@@ -17,4 +17,12 @@ type Image struct {
 	OriginalPath  string
 	ProcessedPath *string
 	CreatedAt     time.Time
+	Format        string
+	Operations    ProcessOptions
+}
+
+type ProcessOptions struct {
+	Resize    bool `json:"resize"`
+	Thumbnail bool `json:"thumbnail"`
+	Watermark bool `json:"watermark"`
 }

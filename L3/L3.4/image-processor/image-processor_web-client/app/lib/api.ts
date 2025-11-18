@@ -1,10 +1,21 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 import { Image } from "./types"
 
-export const uploadImage = async (file: File): Promise<{ id: string }> => {
+interface ProcessOptions {
+  resize: boolean
+  thumbnail: boolean
+  watermark: boolean
+}
+
+export const uploadImage = async (
+  file: File,
+  options: ProcessOptions
+): Promise<{ id: string }> => {
   const formData = new FormData()
   formData.append("file", file)
+  formData.append("options", JSON.stringify(options))
+
   const res = await fetch(`${API_BASE_URL}/upload`, {
     method: "POST",
     body: formData,

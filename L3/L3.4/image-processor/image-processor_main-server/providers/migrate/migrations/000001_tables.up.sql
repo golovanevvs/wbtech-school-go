@@ -5,5 +5,6 @@ CREATE TABLE image (
     processed_path TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    format VARCHAR(10)
+    format VARCHAR(10),
+    operations JSONB DEFAULT '{"resize": true, "thumbnail": false, "watermark": false}'
 );

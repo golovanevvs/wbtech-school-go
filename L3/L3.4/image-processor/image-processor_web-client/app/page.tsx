@@ -5,13 +5,16 @@ import { Container, Stack } from "@mui/material";
 import Header from "./ui/Header";
 import ImageUploadForm from "./ui/ImageUploadForm";
 import ImageGallery from "./ui/ImageGallery";
-import { Image } from "./lib/types";
 
 export default function Home() {
-  const [images, setImages] = useState<Image[]>([]);
+  const [imageIds, setImageIds] = useState<string[]>([]);
 
   const handleUpload = (newImage: { id: string; status: string }) => {
-    setImages((prev) => [...prev, { id: newImage.id, status: newImage.status } as Image]);
+    setImageIds((prev) => [...prev, newImage.id]);
+  };
+
+  const handleRemove = (id: string) => {
+    setImageIds((prev) => prev.filter(imgId => imgId !== id));
   };
 
   return (
@@ -29,7 +32,7 @@ export default function Home() {
       <Stack spacing={4}>
         <Header />
         <ImageUploadForm onUpload={handleUpload} />
-        <ImageGallery initialImages={images} />
+        <ImageGallery imageIds={imageIds} onRemove={handleRemove} />
       </Stack>
     </Container>
   );
