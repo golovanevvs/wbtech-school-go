@@ -19,7 +19,7 @@ export default function ImageGallery({
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(330px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
           gap: 2,
           width: "fit-content",
           maxWidth: "100%",

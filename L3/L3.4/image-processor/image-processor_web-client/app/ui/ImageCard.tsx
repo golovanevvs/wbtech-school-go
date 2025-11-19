@@ -133,7 +133,7 @@ export default function ImageCard({ id, onRemove }: Props) {
   return (
     <Card
       sx={{
-        width: 330,
+        width: 320,
         margin: "10px",
         display: "flex",
         flexDirection: "column",
