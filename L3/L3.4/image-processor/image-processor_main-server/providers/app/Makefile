@@ -66,6 +66,11 @@ endif
 
 build-up: build up
 
+create-network:
+	@echo "Creating Docker network: $(APP_CONTAINER)"
+	@docker network create $(APP_CONTAINER) || echo "Network $(APP_CONTAINER) already exists"
+	@echo "Docker network $(APP_CONTAINER) ready"
+
 # TESTS
 COVER_DIR = $(PROJECT_DIR)/resources/coverage
 COVER_TMP = $(COVER_DIR)/coverage.out.tmp
@@ -116,7 +121,7 @@ mock-rd-savenotice-clean:
 
 # APP = providers/app
 
-# .PHONY: app-build app-up app-build-up app-test-cover
+# .PHONY: app-build app-up app-build-up app-test-cover app-create-network
 
 # app-build:
 # 	$(MAKE_CMD) -C $(APP) build
@@ -124,6 +129,8 @@ mock-rd-savenotice-clean:
 # 	$(MAKE_CMD) -C $(APP) up
 # app-build-up:
 # 	$(MAKE_CMD) -C $(APP) build-up
+# app-create-network:
+# 	$(MAKE_CMD) -C $(APP) create-network
 # app-test-cover:
 # 	$(MAKE_CMD) -C $(APP) test-cover
 

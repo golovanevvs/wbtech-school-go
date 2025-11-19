@@ -16,9 +16,11 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     networks:
       - proxy
+      - ${APP_CONTAINER}
     ports:
       - 7783:${APP_TRANSPORT_HTTP_PORT}
 
 networks:
   proxy:
     external: true
+  image-processor_main-server:

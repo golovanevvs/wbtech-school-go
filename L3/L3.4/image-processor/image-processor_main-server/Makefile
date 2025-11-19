@@ -20,7 +20,7 @@ endif
 
 APP = providers/app
 
-.PHONY: app-build app-up app-build-up app-test-cover
+.PHONY: app-build app-up app-build-up app-test-cover app-create-network
 
 app-build:
 	$(MAKE_CMD) -C $(APP) build
@@ -28,6 +28,8 @@ app-up:
 	$(MAKE_CMD) -C $(APP) up
 app-build-up:
 	$(MAKE_CMD) -C $(APP) build-up
+app-create-network:
+	$(MAKE_CMD) -C $(APP) create-network
 app-test-cover:
 	$(MAKE_CMD) -C $(APP) test-cover
 
