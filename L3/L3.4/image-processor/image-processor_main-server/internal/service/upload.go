@@ -31,7 +31,7 @@ func (sv *Service) UploadImage(ctx context.Context, file io.Reader, filename str
 		return 0, err
 	}
 
-	err = sv.rpMeta.UpdateImageStatus(ctx, img.ID, model.StatusProcessing)
+	err = sv.rpMeta.UpdateImageStatus(ctx, img.ID, model.StatusQueued)
 	if err != nil {
 		return 0, err
 	}

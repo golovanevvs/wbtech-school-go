@@ -28,4 +28,4 @@ COPY --from=builder /app/$APP_NAME .
 
 COPY --from=builder /app/providers ./providers/
 
-ENTRYPOINT ["/root/comment-tree_main-server"]
+ENTRYPOINT ["/root/image-processor_main-server"]

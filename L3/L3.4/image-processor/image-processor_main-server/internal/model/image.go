@@ -6,6 +6,7 @@ type ImageStatus string
 
 const (
 	StatusUploading  ImageStatus = "uploading"
+	StatusQueued     ImageStatus = "queued"
 	StatusProcessing ImageStatus = "processing"
 	StatusCompleted  ImageStatus = "completed"
 	StatusFailed     ImageStatus = "failed"

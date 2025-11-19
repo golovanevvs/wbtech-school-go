@@ -46,7 +46,7 @@ func (hd *ImageHandlers) RegisterRoutes() {
 func convertToImageResponse(img *model.Image) *imageResponse {
 	var processedUrl string
 	if img.ProcessedPath != nil {
-		processedUrl = "https://morbidly-willing-redpoll.cloudpub.ru/uploads/" + filepath.Base(*img.ProcessedPath)
+		processedUrl = "/uploads/" + filepath.Base(*img.ProcessedPath)
 	}
 
 	return &imageResponse{

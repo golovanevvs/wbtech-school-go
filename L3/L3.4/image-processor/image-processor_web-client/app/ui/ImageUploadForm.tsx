@@ -8,6 +8,7 @@ import {
   Typography,
   FormControlLabel,
   Checkbox,
+  Box,
 } from "@mui/material"
 import { uploadImage } from "../lib/api"
 
@@ -20,8 +21,8 @@ export default function ImageUploadForm({ onUpload }: Props) {
   const [loading, setLoading] = useState(false)
 
   const [resize, setResize] = useState(true)
-  const [thumbnail, setThumbnail] = useState(false)
   const [watermark, setWatermark] = useState(false)
+  const [thumbnail, setThumbnail] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -57,59 +58,78 @@ export default function ImageUploadForm({ onUpload }: Props) {
   }
 
   return (
-    <Paper
-      component="form"
-      onSubmit={handleSubmit}
-      sx={{ p: 2, display: "flex", gap: 2, flexDirection: "column" }}
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        width: "100%",
+      }}
     >
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        style={{ display: "none" }}
-      />
-      <Button variant="outlined" onClick={handleButtonClick} disabled={loading}>
-        Выберите файл
-      </Button>
-      {file && <Typography variant="body2">Выбрано: {file.name}</Typography>}
+      <Paper
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{
+          p: 2,
+          display: "flex",
+          gap: 2,
+          flexDirection: "column",
+          maxWidth: 600,
+          width: "100%",
+        }}
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          style={{ display: "none" }}
+        />
+        <Button
+          variant="outlined"
+          onClick={handleButtonClick}
+          disabled={loading}
+        >
+          Выберите файл
+        </Button>
+        {file && <Typography variant="body2">Выбрано: {file.name}</Typography>}
 
-      <Stack spacing={1}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={resize}
-              onChange={(e) => setResize(e.target.checked)}
-              disabled={!file || loading}
-            />
-          }
-          label="Изменить размер"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={thumbnail}
-              onChange={(e) => setThumbnail(e.target.checked)}
-              disabled={!file || loading}
-            />
-          }
-          label="Создать миниатюру"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={watermark}
-              onChange={(e) => setWatermark(e.target.checked)}
-              disabled={!file || loading}
-            />
-          }
-          label="Наложить водяной знак"
-        />
-      </Stack>
+        <Stack spacing={1}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={resize}
+                onChange={(e) => setResize(e.target.checked)}
+                disabled={!file || loading}
+              />
+            }
+            label="Изменить размер"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={watermark}
+                onChange={(e) => setWatermark(e.target.checked)}
+                disabled={!file || loading}
+              />
+            }
+            label="Наложить водяной знак"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={thumbnail}
+                onChange={(e) => setThumbnail(e.target.checked)}
+                disabled={!file || loading}
+              />
+            }
+            label="Создать миниатюру"
+          />
+        </Stack>
 
-      <Button type="submit" variant="contained" disabled={loading || !file}>
-        {loading ? "Загрузка..." : "Загрузить"}
-      </Button>
-    </Paper>
+        <Button type="submit" variant="contained" disabled={loading || !file}>
+          {loading ? "Загрузка..." : "Загрузить"}
+        </Button>
+      </Paper>
+    </Box>
   )
 }

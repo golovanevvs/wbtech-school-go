@@ -11,12 +11,13 @@ import {
   IconButton,
 } from "@mui/material"
 import DeleteIcon from "@mui/icons-material/Delete"
+import DownloadIcon from "@mui/icons-material/Download"
 import { getImageStatus, deleteImage } from "../lib/api"
 import { Image } from "../lib/types"
 
 interface Props {
-  id: number // ✅ id как number
-  onRemove: (id: number) => void // ✅ onRemove как (id: number) => void
+  id: number
+  onRemove: (id: number) => void
 }
 
 export default function ImageCard({ id, onRemove }: Props) {
@@ -33,7 +34,7 @@ export default function ImageCard({ id, onRemove }: Props) {
       if (!isMountedRef.current) return
 
       try {
-        const data = await getImageStatus(id.toString()) // ✅ преобразуем к string для API
+        const data = await getImageStatus(id.toString())
         console.log("getImageStatus response received:", data)
 
         if (!isMountedRef.current) {
@@ -41,7 +42,6 @@ export default function ImageCard({ id, onRemove }: Props) {
           return
         }
 
-        // Проверим тип вручную
         console.log("Checking data types...")
         if (typeof data.id !== "number" || typeof data.status !== "string") {
           console.error("Invalid data format:", data)
@@ -88,7 +88,7 @@ export default function ImageCard({ id, onRemove }: Props) {
   const handleDelete = async () => {
     setLoading(true)
     try {
-      await deleteImage(id.toString()) // ✅ преобразуем к string для API
+      await deleteImage(id.toString())
       onRemove(id)
     } catch (err: unknown) {
       let message = "Ошибка удаления"
@@ -101,6 +101,12 @@ export default function ImageCard({ id, onRemove }: Props) {
     }
   }
 
+  const handleDownload = () => {
+    if (image?.processed_url) {
+      window.open(image.processed_url, "_blank")
+    }
+  }
+
   if (error) return <Box color="error.main">❌ Ошибка: {error}</Box>
 
   if (!image) {
@@ -110,14 +116,49 @@ export default function ImageCard({ id, onRemove }: Props) {
 
   console.log("Image is not null, showing card")
 
+  const originalFilename = image.original_path
+    ? image.original_path.split("\\").pop()?.split("/").pop() || "unknown"
+    : "unknown"
+
+  const operationsList = []
+  if (image.operations) {
+    if (image.operations.resize) operationsList.push("изменение размера")
+    if (image.operations.watermark)
+      operationsList.push("наложение водяного знака")
+    if (image.operations.thumbnail) operationsList.push("создание миниатюры")
+  }
+  const operationsText =
+    operationsList.length > 0 ? operationsList.join(", ") : "без изменений"
+
   return (
-    <Card sx={{ maxWidth: 345, margin: "10px" }}>
-      <CardContent>
+    <Card
+      sx={{
+        width: 345,
+        margin: "10px",
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+      }}
+    >
+      <CardContent sx={{ flexGrow: 1 }}>
         <Typography gutterBottom variant="h6" component="div">
           ID изображения: {image.id}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Статус: {image.status}
+        </Typography>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
+          }}
+        >
+          Файл: {originalFilename}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Обработка: {operationsText}
         </Typography>
       </CardContent>
 
@@ -128,6 +169,21 @@ export default function ImageCard({ id, onRemove }: Props) {
           image={image.processed_url}
           alt="Обработанное изображение"
         />
+      )}
+
+      {(image.status === "uploading" || image.status === "processing") && (
+        <CardContent
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: 140,
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            📁 Загрузка...
+          </Typography>
+        </CardContent>
       )}
 
       {image.status === "failed" && (
@@ -147,6 +203,16 @@ export default function ImageCard({ id, onRemove }: Props) {
       )}
 
       <CardActions>
+        {image.status === "completed" && image.processed_url && (
+          <IconButton
+            size="small"
+            color="primary"
+            onClick={handleDownload}
+            aria-label="открыть в новом окне"
+          >
+            <DownloadIcon />
+          </IconButton>
+        )}
         <IconButton
           size="small"
           color="error"

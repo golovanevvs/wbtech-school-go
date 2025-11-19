@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Container, Stack } from "@mui/material"
+import { Box, Stack } from "@mui/material"
 import Header from "./ui/Header"
 import ImageUploadForm from "./ui/ImageUploadForm"
 import ImageGallery from "./ui/ImageGallery"
-import { getAllImages } from "./lib/api";
+import { getAllImages } from "./lib/api"
 
 export default function Home() {
   const [imageIds, setImageIds] = useState<number[]>([])
@@ -33,15 +33,15 @@ export default function Home() {
   }, [])
 
   return (
-    <Container
-      disableGutters
+    <Box
       sx={{
         width: "100%",
-        maxWidth: 800,
-        mx: "auto",
+        minHeight: "100vh",
         px: { xs: 0, sm: 2 },
         py: 2,
         bgcolor: "background.default",
+        maxWidth: "100vw", 
+        mx: "auto", 
       }}
     >
       <Stack spacing={4}>
@@ -49,6 +49,6 @@ export default function Home() {
         <ImageUploadForm onUpload={handleUpload} />
         <ImageGallery imageIds={imageIds} onRemove={handleRemove} />
       </Stack>
-    </Container>
+    </Box>
   )
 }

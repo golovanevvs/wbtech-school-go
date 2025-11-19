@@ -1,0 +1,90 @@
+name: image-processor_web-client CI/CD
+
+on:
+  push:
+    tags:
+      - "image-processor_web-client_v*"
+  pull_request:
+    branches: [main]
+    paths:
+      - "L3/L3.4/image-processor/image-processor_web-client/**"
+      - ".github/workflows/image-processor_web-client.yml"
+
+jobs:
+  extract-tag-info:
+    name: Extract Tag Information
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract-version.outputs.version }}
+      tag-name: ${{ github.ref_name }}
+    steps:
+      - name: Extract version from tag
+        id: extract-version
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          VERSION="${TAG_NAME#image-processor_web-client_v}"
+          echo "Extracted version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+  build-and-publish:
+    name: Build and Publish
+    runs-on: ubuntu-latest
+    needs: extract-tag-info
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: L3/L3.4/image-processor/image-processor_web-client
+          file: L3/L3.4/image-processor/image-processor_web-client/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.actor }}/image-processor_web-client:${{ needs.extract-tag-info.outputs.version }}
+            ghcr.io/${{ github.actor }}/image-processor_web-client:latest
+          labels: |
+            version=${{ needs.extract-tag-info.outputs.version }}
+            commit=${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://incompletely-elemental-moonfish.cloudpub.ru/image-processor_main-server
+
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    needs: [build-and-publish, extract-tag-info]
+
+    steps:
+      - name: Trigger deployment via Webhook
+        run: |
+          response=$(curl -s -w "%{http_code}" -X POST \
+          -H "X-GitHub-Token: ${{ secrets.DEPLOY_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d "{\"version\": \"${{ needs.extract-tag-info.outputs.version }}\", \"image\": \"ghcr.io/${{ github.actor }}/image-processor_web-client:${{ needs.extract-tag-info.outputs.version }}\"}" \
+           https://${{secrets.SERVER_HOST}}/hooks/image-processor_web-client)
+
+          http_code=${response: -3}
+          body=${response%???}
+
+          echo "Response: $body"
+          echo "HTTP Code: $http_code"
+
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ Deployment triggered successfully"
+          else
+            echo "❌ Deployment failed with HTTP code: $http_code"
+            exit 1
+          fi

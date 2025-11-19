@@ -13,20 +13,23 @@ export default function ImageGallery({
   return (
     <Box
       sx={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-        gap: 2,
-        justifyContent: 'center',
-        width: '100%',
+        width: "100%",
       }}
     >
-      {imageIds.map((id) => (
-        <ImageCard 
-          key={id} 
-          id={id}
-          onRemove={onRemove}
-        />
-      ))}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(345px, 1fr))",
+          gap: 2,
+          width: "fit-content",
+          maxWidth: "100%",
+          mx: "auto",
+        }}
+      >
+        {imageIds.map((id) => (
+          <ImageCard key={id} id={id} onRemove={onRemove} />
+        ))}
+      </Box>
     </Box>
   )
 }

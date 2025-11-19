@@ -41,6 +41,7 @@ func newConfig(env string) (*Config, error) {
 		"providers/app/config.yaml",
 		"providers/logger/config.yaml",
 		"providers/kafka/config.yaml",
+		"providers/postgres/config.yaml",
 	); err != nil {
 		return nil, fmt.Errorf("failed to load config files: %w", err)
 	}
