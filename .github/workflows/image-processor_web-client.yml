@@ -61,6 +61,7 @@ jobs:
             commit=${{ github.sha }}
           build-args: |
             NEXT_PUBLIC_API_URL=https://incompletely-elemental-moonfish.cloudpub.ru/image-processor_main-server
+            NEXT_PUBLIC_BASE_PATH=/image-processor_web-client
 
   deploy:
     name: Deploy to Server
