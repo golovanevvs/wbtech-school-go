@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"path/filepath"
 	"strconv"
@@ -15,31 +16,31 @@ func (sv *Service) UploadImage(ctx context.Context, file io.Reader, filename str
 
 	img, err := sv.rpMeta.CreateImage(ctx, "", format, options)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("create image: %w", err)
 	}
 
 	originalPath, err := sv.rpFile.SaveOriginalWithID(file, img.ID, filename)
 	if err != nil {
 		_ = sv.rpMeta.DeleteImage(ctx, img.ID)
-		return 0, err
+		return 0, fmt.Errorf("save original with ID: %w", err)
 	}
 
 	err = sv.rpMeta.UpdateOriginalPath(ctx, img.ID, originalPath)
 	if err != nil {
 		_ = sv.rpFile.DeleteOriginal(originalPath)
 		_ = sv.rpMeta.DeleteImage(ctx, img.ID)
-		return 0, err
+		return 0, fmt.Errorf("update original path: %w", err)
 	}
 
 	err = sv.rpMeta.UpdateImageStatus(ctx, img.ID, model.StatusQueued)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("update image status: %w", err)
 	}
 
 	err = sv.producer.SendProcessTask(ctx, strconv.Itoa(img.ID))
 	if err != nil {
 		_ = sv.rpMeta.UpdateImageStatus(ctx, img.ID, model.StatusFailed)
-		return 0, err
+		return 0, fmt.Errorf("send process task: %w", err)
 	}
 
 	return img.ID, nil
