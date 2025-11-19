@@ -28,4 +28,7 @@ COPY --from=builder /app/$APP_NAME .
 
 COPY --from=builder /app/providers ./providers/
 
+RUN mkdir -p ./resources/app/filestorage
+RUN chmod 755 ./resources/app/filestorage
+
 ENTRYPOINT ["/root/image-processor_main-server"]
