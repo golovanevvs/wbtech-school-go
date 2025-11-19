@@ -6,6 +6,11 @@
 
 [https://incompletely-elemental-moonfish.cloudpub.ru/image-processor_web-client/](https://incompletely-elemental-moonfish.cloudpub.ru/image-processor_web-client/)
 
+Проект состоит из двух частей:
+
+- [**image-processor_main-server**](image-processor_main-server) (Go) — отвечает за API и работу с данными.  
+- [**image-processor_web-client**](image-processor_web-client) (Next.js) — веб-интерфейс для работы с сервисом.
+
 ## Возможности
 
 - **Загрузка изображений** с выбором операций обработки
