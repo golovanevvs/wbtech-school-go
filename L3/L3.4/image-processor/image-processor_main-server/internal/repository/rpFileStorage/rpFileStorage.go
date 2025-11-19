@@ -23,13 +23,13 @@ func (fs *RpFileStorage) SaveOriginalWithID(file io.Reader, id int, originalFile
 	filename := filepath.Join(fs.dir, fmt.Sprintf("%d_%s", id, originalFilename))
 	out, err := os.Create(filename)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("create: %w", err)
 	}
 	defer out.Close()
 
 	_, err = io.Copy(out, file)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("copy: %w", err)
 	}
 
 	return filename, nil
