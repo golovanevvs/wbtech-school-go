@@ -1,4 +1,4 @@
 kafka:
   brokers:
-    - "localhost:9092"
+    - "host.docker.internal:9092"
   topic: "image-processor"
