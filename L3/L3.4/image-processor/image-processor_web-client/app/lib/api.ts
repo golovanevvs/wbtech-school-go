@@ -35,7 +35,7 @@ export const getImageStatus = async (id: string): Promise<Image> => {
     throw new Error(`Failed to fetch image status: ${errorText}`)
   }
 
-  const data = await res.json() // ✅ Читаем один раз
+  const data = await res.json()
   console.log("getImageStatus response:", res.status, data)
 
   return data
