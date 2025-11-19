@@ -1,6 +1,12 @@
 # Comment Tree
 
-comment-tree — это веб-приложение для работы с древовидными комментариями. Пользователи могут:
+comment-tree — это веб-приложение для работы с древовидными комментариями.
+
+Протестировать работу сервиса можно по ссылке:
+
+[https://incompletely-elemental-moonfish.cloudpub.ru/comment-tree_web-client/](https://incompletely-elemental-moonfish.cloudpub.ru/comment-tree_web-client/)
+
+Пользователи могут:
 
 - Просматривать древовидную структуру комментариев.
 - Отвечать на комментарии.
