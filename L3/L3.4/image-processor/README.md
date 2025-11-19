@@ -2,6 +2,10 @@
 
 Веб-приложение для асинхронной обработки изображений.
 
+Протестировать работу сервиса можно по ссылке:
+
+[https://incompletely-elemental-moonfish.cloudpub.ru/image-processor_web-client/](https://incompletely-elemental-moonfish.cloudpub.ru/image-processor_web-client/)
+
 ## Возможности
 
 - **Загрузка изображений** с выбором операций обработки
