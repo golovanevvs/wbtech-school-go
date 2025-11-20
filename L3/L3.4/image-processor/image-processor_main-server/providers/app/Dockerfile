@@ -2,7 +2,12 @@
 
 FROM golang:1.25.2-alpine AS builder
 
-RUN apk add --no-cache git ca-certificates
+RUN apk add --no-cache \
+    git \
+    ca-certificates \
+    build-base \
+    pkgconfig \
+    opencv-dev
 
 WORKDIR /app
 
@@ -20,7 +25,10 @@ RUN go build -o $APP_NAME ./cmd/$APP_NAME
 
 FROM alpine:latest
 
-RUN apk add --no-cache ca-certificates
+RRUN apk add --no-cache \
+    ca-certificates \
+    libstdc++ \
+    opencv
 
 WORKDIR /root/
 
