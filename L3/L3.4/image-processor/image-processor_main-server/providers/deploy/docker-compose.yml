@@ -14,11 +14,17 @@ services:
       - POSTGRES_MASTER_PORT=${POSTGRES_MASTER_PORT}
       - POSTGRES_MASTER_HOST=${POSTGRES_MASTER_HOST}
       - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - image-processor_storage:/root/resources/app/filestorage
     networks:
       - proxy
       - image-processor_main-server
     ports:
       - 7783:${APP_TRANSPORT_HTTP_PORT}
+
+volumes:
+  image-processor_storage:
+    driver: local
 
 networks:
   proxy:
