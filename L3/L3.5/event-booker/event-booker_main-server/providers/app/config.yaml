@@ -1,0 +1,10 @@
+app:
+  retry:
+    attempts: 5
+    delay: 300ms
+    backoff: 2
+  transport:
+    http:
+      handler:
+        gin_mode: release
+        web_port: 7778

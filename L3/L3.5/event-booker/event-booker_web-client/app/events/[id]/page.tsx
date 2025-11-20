@@ -64,7 +64,6 @@ export default function EventDetailPage({ params }: PageProps) {
         }}
       >
         <Stack spacing={4}>
-          <Header />
           <Alert severity="error">{error}</Alert>
         </Stack>
       </Box>

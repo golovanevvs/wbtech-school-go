@@ -32,7 +32,6 @@ export default function CreateEventPage() {
     <Box
       sx={{
         width: "100%",
-        minHeight: "100vh",
         px: { xs: 2, sm: 2 },
         py: 1,
         bgcolor: "background.default",
