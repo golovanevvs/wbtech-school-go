@@ -91,7 +91,17 @@ export default function ImageUploadForm({ onUpload }: Props) {
         >
           Выберите файл
         </Button>
-        {file && <Typography variant="body2">Выбрано: {file.name}</Typography>}
+        {file && (
+          <Typography
+            variant="body2"
+            sx={{
+              wordBreak: "break-word",
+              overflowWrap: "break-word",
+            }}
+          >
+            Выбрано: {file.name}
+          </Typography>
+        )}
 
         <Stack spacing={1}>
           <FormControlLabel
