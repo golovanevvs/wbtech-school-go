@@ -14,6 +14,7 @@ import (
 	"github.com/disintegration/imaging"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.4/image-processor/image-processor_main-server/internal/model"
 	"github.com/nfnt/resize"
+	"gocv.io/x/gocv"
 )
 
 //go:embed watermark.png
@@ -70,9 +71,12 @@ func (sv *Service) applyProcessing(img image.Image, options model.ProcessOptions
 	result := img
 
 	if options.Resize {
-		result = imaging.Fit(result, 800, 600, imaging.Lanczos)
-		result = imaging.Fill(result, 800, 600, imaging.Center, imaging.Lanczos)
+		result = applyClassicCartoonEffect(result)
 	}
+	// if options.Resize {
+	// 	result = imaging.Fit(result, 800, 600, imaging.Lanczos)
+	// 	result = imaging.Fill(result, 800, 600, imaging.Center, imaging.Lanczos)
+	// }
 
 	if options.Watermark {
 		result = addWatermark(result)
@@ -136,4 +140,55 @@ func addWatermark(img image.Image) image.Image {
 	result := imaging.Overlay(img, scaledWatermark, image.Point{X: x, Y: y}, 0.2)
 
 	return result
+}
+
+// applyClassicCartoonEffect применяет классические фильтры для мультяшного эффекта
+func applyClassicCartoonEffect(img image.Image) image.Image {
+	mat, err := gocv.ImageToMatRGB(img)
+	if err != nil {
+		return img
+	}
+	defer mat.Close()
+
+	// 1. Упрощение деталей с помощью bilateral filter
+	simplified := gocv.NewMat()
+	defer simplified.Close()
+	gocv.BilateralFilter(mat, &simplified, 9, 150, 150)
+
+	// 2. Дополнительное упрощение median filter
+	smoothed := gocv.NewMat()
+	defer smoothed.Close()
+	gocv.MedianBlur(simplified, &smoothed, 7)
+
+	// 3. Создаем маску краев
+	gray := gocv.NewMat()
+	defer gray.Close()
+	gocv.CvtColor(smoothed, &gray, gocv.ColorBGRToGray)
+
+	edges := gocv.NewMat()
+	defer edges.Close()
+	gocv.AdaptiveThreshold(gray, &edges, 255, gocv.AdaptiveThresholdGaussian,
+		gocv.ThresholdBinary, 9, 2)
+
+	// 4. Инвертируем края для создания маски
+	edgesInv := gocv.NewMat()
+	defer edgesInv.Close()
+	gocv.BitwiseNot(edges, &edgesInv)
+
+	// 5. Создаем цветную версию инвертированных краев
+	edgesInvColor := gocv.NewMat()
+	defer edgesInvColor.Close()
+	gocv.CvtColor(edgesInv, &edgesInvColor, gocv.ColorGrayToBGR)
+
+	// 6. Объединяем упрощенное изображение с маской
+	result := gocv.NewMat()
+	defer result.Close()
+	gocv.BitwiseAnd(smoothed, edgesInvColor, &result)
+
+	resultImg, err := result.ToImage()
+	if err != nil {
+		return img
+	}
+
+	return resultImg
 }
