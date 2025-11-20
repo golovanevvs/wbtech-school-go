@@ -1,10 +1,8 @@
 # Build
-FROM golang:1.25.2-bullseye AS builder
 
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    libopencv-dev \
-    && rm -rf /var/lib/apt/lists/*
+FROM golang:1.25.2-alpine AS builder
+
+RUN apk add --no-cache git ca-certificates
 
 WORKDIR /app
 
@@ -19,13 +17,10 @@ COPY . .
 RUN go build -o $APP_NAME ./cmd/$APP_NAME
 
 # Runtime
-FROM debian:bullseye-slim
 
-RUN apt-get update && apt-get install -y \
-    libopencv-core4.5 \
-    libopencv-imgproc4.5 \
-    libopencv-imgcodecs4.5 \
-    && rm -rf /var/lib/apt/lists/*
+FROM alpine:latest
+
+RUN apk add --no-cache ca-certificates
 
 WORKDIR /root/
 
