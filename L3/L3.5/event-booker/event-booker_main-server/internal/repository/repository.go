@@ -11,15 +11,18 @@ type Repository struct {
 	*rpPostgres.EventRepository
 	*rpPostgres.BookingRepository
 	*rpPostgres.RefreshTokenRepository
+	*rpPostgres.NoticeRepository
 }
 
 func New(pg *pkgPostgres.Postgres) (*Repository, error) {
+	userRp := rpPostgres.NewUserRepository(pg)
 	return &Repository{
 		RpPostgres:             rpPostgres.New(pg),
-		UserRepository:         rpPostgres.NewUserRepository(pg),
+		UserRepository:         userRp,
 		EventRepository:        rpPostgres.NewEventRepository(pg),
 		BookingRepository:      rpPostgres.NewBookingRepository(pg),
 		RefreshTokenRepository: rpPostgres.NewRefreshTokenRepository(pg),
+		NoticeRepository:       rpPostgres.NewNoticeRepository(userRp),
 	}, nil
 
 }

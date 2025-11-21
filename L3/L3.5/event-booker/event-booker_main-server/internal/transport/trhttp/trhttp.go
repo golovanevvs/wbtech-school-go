@@ -23,14 +23,25 @@ type HTTP struct {
 	httpsrv *http.Server
 }
 
-func New(cfg *Config, parentLg *zlog.Zerolog, rs *pkgRetry.Retry, sv IService, fileStorageDir string) *HTTP {
+func New(
+	cfg *Config,
+	parentLg *zlog.Zerolog,
+	rs *pkgRetry.Retry,
+	sv IService,
+) *HTTP {
 	lg := parentLg.With().Str("component", "HTTP").Logger()
 	return &HTTP{
 		lg: &lg,
 		rs: rs,
 		httpsrv: &http.Server{
-			Addr:    fmt.Sprintf(":%d", cfg.Port),
-			Handler: handler.New(cfg.Handler, &lg, sv, cfg.PublicHost, cfg.WebPublicHost, fileStorageDir).Rt,
+			Addr: fmt.Sprintf(":%d", cfg.Port),
+			Handler: handler.New(
+				cfg.Handler,
+				&lg,
+				sv,
+				cfg.PublicHost,
+				cfg.WebPublicHost,
+			).Rt,
 		},
 	}
 }

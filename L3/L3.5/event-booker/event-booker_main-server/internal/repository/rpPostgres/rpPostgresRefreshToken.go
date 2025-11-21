@@ -22,7 +22,7 @@ func NewRefreshTokenRepository(db *pkgPostgres.Postgres) *RefreshTokenRepository
 }
 
 // Create creates a new refresh token
-func (r *RefreshTokenRepository) Create(token *model.RefreshToken) (*model.RefreshToken, error) {
+func (rp *RefreshTokenRepository) Create(token *model.RefreshToken) (*model.RefreshToken, error) {
 	query := `
 
 		INSERT INTO
@@ -35,7 +35,7 @@ func (r *RefreshTokenRepository) Create(token *model.RefreshToken) (*model.Refre
 		`
 
 	var createdToken model.RefreshToken
-	err := r.db.DB.Master.QueryRowContext(
+	err := rp.db.DB.Master.QueryRowContext(
 		context.Background(),
 		query,
 		token.UserID,
@@ -58,7 +58,7 @@ func (r *RefreshTokenRepository) Create(token *model.RefreshToken) (*model.Refre
 }
 
 // GetByToken returns a refresh token by its value
-func (r *RefreshTokenRepository) GetByToken(token string) (*model.RefreshToken, error) {
+func (rp *RefreshTokenRepository) GetByToken(token string) (*model.RefreshToken, error) {
 	query := `
 
 		SELECT
@@ -71,7 +71,7 @@ func (r *RefreshTokenRepository) GetByToken(token string) (*model.RefreshToken, 
 		`
 	var refreshToken model.RefreshToken
 
-	row := r.db.DB.QueryRowContext(context.Background(), query, token)
+	row := rp.db.DB.QueryRowContext(context.Background(), query, token)
 	err := row.Scan(
 		&refreshToken.ID,
 		&refreshToken.UserID,
@@ -91,7 +91,7 @@ func (r *RefreshTokenRepository) GetByToken(token string) (*model.RefreshToken, 
 }
 
 // GetByUserID returns all refresh tokens for a user
-func (r *RefreshTokenRepository) GetByUserID(userID int) ([]*model.RefreshToken, error) {
+func (rp *RefreshTokenRepository) GetByUserID(userID int) ([]*model.RefreshToken, error) {
 	query := `
 
 		SELECT
@@ -105,7 +105,7 @@ func (r *RefreshTokenRepository) GetByUserID(userID int) ([]*model.RefreshToken,
 		
 		`
 
-	rows, err := r.db.DB.QueryContext(context.Background(), query, userID)
+	rows, err := rp.db.DB.QueryContext(context.Background(), query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get refresh tokens for user %d: %w", userID, err)
 	}
@@ -131,7 +131,7 @@ func (r *RefreshTokenRepository) GetByUserID(userID int) ([]*model.RefreshToken,
 }
 
 // DeleteByID deletes a refresh token by ID
-func (r *RefreshTokenRepository) DeleteByID(id int) error {
+func (rp *RefreshTokenRepository) DeleteByID(id int) error {
 	query := `
 	
 		DELETE FROM
@@ -140,7 +140,7 @@ func (r *RefreshTokenRepository) DeleteByID(id int) error {
 			id = $1
 		
 		`
-	result, err := r.db.DB.ExecContext(context.Background(), query, id)
+	result, err := rp.db.DB.ExecContext(context.Background(), query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete refresh token by ID: %w", err)
 	}
@@ -158,7 +158,7 @@ func (r *RefreshTokenRepository) DeleteByID(id int) error {
 }
 
 // DeleteByToken deletes a refresh token by its value
-func (r *RefreshTokenRepository) DeleteByToken(token string) error {
+func (rp *RefreshTokenRepository) DeleteByToken(token string) error {
 	query := `
 	
 		DELETE FROM
@@ -167,7 +167,7 @@ func (r *RefreshTokenRepository) DeleteByToken(token string) error {
 			token = $1
 		
 		`
-	result, err := r.db.DB.ExecContext(context.Background(), query, token)
+	result, err := rp.db.DB.ExecContext(context.Background(), query, token)
 	if err != nil {
 		return fmt.Errorf("failed to delete refresh token by token: %w", err)
 	}
@@ -185,7 +185,7 @@ func (r *RefreshTokenRepository) DeleteByToken(token string) error {
 }
 
 // DeleteByUserID deletes all refresh tokens for a user
-func (r *RefreshTokenRepository) DeleteByUserID(userID int) error {
+func (rp *RefreshTokenRepository) DeleteByUserID(userID int) error {
 	query := `
 	
 		DELETE FROM
@@ -194,7 +194,7 @@ func (r *RefreshTokenRepository) DeleteByUserID(userID int) error {
 			user_id = $1
 		
 		`
-	result, err := r.db.DB.ExecContext(context.Background(), query, userID)
+	result, err := rp.db.DB.ExecContext(context.Background(), query, userID)
 	if err != nil {
 		return fmt.Errorf("failed to delete refresh tokens for user %d: %w", userID, err)
 	}
@@ -212,7 +212,7 @@ func (r *RefreshTokenRepository) DeleteByUserID(userID int) error {
 }
 
 // DeleteExpired deletes all expired refresh tokens
-func (r *RefreshTokenRepository) DeleteExpired() error {
+func (rp *RefreshTokenRepository) DeleteExpired() error {
 	query := `
 	
 		DELETE FROM
@@ -223,7 +223,7 @@ func (r *RefreshTokenRepository) DeleteExpired() error {
 		`
 	currentTime := time.Now()
 
-	result, err := r.db.DB.ExecContext(context.Background(), query, currentTime)
+	result, err := rp.db.DB.ExecContext(context.Background(), query, currentTime)
 	if err != nil {
 		return fmt.Errorf("failed to delete expired refresh tokens: %w", err)
 	}

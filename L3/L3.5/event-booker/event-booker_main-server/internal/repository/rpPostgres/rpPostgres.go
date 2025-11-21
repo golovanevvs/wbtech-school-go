@@ -13,26 +13,26 @@ func New(db *pkgPostgres.Postgres) *RpPostgres {
 }
 
 // Close closes the database connection
-func (r *RpPostgres) Close() error {
-	return r.db.Close()
+func (rp *RpPostgres) Close() error {
+	return rp.db.Close()
 }
 
 // User returns the user repository
-func (r *RpPostgres) User() *UserRepository {
-	return NewUserRepository(r.db)
+func (rp *RpPostgres) User() *UserRepository {
+	return NewUserRepository(rp.db)
 }
 
 // Event returns the event repository
-func (r *RpPostgres) Event() *EventRepository {
-	return NewEventRepository(r.db)
+func (rp *RpPostgres) Event() *EventRepository {
+	return NewEventRepository(rp.db)
 }
 
 // Booking returns the booking repository
-func (r *RpPostgres) Booking() *BookingRepository {
-	return NewBookingRepository(r.db)
+func (rp *RpPostgres) Booking() *BookingRepository {
+	return NewBookingRepository(rp.db)
 }
 
 // RefreshToken returns the refresh token repository
-func (r *RpPostgres) RefreshToken() *RefreshTokenRepository {
-	return NewRefreshTokenRepository(r.db)
+func (rp *RpPostgres) RefreshToken() *RefreshTokenRepository {
+	return NewRefreshTokenRepository(rp.db)
 }

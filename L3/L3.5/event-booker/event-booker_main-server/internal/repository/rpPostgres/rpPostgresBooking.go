@@ -22,7 +22,7 @@ func NewBookingRepository(db *pkgPostgres.Postgres) *BookingRepository {
 }
 
 // Create creates a new booking
-func (r *BookingRepository) Create(booking *model.Booking) (*model.Booking, error) {
+func (rp *BookingRepository) Create(booking *model.Booking) (*model.Booking, error) {
 	query := `
 
 		INSERT INTO
@@ -35,7 +35,7 @@ func (r *BookingRepository) Create(booking *model.Booking) (*model.Booking, erro
 		`
 
 	var createdBooking model.Booking
-	err := r.db.DB.Master.QueryRowContext(
+	err := rp.db.DB.Master.QueryRowContext(
 		context.Background(),
 		query,
 		booking.UserID,
@@ -64,7 +64,7 @@ func (r *BookingRepository) Create(booking *model.Booking) (*model.Booking, erro
 }
 
 // GetByID returns a booking by ID
-func (r *BookingRepository) GetByID(id int) (*model.Booking, error) {
+func (rp *BookingRepository) GetByID(id int) (*model.Booking, error) {
 	query := `
 
 		SELECT
@@ -77,7 +77,7 @@ func (r *BookingRepository) GetByID(id int) (*model.Booking, error) {
 		`
 	var booking model.Booking
 
-	row := r.db.DB.QueryRowContext(context.Background(), query, id)
+	row := rp.db.DB.QueryRowContext(context.Background(), query, id)
 	err := row.Scan(
 		&booking.ID,
 		&booking.UserID,
@@ -100,7 +100,7 @@ func (r *BookingRepository) GetByID(id int) (*model.Booking, error) {
 }
 
 // GetByUserID returns all bookings for a user
-func (r *BookingRepository) GetByUserID(userID int) ([]*model.Booking, error) {
+func (rp *BookingRepository) GetByUserID(userID int) ([]*model.Booking, error) {
 	query := `
 
 		SELECT
@@ -114,7 +114,7 @@ func (r *BookingRepository) GetByUserID(userID int) ([]*model.Booking, error) {
 		
 		`
 
-	rows, err := r.db.DB.QueryContext(context.Background(), query, userID)
+	rows, err := rp.db.DB.QueryContext(context.Background(), query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookings for user %d: %w", userID, err)
 	}
@@ -143,7 +143,7 @@ func (r *BookingRepository) GetByUserID(userID int) ([]*model.Booking, error) {
 }
 
 // GetByEventID returns all bookings for an event
-func (r *BookingRepository) GetByEventID(eventID int) ([]*model.Booking, error) {
+func (rp *BookingRepository) GetByEventID(eventID int) ([]*model.Booking, error) {
 	query := `
 
 		SELECT
@@ -157,7 +157,7 @@ func (r *BookingRepository) GetByEventID(eventID int) ([]*model.Booking, error) 
 		
 		`
 
-	rows, err := r.db.DB.QueryContext(context.Background(), query, eventID)
+	rows, err := rp.db.DB.QueryContext(context.Background(), query, eventID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bookings for event %d: %w", eventID, err)
 	}
@@ -186,7 +186,7 @@ func (r *BookingRepository) GetByEventID(eventID int) ([]*model.Booking, error) 
 }
 
 // Update updates a booking
-func (r *BookingRepository) Update(booking *model.Booking) error {
+func (rp *BookingRepository) Update(booking *model.Booking) error {
 	query := `
 
 		UPDATE
@@ -198,7 +198,7 @@ func (r *BookingRepository) Update(booking *model.Booking) error {
 		
 		`
 
-	result, err := r.db.DB.ExecContext(
+	result, err := rp.db.DB.ExecContext(
 		context.Background(),
 		query,
 		booking.UserID,
@@ -226,7 +226,7 @@ func (r *BookingRepository) Update(booking *model.Booking) error {
 }
 
 // Delete deletes a booking by ID
-func (r *BookingRepository) Delete(id int) error {
+func (rp *BookingRepository) Delete(id int) error {
 	query := `
 	
 		DELETE FROM
@@ -235,7 +235,7 @@ func (r *BookingRepository) Delete(id int) error {
 			id = $1
 		
 		`
-	result, err := r.db.DB.ExecContext(context.Background(), query, id)
+	result, err := rp.db.DB.ExecContext(context.Background(), query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete booking: %w", err)
 	}
@@ -253,7 +253,7 @@ func (r *BookingRepository) Delete(id int) error {
 }
 
 // GetExpiredBookings returns all bookings that have expired
-func (r *BookingRepository) GetExpiredBookings() ([]*model.Booking, error) {
+func (rp *BookingRepository) GetExpiredBookings() ([]*model.Booking, error) {
 	query := `
 
 		SELECT
@@ -266,7 +266,7 @@ func (r *BookingRepository) GetExpiredBookings() ([]*model.Booking, error) {
 		`
 
 	currentTime := time.Now()
-	rows, err := r.db.DB.QueryContext(context.Background(), query, currentTime, model.BookingPending)
+	rows, err := rp.db.DB.QueryContext(context.Background(), query, currentTime, model.BookingPending)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get expired bookings: %w", err)
 	}
@@ -295,7 +295,7 @@ func (r *BookingRepository) GetExpiredBookings() ([]*model.Booking, error) {
 }
 
 // UpdateStatus updates the status of a booking
-func (r *BookingRepository) UpdateStatus(id int, status model.BookingStatus) error {
+func (rp *BookingRepository) UpdateStatus(id int, status model.BookingStatus) error {
 	query := `
 
 		UPDATE
@@ -308,7 +308,7 @@ func (r *BookingRepository) UpdateStatus(id int, status model.BookingStatus) err
 		`
 	currentTime := time.Now()
 
-	result, err := r.db.DB.ExecContext(
+	result, err := rp.db.DB.ExecContext(
 		context.Background(),
 		query,
 		status,

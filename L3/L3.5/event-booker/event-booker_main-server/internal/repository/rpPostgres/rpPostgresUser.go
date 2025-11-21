@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.5/event-booker/event-booker_main-server/internal/model"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.5/event-booker/event-booker_main-server/internal/pkg/pkgPostgres"
@@ -21,30 +22,34 @@ func NewUserRepository(db *pkgPostgres.Postgres) *UserRepository {
 }
 
 // Create creates a new user
-func (r *UserRepository) Create(user *model.User) (*model.User, error) {
+func (rp *UserRepository) Create(user *model.User) (*model.User, error) {
 	query := `
-		
+
 		INSERT INTO users
-			(email, name, created_at, updated_at) 
+			(email, name, password_hash, telegram_chat_id, created_at, updated_at) 
 		VALUES
-			($1, $2, $3, $4) 
+			($1, $2, $3, $4, $5, $6) 
 		RETURNING
-			id, email, name, created_at, updated_at
+			id, email, name, password_hash, telegram_chat_id, created_at, updated_at
 		
 		`
 
 	var createdUser model.User
-	err := r.db.DB.Master.QueryRowContext(
+	err := rp.db.DB.Master.QueryRowContext(
 		context.Background(),
 		query,
 		user.Email,
 		user.Name,
+		user.PasswordHash,
+		user.TelegramChatID,
 		user.CreatedAt,
 		user.UpdatedAt,
 	).Scan(
 		&createdUser.ID,
 		&createdUser.Email,
 		&createdUser.Name,
+		&createdUser.PasswordHash,
+		&createdUser.TelegramChatID,
 		&createdUser.CreatedAt,
 		&createdUser.UpdatedAt,
 	)
@@ -57,22 +62,29 @@ func (r *UserRepository) Create(user *model.User) (*model.User, error) {
 }
 
 // GetByID returns a user by ID
-func (r *UserRepository) GetByID(id int) (*model.User, error) {
+func (rp *UserRepository) GetByID(id int) (*model.User, error) {
 	query := `
-	
+
 		SELECT
-			id, email, name, created_at, updated_at
-		FROM 
+			id, email, name, password_hash, telegram_chat_id, created_at, updated_at 	
+		FROM
 			users
 		WHERE
 			id = $1
 		
 		`
-
 	var user model.User
 
-	row := r.db.DB.QueryRowContext(context.Background(), query, id)
-	err := row.Scan(&user.ID, &user.Email, &user.Name, &user.CreatedAt, &user.UpdatedAt)
+	row := rp.db.DB.QueryRowContext(context.Background(), query, id)
+	err := row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.Name,
+		&user.PasswordHash,
+		&user.TelegramChatID,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -85,22 +97,29 @@ func (r *UserRepository) GetByID(id int) (*model.User, error) {
 }
 
 // GetByEmail returns a user by email
-func (r *UserRepository) GetByEmail(email string) (*model.User, error) {
+func (rp *UserRepository) GetByEmail(email string) (*model.User, error) {
 	query := `
-
+		
 		SELECT
-			id, email, name, created_at, updated_at
+			id, email, name, password_hash, telegram_chat_id, created_at, updated_at 
 		FROM
 			users
 		WHERE
 			email = $1
 		
 		`
-
 	var user model.User
 
-	row := r.db.DB.QueryRowContext(context.Background(), query, email)
-	err := row.Scan(&user.ID, &user.Email, &user.Name, &user.CreatedAt, &user.UpdatedAt)
+	row := rp.db.DB.QueryRowContext(context.Background(), query, email)
+	err := row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.Name,
+		&user.PasswordHash,
+		&user.TelegramChatID,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -113,23 +132,25 @@ func (r *UserRepository) GetByEmail(email string) (*model.User, error) {
 }
 
 // Update updates a user
-func (r *UserRepository) Update(user *model.User) error {
+func (rp *UserRepository) Update(user *model.User) error {
 	query := `
 
 		UPDATE
 			users 
 		SET
-			email = $1, name = $2, updated_at = $3 
+			email = $1, name = $2, password_hash = $3, telegram_chat_id = $4, updated_at = $5 
 		WHERE
-			id = $4
+			id = $6
 		
 		`
 
-	result, err := r.db.DB.ExecContext(
+	result, err := rp.db.DB.ExecContext(
 		context.Background(),
 		query,
 		user.Email,
 		user.Name,
+		user.PasswordHash,
+		user.TelegramChatID,
 		user.UpdatedAt,
 		user.ID,
 	)
@@ -150,17 +171,16 @@ func (r *UserRepository) Update(user *model.User) error {
 }
 
 // Delete deletes a user by ID
-func (r *UserRepository) Delete(id int) error {
+func (rp *UserRepository) Delete(id int) error {
 	query := `
-
+	
 		DELETE FROM
 			users
 		WHERE
 			id = $1
 		
 		`
-
-	result, err := r.db.DB.ExecContext(context.Background(), query, id)
+	result, err := rp.db.DB.ExecContext(context.Background(), query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete user: %w", err)
 	}
@@ -175,4 +195,135 @@ func (r *UserRepository) Delete(id int) error {
 	}
 
 	return nil
+}
+
+// SaveTelegramChatID saves the Telegram chat ID for a user
+func (rp *UserRepository) SaveTelegramChatID(ctx context.Context, userID int, chatID int64) error {
+	query := `
+
+		UPDATE
+			users 
+		SET
+			telegram_chat_id = $1, updated_at = $2 
+		WHERE
+			id = $3
+		
+		`
+
+	result, err := rp.db.DB.ExecContext(ctx, query, &chatID, time.Now(), userID)
+	if err != nil {
+		return fmt.Errorf("failed to update telegram chat ID: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("user with id %d not found", userID)
+	}
+
+	return nil
+}
+
+// GetByTelegramChatID returns a user by Telegram chat ID
+func (rp *UserRepository) GetByTelegramChatID(ctx context.Context, chatID int64) (*model.User, error) {
+	query := `
+		
+		SELECT
+			id, email, name, password_hash, telegram_chat_id, created_at, updated_at 
+		FROM
+			users
+		WHERE
+			telegram_chat_id = $1
+		
+		`
+	var user model.User
+
+	row := rp.db.DB.QueryRowContext(context.Background(), query, chatID)
+	err := row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.Name,
+		&user.PasswordHash,
+		&user.TelegramChatID,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("user with telegram chat id %d not found", chatID)
+		}
+		return nil, fmt.Errorf("failed to get user by telegram chat id: %w", err)
+	}
+
+	return &user, nil
+}
+
+// UpdateTelegramUsername updates the Telegram username for a user
+func (rp *UserRepository) UpdateTelegramUsername(ctx context.Context, userID int, username *string) error {
+	query := `
+
+		UPDATE
+			users 
+		SET
+			telegram_username = $1, updated_at = $2 
+		WHERE
+			id = $3
+		
+		`
+
+	result, err := rp.db.DB.ExecContext(ctx, query, username, time.Now(), userID)
+	if err != nil {
+		return fmt.Errorf("failed to update telegram username: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get affected rows: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("user with id %d not found", userID)
+	}
+
+	return nil
+}
+
+// GetByTelegramUsername returns a user by Telegram username
+func (rp *UserRepository) GetByTelegramUsername(ctx context.Context, username string) (*model.User, error) {
+	query := `
+		
+		SELECT
+			id, email, name, password_hash, telegram_username, telegram_chat_id, created_at, updated_at 
+		FROM
+			users
+		WHERE
+			telegram_username = $1
+		
+		`
+	var user model.User
+
+	row := rp.db.DB.QueryRowContext(context.Background(), query, username)
+	err := row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.Name,
+		&user.PasswordHash,
+		&user.TelegramUsername,
+		&user.TelegramChatID,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("user with telegram username %s not found", username)
+		}
+		return nil, fmt.Errorf("failed to get user by telegram username: %w", err)
+	}
+
+	return &user, nil
 }

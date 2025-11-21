@@ -3,6 +3,9 @@ DROP TRIGGER IF EXISTS update_events_updated_at ON events;
 
 DROP FUNCTION IF EXISTS update_updated_at_column();
 
+DROP INDEX IF EXISTS idx_users_email;
+DROP INDEX IF EXISTS idx_users_telegram_username;
+DROP INDEX IF EXISTS idx_users_telegram_chat_id;
 DROP INDEX IF EXISTS idx_events_date;
 DROP INDEX IF EXISTS idx_bookings_status;
 DROP INDEX IF EXISTS idx_bookings_expires_at;

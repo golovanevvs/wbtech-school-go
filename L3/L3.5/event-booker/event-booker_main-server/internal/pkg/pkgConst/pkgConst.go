@@ -19,11 +19,12 @@ var (
 
 	//config
 	Logger    = emoji.Memo
+	Retry     = emoji.RecyclingSymbol
 	EMail     = emoji.EMail
 	Telegram  = emoji.MobilePhoneWithArrow
 	RabbitMQ  = emoji.RabbitFace
 	Redis     = emoji.FloppyDisk
 	Postgres  = emoji.ComputerDisk
-	Retry     = emoji.RecyclingSymbol
+	Service   = emoji.MoneyBag
 	Transport = emoji.Bus
 )

@@ -1,7 +1,8 @@
 export interface User {
-  id: number
-  email: string
-  name: string
+  id: number;
+  email: string;
+  name: string;
+  telegramChatID?: number | null;
 }
 
 export interface Event {

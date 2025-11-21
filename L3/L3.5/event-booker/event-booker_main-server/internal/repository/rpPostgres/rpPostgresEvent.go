@@ -22,7 +22,7 @@ func NewEventRepository(db *pkgPostgres.Postgres) *EventRepository {
 }
 
 // Create creates a new event
-func (r *EventRepository) Create(event *model.Event) (*model.Event, error) {
+func (rp *EventRepository) Create(event *model.Event) (*model.Event, error) {
 	query := `
 
 		INSERT INTO
@@ -35,7 +35,7 @@ func (r *EventRepository) Create(event *model.Event) (*model.Event, error) {
 		`
 
 	var createdEvent model.Event
-	err := r.db.DB.Master.QueryRowContext(
+	err := rp.db.DB.Master.QueryRowContext(
 		context.Background(),
 		query,
 		event.Title,
@@ -66,7 +66,7 @@ func (r *EventRepository) Create(event *model.Event) (*model.Event, error) {
 }
 
 // GetByID returns an event by ID
-func (r *EventRepository) GetByID(id int) (*model.Event, error) {
+func (rp *EventRepository) GetByID(id int) (*model.Event, error) {
 	query := `
 
 		SELECT
@@ -79,7 +79,7 @@ func (r *EventRepository) GetByID(id int) (*model.Event, error) {
 		`
 	var event model.Event
 
-	row := r.db.DB.QueryRowContext(context.Background(), query, id)
+	row := rp.db.DB.QueryRowContext(context.Background(), query, id)
 	err := row.Scan(
 		&event.ID,
 		&event.Title,
@@ -103,7 +103,7 @@ func (r *EventRepository) GetByID(id int) (*model.Event, error) {
 }
 
 // GetAll returns all events
-func (r *EventRepository) GetAll() ([]*model.Event, error) {
+func (rp *EventRepository) GetAll() ([]*model.Event, error) {
 	query := `
 
 		SELECT
@@ -115,7 +115,7 @@ func (r *EventRepository) GetAll() ([]*model.Event, error) {
 		
 		`
 
-	rows, err := r.db.DB.QueryContext(context.Background(), query)
+	rows, err := rp.db.DB.QueryContext(context.Background(), query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get all events: %w", err)
 	}
@@ -145,7 +145,7 @@ func (r *EventRepository) GetAll() ([]*model.Event, error) {
 }
 
 // Update updates an event
-func (r *EventRepository) Update(event *model.Event) error {
+func (rp *EventRepository) Update(event *model.Event) error {
 	query := `
 
 		UPDATE
@@ -157,7 +157,7 @@ func (r *EventRepository) Update(event *model.Event) error {
 		
 		`
 
-	result, err := r.db.DB.ExecContext(
+	result, err := rp.db.DB.ExecContext(
 		context.Background(),
 		query,
 		event.Title,
@@ -186,7 +186,7 @@ func (r *EventRepository) Update(event *model.Event) error {
 }
 
 // Delete deletes an event by ID
-func (r *EventRepository) Delete(id int) error {
+func (rp *EventRepository) Delete(id int) error {
 	query := `
 	
 		DELETE FROM
@@ -195,7 +195,7 @@ func (r *EventRepository) Delete(id int) error {
 			id = $1
 		
 		`
-	result, err := r.db.DB.ExecContext(context.Background(), query, id)
+	result, err := rp.db.DB.ExecContext(context.Background(), query, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete event: %w", err)
 	}
@@ -213,7 +213,7 @@ func (r *EventRepository) Delete(id int) error {
 }
 
 // UpdateAvailablePlaces updates the available places for an event
-func (r *EventRepository) UpdateAvailablePlaces(eventID int, newAvailablePlaces int) error {
+func (rp *EventRepository) UpdateAvailablePlaces(eventID int, newAvailablePlaces int) error {
 	query := `
 	
 		UPDATE
@@ -226,7 +226,7 @@ func (r *EventRepository) UpdateAvailablePlaces(eventID int, newAvailablePlaces 
 		`
 	currentTime := time.Now()
 
-	result, err := r.db.DB.ExecContext(
+	result, err := rp.db.DB.ExecContext(
 		context.Background(),
 		query,
 		newAvailablePlaces,

@@ -14,4 +14,6 @@ var (
 	ErrEmptyDate      = errors.New("date must not be empty")
 	ErrUserNotFound   = errors.New("user id not found")
 	ErrNoticeNotFound = errors.New("notice not found")
+	ErrUnauthorized   = errors.New("unauthorized")
+	ErrInvalidID      = errors.New("invalid id")
 )

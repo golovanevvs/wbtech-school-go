@@ -5,11 +5,14 @@ import (
 )
 
 type User struct {
-	ID        int       `json:"id" db:"id"`
-	Email     string    `json:"email" db:"email"`
-	Name      string    `json:"name" db:"name"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID               int       `json:"id" db:"id"`
+	Email            string    `json:"email" db:"email"`
+	Name             string    `json:"name" db:"name"`
+	PasswordHash     string    `json:"-" db:"password_hash"`
+	TelegramUsername *string   `json:"telegram_username,omitempty" db:"telegram_username"`
+	TelegramChatID   *int64    `json:"telegram_chat_id,omitempty" db:"telegram_chat_id"`
+	CreatedAt        time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type Event struct {
@@ -49,4 +52,17 @@ type RefreshToken struct {
 	Token     string    `json:"token" db:"token"`
 	ExpiresAt time.Time `json:"expires_at" db:"expires_at"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
+
+// NotificationChannels specifies which channels to use for notification
+type NotificationChannels struct {
+	Telegram bool
+	Email    bool
+}
+
+// Notice represents a notification to be sent
+type Notice struct {
+	UserID   int
+	Message  string
+	Channels NotificationChannels
 }

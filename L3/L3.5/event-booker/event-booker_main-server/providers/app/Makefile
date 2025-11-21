@@ -3,7 +3,7 @@ MAKEFLAGS += --no-print-directory
 
 PROJECT_DIR := $(abspath ../..)
 
-ENV_FILES := ../../../../../.env .env ../redis/.env
+ENV_FILES := ../../../../../.env .env ../redis/.env ../telegram/.env ../email/.env
 
 $(foreach file,$(ENV_FILES), \
   $(if $(wildcard $(file)), $(eval include $(file))) \
