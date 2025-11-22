@@ -117,7 +117,7 @@ export default function CreateNoticeForm() {
             <Button
               variant="outlined"
               onClick={() =>
-                window.open("https://t.me/v_delayed_notifier_bot", "_blank")
+                window.open("tg://resolve?domain=v_delayed_notifier_bot", "_blank")
               }
             >
               Подписаться на Telegram-бота
