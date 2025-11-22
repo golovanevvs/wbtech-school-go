@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.5/event-booker/event-booker_main-server/internal/pkg/pkgConst"
@@ -37,17 +36,10 @@ func NewAuthMiddleware(parentLg *zlog.Zerolog, sv ISvForAuthHandler) *AuthMiddle
 func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 	lg := mw.lg.With().Str("middleware", "JWTMiddleware").Logger()
 
-	authHeader := c.GetHeader("Authorization")
-	if authHeader == "" {
-		lg.Warn().Msg("Authorization header is missing")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
-		c.Abort()
-		return
-	}
-
-	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-	if tokenString == authHeader {
-		lg.Warn().Msg("Authorization header format is invalid")
+	// Получаем access token из cookie
+	tokenString, err := c.Cookie("access_token")
+	if err != nil || tokenString == "" {
+		lg.Warn().Msg("Access token cookie is missing")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
 		c.Abort()
 		return
@@ -57,10 +49,40 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 
 	userID, userEmail, err := mw.sv.ValidateToken(c.Request.Context(), tokenString)
 	if err != nil {
-		lg.Warn().Err(err).Msg("Failed to validate token")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
-		c.Abort()
-		return
+		lg.Warn().Err(err).Msg("Failed to validate token, attempting refresh")
+
+		// Пытаемся обновить токен с помощью refresh token
+		refreshToken, err := c.Cookie("refresh_token")
+		if err != nil || refreshToken == "" {
+			lg.Warn().Msg("Refresh token cookie is missing")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
+			c.Abort()
+			return
+		}
+
+		// Обновляем токены
+		newAccessToken, newRefreshToken, err := mw.sv.RefreshTokens(c.Request.Context(), refreshToken)
+		if err != nil {
+			lg.Warn().Err(err).Msg("Failed to refresh tokens")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
+			c.Abort()
+			return
+		}
+
+		// Устанавливаем новые cookies
+		c.SetCookie("access_token", newAccessToken, 3600, "/", "", true, true)
+		c.SetCookie("refresh_token", newRefreshToken, 7*24*3600, "/", "", true, true)
+
+		// Валидируем новый access token
+		userID, userEmail, err = mw.sv.ValidateToken(c.Request.Context(), newAccessToken)
+		if err != nil {
+			lg.Warn().Err(err).Msg("Failed to validate refreshed token")
+			c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
+			c.Abort()
+			return
+		}
+
+		lg.Debug().Msg("Token refreshed and validated successfully")
 	}
 
 	// Set user ID in context for use in handlers

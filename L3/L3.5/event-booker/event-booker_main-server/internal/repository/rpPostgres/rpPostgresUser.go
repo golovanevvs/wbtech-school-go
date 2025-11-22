@@ -26,32 +26,26 @@ func (rp *UserRepository) Create(user *model.User) (*model.User, error) {
 	query := `
 
 		INSERT INTO users
-			(email, name, password_hash, telegram_chat_id, created_at, updated_at) 
+			(email, name, password_hash, created_at, updated_at) 
 		VALUES
-			($1, $2, $3, $4, $5, $6) 
+			($1, $2, $3, $4, $5) 
 		RETURNING
-			id, email, name, password_hash, telegram_chat_id, created_at, updated_at
+			id
 		
 		`
 
 	var createdUser model.User
+	createdUser = *user
 	err := rp.db.DB.Master.QueryRowContext(
 		context.Background(),
 		query,
 		user.Email,
 		user.Name,
 		user.PasswordHash,
-		user.TelegramChatID,
 		user.CreatedAt,
 		user.UpdatedAt,
 	).Scan(
 		&createdUser.ID,
-		&createdUser.Email,
-		&createdUser.Name,
-		&createdUser.PasswordHash,
-		&createdUser.TelegramChatID,
-		&createdUser.CreatedAt,
-		&createdUser.UpdatedAt,
 	)
 
 	if err != nil {

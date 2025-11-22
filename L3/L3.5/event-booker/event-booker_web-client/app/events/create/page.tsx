@@ -5,19 +5,24 @@ import { useRouter } from "next/navigation"
 import { Box, Stack, Alert, Paper } from "@mui/material"
 import EventForm from "../../ui/events/EventForm"
 import { createEvent } from "../../api/events"
+import { useAuth } from "../../context/AuthContext"
 import { Event } from "../../lib/types"
 
 export default function CreateEventPage() {
+  const { user, loading } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) {
+    // Если не загружается контекст аутентификации, ждем
+    if (loading) return
+
+    // Если пользователь не аутентифицирован, перенаправляем на /auth
+    if (!user) {
       router.push("/auth")
       return
     }
-  }, [router])
+  }, [user, loading, router])
 
   const handleSubmit = async (
     eventData: Omit<Event, "id" | "createdAt" | "updatedAt" | "availablePlaces">
@@ -34,6 +39,25 @@ export default function CreateEventPage() {
 
   const handleCancel = () => {
     router.push("/events")
+  }
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          minHeight: "100vh",
+          px: { xs: 0, sm: 2 },
+          py: 2,
+          bgcolor: "background.default",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Box>Загрузка...</Box>
+      </Box>
+    )
   }
 
   return (

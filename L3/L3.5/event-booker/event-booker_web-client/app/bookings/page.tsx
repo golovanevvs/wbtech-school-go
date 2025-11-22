@@ -5,17 +5,22 @@ import { useRouter } from "next/navigation"
 import { Box, Stack, Typography, Alert, Button } from "@mui/material"
 import BookingList from "../ui/bookings/BookingList"
 import { getUserBookings, confirmBooking, cancelBooking } from "../api/bookings"
+import { useAuth } from "../context/AuthContext"
 import { Booking } from "../lib/types"
 
 export default function BookingsPage() {
+  const { user, loading: authLoading } = useAuth()
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) {
+    // Если не загружается контекст аутентификации, ждем
+    if (authLoading) return
+
+    // Если пользователь не аутентифицирован, перенаправляем на /auth
+    if (!user) {
       router.push("/auth")
       return
     }
@@ -33,7 +38,7 @@ export default function BookingsPage() {
     }
 
     fetchBookings()
-  }, [router])
+  }, [user, authLoading, router])
 
   const handleConfirm = async (id: number) => {
     try {
@@ -55,7 +60,7 @@ export default function BookingsPage() {
     }
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <Box
         sx={{

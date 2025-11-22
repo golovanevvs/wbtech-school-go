@@ -25,16 +25,18 @@ type ISvForAuthHandler interface {
 
 // AuthHandler handles authentication requests
 type AuthHandler struct {
-	lg *zlog.Zerolog
-	sv ISvForAuthHandler
+	lg      *zlog.Zerolog
+	sv      ISvForAuthHandler
+	webHost string // Домен фронтенда для установки cookies
 }
 
 // New creates a new AuthHandler
-func New(parentLg *zlog.Zerolog, sv ISvForAuthHandler) *AuthHandler {
+func New(parentLg *zlog.Zerolog, sv ISvForAuthHandler, webHost string) *AuthHandler {
 	lg := parentLg.With().Str("component", "handler-authHandler").Logger()
 	return &AuthHandler{
-		lg: &lg,
-		sv: sv,
+		lg:      &lg,
+		sv:      sv,
+		webHost: webHost,
 	}
 }
 
@@ -45,6 +47,7 @@ func (hd *AuthHandler) RegisterPublicRoutes(rt *ginext.RouterGroup) {
 		auth.POST("/register", hd.Register)
 		auth.POST("/login", hd.Login)
 		auth.POST("/refresh", hd.Refresh)
+		auth.POST("/logout", hd.Logout) // Добавляем logout endpoint
 	}
 }
 
@@ -86,9 +89,22 @@ func (hd *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	accessToken, refreshToken, err := hd.sv.Login(c.Request.Context(), req.Email, req.Password)
+	if err != nil {
+		lg.Warn().Err(err).Str("email", req.Email).Msgf("%s failed to generate tokens after registration", pkgConst.Warn)
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Failed to generate tokens"})
+		return
+	}
+
 	lg.Debug().Int("user_id", user.ID).Str("email", user.Email).Msgf("%s user registered successfully", pkgConst.OpSuccess)
+
+	// Устанавливаем HttpOnly cookies для домена фронтенда
+	c.SetCookie("access_token", accessToken, 3600, "/", hd.webHost, false, true)
+	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", hd.webHost, false, true)
+
 	c.JSON(http.StatusCreated, ginext.H{
-		"user": user,
+		"message": "Registration successful",
+		"user":    user,
 	})
 }
 
@@ -121,9 +137,13 @@ func (hd *AuthHandler) Login(c *gin.Context) {
 	}
 
 	lg.Debug().Str("email", req.Email).Msgf("%s user logged in successfully", pkgConst.OpSuccess)
+
+	// Устанавливаем HttpOnly cookies для домена фронтенда
+	c.SetCookie("access_token", accessToken, 3600, "/", hd.webHost, false, true)
+	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", hd.webHost, false, true)
+
 	c.JSON(http.StatusOK, ginext.H{
-		"token":        accessToken,
-		"refreshToken": refreshToken,
+		"message": "Login successful",
 	})
 }
 
@@ -155,9 +175,13 @@ func (hd *AuthHandler) Refresh(c *gin.Context) {
 	}
 
 	lg.Debug().Msgf("%s tokens refreshed successfully", pkgConst.OpSuccess)
+
+	// Устанавливаем новые HttpOnly cookies для домена фронтенда
+	c.SetCookie("access_token", newAccessToken, 3600, "/", hd.webHost, false, true)
+	c.SetCookie("refresh_token", newRefreshToken, 7*24*3600, "/", hd.webHost, false, true)
+
 	c.JSON(http.StatusOK, ginext.H{
-		"token":        newAccessToken,
-		"refreshToken": newRefreshToken,
+		"message": "Tokens refreshed successfully",
 	})
 }
 
@@ -181,8 +205,13 @@ func (hd *AuthHandler) GetCurrentUser(c *gin.Context) {
 
 	user, err := hd.sv.GetUserByID(c.Request.Context(), userIDInt)
 	if err != nil {
-		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to get user", pkgConst.Warn)
-		c.JSON(http.StatusInternalServerError, ginext.H{"error": err.Error()})
+		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s user not found in database, clearing invalid cookies", pkgConst.Warn)
+
+		// Если пользователь не найден в БД, удаляем cookies
+		c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
+		c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
+
+		c.JSON(http.StatusUnauthorized, ginext.H{"error": "User not found"})
 		return
 	}
 
@@ -208,6 +237,19 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
+	// Проверяем, что пользователь существует в БД
+	_, err := hd.sv.GetUserByID(c.Request.Context(), userIDInt)
+	if err != nil {
+		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s user not found in database, clearing invalid cookies", pkgConst.Warn)
+
+		// Если пользователь не найден в БД, удаляем cookies
+		c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
+		c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
+
+		c.JSON(http.StatusUnauthorized, ginext.H{"error": "User not found"})
+		return
+	}
+
 	var req struct {
 		Name                  string  `json:"name"`
 		TelegramUsername      *string `json:"telegramUsername"`
@@ -227,7 +269,7 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 		TelegramUsername: req.TelegramUsername,
 	}
 
-	err := hd.sv.UpdateUser(c.Request.Context(), user)
+	err = hd.sv.UpdateUser(c.Request.Context(), user)
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to update user", pkgConst.Warn)
 		c.JSON(http.StatusInternalServerError, ginext.H{"error": err.Error()})
@@ -244,4 +286,20 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 	lg.Debug().Int("user_id", userIDInt).Msgf("%s user updated successfully", pkgConst.OpSuccess)
 
 	c.JSON(http.StatusOK, updatedUser)
+}
+
+// Logout handles user logout
+func (hd *AuthHandler) Logout(c *gin.Context) {
+	lg := hd.lg.With().Str("handler", "Logout").Logger()
+
+	lg.Debug().Msg("User logout initiated")
+
+	// Удаляем cookies на сервере, устанавливая их с прошедшим временем истечения
+	c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
+	c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
+
+	lg.Debug().Msgf("%s user logged out successfully", pkgConst.OpSuccess)
+	c.JSON(http.StatusOK, ginext.H{
+		"message": "Logout successful",
+	})
 }

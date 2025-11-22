@@ -1,5 +1,4 @@
-// app/ui/Header.tsx
-'use client'
+ 'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -22,8 +21,8 @@ export default function Header() {
     setAnchorEl(null)
   }
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     router.push('/auth')
     handleMenuClose()
   }

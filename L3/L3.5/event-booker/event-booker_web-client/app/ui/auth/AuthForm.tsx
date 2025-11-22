@@ -31,6 +31,7 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
     setError("")
     setLoading(true)
 
+    // Проверка на совпадение паролей
     if (mode === "register") {
       if (password !== confirmPassword) {
         setError("Пароли не совпадают")
@@ -40,35 +41,24 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
     }
 
     try {
-      let accessToken: string
-      let refreshToken: string
-
       if (mode === "login") {
+        // Создание объекта с данными аунтификации
         const credentials: LoginRequest = { email, password }
-        const response = await loginApi(credentials)
-        accessToken = response.token
-
-        if (!response.refreshToken) {
-          throw new Error("No refresh token received from server")
-        }
-        refreshToken = response.refreshToken
+        await loginApi(credentials)
       } else {
+        // Создание объекта с данными регистрации
         const credentials: RegisterRequest = { email, password, name }
-        const response = await registerApi(credentials)
-        accessToken = response.token
-
-        if (!response.refreshToken) {
-          throw new Error("No refresh token received from server")
-        }
-        refreshToken = response.refreshToken
+        await registerApi(credentials)
       }
 
-      await login(accessToken, refreshToken)
+      // Токены устанавливаются сервером через cookies
+      await login()
 
       if (onAuthSuccess) {
         onAuthSuccess()
       }
 
+      // Перенаправление на страницу events
       router.push("/events")
       router.refresh()
     } catch (err) {

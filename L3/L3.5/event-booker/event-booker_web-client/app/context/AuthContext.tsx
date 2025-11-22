@@ -7,13 +7,13 @@ import {
   useState,
   ReactNode,
 } from "react"
-import { getCurrentUser } from "../api/auth"
+import { getCurrentUser, logout as apiLogout } from "../api/auth"
 import { User } from "../lib/types"
 
 type AuthContextType = {
   user: User | null
   loading: boolean
-  login: (accessToken: string, refreshToken?: string) => Promise<void>
+  login: () => Promise<void>
   logout: () => void
 }
 
@@ -23,28 +23,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const logout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("refreshToken")
-    setUser(null)
+  const logout = async () => {
+    try {
+      // Вызываем серверный endpoint для logout
+      await apiLogout()
+      console.log("Logout successful")
+    } catch (error) {
+      console.error("Logout failed:", error)
+    } finally {
+      // Сбрасываем состояние пользователя
+      setUser(null)
+    }
   }
 
-  const login = async (
-    accessToken: string,
-    refreshToken?: string
-  ): Promise<void> => {
-    localStorage.setItem("token", accessToken)
-    if (refreshToken) {
-      localStorage.setItem("refreshToken", refreshToken)
-    }
-
+  const login = async (): Promise<void> => {
+    // Токены уже установлены через cookies
     try {
       const userData = await getCurrentUser()
       setUser(userData)
     } catch (error) {
-      localStorage.removeItem("token")
-      localStorage.removeItem("refreshToken")
-      setUser(null)
+      // При ошибке просто пробросим ошибку - useEffect сам разберется с повторными попытками
       throw error
     }
   }
@@ -52,14 +50,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
+        console.log("Checking auth status...")
+        console.log("Current cookies:", document.cookie)
+        
         // Пробуем получить текущего пользователя
-        // Если токен просрочен, api/auth.ts автоматически попытается обновить его
+        // Токены передаются через cookies автоматически
         const userData = await getCurrentUser()
+        console.log("Auth check successful:", userData)
         setUser(userData)
       } catch (error) {
-        // Если обновление токена не помогло (или нет токена вообще)
-        console.error("Auth check failed:", error)
-        logout()
+        // Если токен недействителен или пользователь не авторизован
+        if (error instanceof Error && error.message.includes('401')) {
+          console.log("User is not authenticated (expected behavior)")
+        } else {
+          console.error("Auth check failed:", error)
+        }
+        setUser(null)
       } finally {
         setLoading(false)
       }

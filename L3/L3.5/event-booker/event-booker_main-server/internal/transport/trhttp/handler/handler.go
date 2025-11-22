@@ -80,14 +80,14 @@ func New(
 		bookingHandler.RegisterRoutes(protected) // POST /bookings, POST /bookings/:id/confirm и т.д.
 
 		// Защищенные маршруты аутентификации (только для получения текущего пользователя и обновления)
-		authHandler := authHandler.New(&lg, sv.AuthService())
+		authHandler := authHandler.New(&lg, sv.AuthService(), webPublicHost)
 		authHandler.RegisterProtectedRoutes(protected) // GET /auth/me, PUT /auth/update
 	}
 
 	// Публичные маршруты аутентификации (регистрация, вход, обновление токена)
 	publicAuth := rt.Group("/auth")
 	{
-		authHandler := authHandler.New(&lg, sv.AuthService())
+		authHandler := authHandler.New(&lg, sv.AuthService(), webPublicHost)
 		authHandler.RegisterPublicRoutes(publicAuth) // POST /auth/register, POST /auth/login, POST /auth/refresh
 	}
 

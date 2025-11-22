@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation"
 import { Box, Typography, Stack, Alert, Button } from "@mui/material"
 import EventList from "../ui/events/EventList"
 import { getEvents } from "../api/events"
+import { useAuth } from "../context/AuthContext"
 import { Event } from "../lib/types"
 
 export default function EventsPage() {
+  const { user } = useAuth()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -30,8 +32,7 @@ export default function EventsPage() {
   }, [])
 
   const handleCreateEvent = () => {
-    const token = localStorage.getItem("token")
-    if (!token) {
+    if (!user) {
       router.push("/auth?mode=login")
       return
     }
@@ -75,8 +76,6 @@ export default function EventsPage() {
     )
   }
 
-  const token = localStorage.getItem("token")
-
   return (
     <Box
       sx={{
@@ -95,7 +94,7 @@ export default function EventsPage() {
             Мероприятия
           </Typography>
           
-          {token && (
+          {user && (
             <Box sx={{ textAlign: "center", mb: 2 }}>
               <Button 
                 variant="contained" 

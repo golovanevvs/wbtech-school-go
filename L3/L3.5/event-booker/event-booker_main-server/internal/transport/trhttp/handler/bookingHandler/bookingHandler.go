@@ -64,10 +64,18 @@ func (hd *BookingHandler) Create(c *gin.Context) {
 		return
 	}
 
-	userID, err := strconv.Atoi(c.GetString("user_id"))
-	if err != nil {
-		lg.Warn().Err(err).Msgf("%s error getting user ID from context", pkgConst.Warn)
+	// Получаем user_id из контекста как int
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		lg.Warn().Msg("User ID not found in context")
 		c.JSON(http.StatusUnauthorized, ginext.H{"error": pkgErrors.ErrUnauthorized.Error()})
+		return
+	}
+
+	userID, ok := userIDInterface.(int)
+	if !ok {
+		lg.Warn().Msg("User ID is not of type int")
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Internal server error"})
 		return
 	}
 

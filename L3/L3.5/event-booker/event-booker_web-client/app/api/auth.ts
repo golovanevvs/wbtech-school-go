@@ -13,192 +13,103 @@ const apiRequest = async <T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> => {
-  let token = getToken()
-
+  console.log(`Making request to: ${API_BASE_URL}${endpoint}`)
+  
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
+    credentials: 'include', // Включаем cookies в запросы
     ...options,
   })
 
-  if (response.status === 401 && token) {
-    try {
-      const newTokens = await refreshTokens()
-      token = newTokens.token
-
-      const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          ...options.headers,
-        },
-        ...options,
-      })
-
-      if (!retryResponse.ok) {
-        const errorData = await retryResponse.text()
-        throw new ApiError(errorData, retryResponse.status)
-      }
-
-      return retryResponse.json()
-    } catch (refreshError) {
-      logout()
-      throw refreshError
-    }
-  }
-
+  console.log(`Response status: ${response.status}`)
+  
   if (!response.ok) {
     const errorData = await response.text()
+    console.error(`API Error: ${response.status}`, errorData)
     throw new ApiError(errorData, response.status)
   }
 
   return response.json()
 }
 
-const getToken = (): string | null => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("token")
-  }
-  return null
+// Функция для удаления cookies (используется в logout)
+const removeCookie = (name: string): void => {
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`
 }
 
-const setToken = (token: string): void => {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("token", token)
-  }
+// Интерфейсы для ответов API (упрощены для работы с cookies)
+interface LoginApiResponse {
+  message: string
 }
 
-const removeToken = (): void => {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("token")
-  }
-}
-
-export interface LoginApiResponse {
-  token: string
-  refreshToken: string
-}
-
-export interface RegisterApiResponse {
-  token: string
-  refreshToken: string
+interface RegisterApiResponse {
+  message: string
+  user: User
 }
 
 export const login = async (
   credentials: LoginRequest
 ): Promise<AuthResponse> => {
-  const response = await apiRequest<LoginApiResponse>("/auth/login", {
+  console.log("Attempting login with:", credentials.email)
+  await apiRequest<LoginApiResponse>("/auth/login", {
     method: "POST",
     body: JSON.stringify(credentials),
   })
 
-  setToken(response.token)
-
-  if (typeof window !== "undefined") {
-    localStorage.setItem("refreshToken", response.refreshToken)
-  }
-
+  console.log("Login successful, cookies after login:", document.cookie)
+  
+  // Получаем данные пользователя
   const user = await getCurrentUser()
+  console.log("User data retrieved:", user)
 
   return {
     user,
-    token: response.token,
-    refreshToken: response.refreshToken,
   }
 }
 
 export const register = async (
   userData: RegisterRequest
 ): Promise<AuthResponse> => {
-  const response = await apiRequest<RegisterApiResponse>("/auth/register", {
+  console.log("Attempting registration with:", userData.email)
+  await apiRequest<RegisterApiResponse>("/auth/register", {
     method: "POST",
     body: JSON.stringify(userData),
   })
-
-  setToken(response.token)
-
-  if (typeof window !== "undefined") {
-    localStorage.setItem("refreshToken", response.refreshToken)
-  }
-
+  console.log("Registration successful, cookies after registration:", document.cookie)
   const user = await getCurrentUser()
-
+  console.log("User data retrieved:", user)
   return {
     user,
-    token: response.token,
   }
 }
 
 export const getCurrentUser = async (): Promise<User> => {
-  const token = getToken()
-
-  if (!token) {
-    throw new ApiError("No authentication token", 401)
-  }
-
-  return apiRequest<User>("/auth/me", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
+  return apiRequest<User>("/auth/me")
 }
 
 export const updateUser = async (userData: UpdateUserRequest): Promise<User> => {
-  const token = getToken()
-
-  if (!token) {
-    throw new ApiError("No authentication token", 401)
-  }
-
   console.log("Sending to backend:", userData)
-
   return apiRequest<User>("/auth/update", {
     method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
     body: JSON.stringify(userData),
   })
 }
 
-export const logout = (): void => {
-  removeToken()
+export const logout = async (): Promise<void> => {
+  try {
+    await apiRequest<{ message: string }>("/auth/logout", {
+      method: "POST",
+    })
+    console.log("Server logout successful")
+  } catch (error) {
+    console.error("Server logout failed:", error)
+    removeCookie("access_token")
+    removeCookie("refresh_token")
+    throw error
+  }
 }
 
-export const refreshTokens = async (): Promise<{
-  token: string
-  refreshToken: string
-}> => {
-  const refreshToken =
-    typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null
-
-  if (!refreshToken) {
-    throw new ApiError("No refresh token", 401)
-  }
-
-  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ refreshToken }),
-  })
-
-  if (!response.ok) {
-    const errorData = await response.text()
-    throw new ApiError(errorData, response.status)
-  }
-
-  const data = await response.json()
-
-  setToken(data.token)
-  if (typeof window !== "undefined") {
-    localStorage.setItem("refreshToken", data.refreshToken)
-  }
-
-  return data
-}
+// Функция refreshTokens больше не нужна - обновление токенов происходит автоматически на сервере

@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation"
 import { Box, Typography, Stack, Alert } from "@mui/material"
 import ProfileForm from "../ui/profile/ProfileForm"
 import { getCurrentUser, updateUser } from "../api/auth"
+import { useAuth } from "../context/AuthContext"
 import { User, UpdateUserRequest } from "../lib/types"
 
 export default function ProfilePage() {
+  const { user: authUser, loading: authLoading } = useAuth()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -15,15 +17,19 @@ export default function ProfilePage() {
   const router = useRouter()
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) {
+    // Если не загружается контекст аутентификации, ждем
+    if (authLoading) return
+
+    // Если пользователь не аутентифицирован, перенаправляем на /auth
+    if (!authUser) {
       router.push("/auth")
       return
     }
 
     const fetchUser = async () => {
       try {
-        const userData = await getCurrentUser()
+        // Используем пользователя из контекста или получаем новые данные
+        const userData = authUser || await getCurrentUser()
         setUser(userData)
       } catch (err) {
         setError(
@@ -35,7 +41,7 @@ export default function ProfilePage() {
     }
 
     fetchUser()
-  }, [router])
+  }, [authUser, authLoading, router])
 
   const handleUpdate = async (userData: UpdateUserRequest) => {
     if (!user) return
@@ -57,7 +63,7 @@ export default function ProfilePage() {
     window.open("tg://resolve?domain=v_delayed_notifier_bot", "_blank")
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <Box
         sx={{

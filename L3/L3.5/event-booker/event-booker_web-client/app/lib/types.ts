@@ -31,8 +31,6 @@ export interface Booking {
 
 export interface AuthResponse {
   user: User
-  token: string
-  refreshToken?: string
 }
 
 export interface LoginRequest {
@@ -47,15 +45,12 @@ export interface RegisterRequest {
 }
 
 export interface LoginResponse {
-  token: string
-  refreshToken: string
-  user?: User
+  message: string
 }
 
 export interface RegisterResponse {
-  token: string
-  refreshToken: string
-  user?: User
+  message: string
+  user: User
 }
 
 export interface UpdateUserRequest {
