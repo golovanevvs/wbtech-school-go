@@ -62,4 +62,5 @@ export interface UpdateUserRequest {
   telegramUsername?: string | null
   telegramNotifications?: boolean
   emailNotifications?: boolean
+  resetTelegramChatID?: boolean // специальный флаг для сброса chatID на сервере
 }

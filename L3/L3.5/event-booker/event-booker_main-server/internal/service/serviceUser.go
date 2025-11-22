@@ -14,7 +14,7 @@ type IUserRp interface {
 	GetByEmail(email string) (*model.User, error)
 	Update(user *model.User) error
 	Delete(id int) error
-	SaveTelegramChatID(ctx context.Context, userID int, chatID int64) error
+	SaveTelegramChatID(ctx context.Context, userID int, chatID *int64) error
 	GetByTelegramChatID(ctx context.Context, chatID int64) (*model.User, error)
 	UpdateTelegramUsername(ctx context.Context, userID int, username *string) error
 	GetByTelegramUsername(ctx context.Context, username string) (*model.User, error)
@@ -73,7 +73,7 @@ func (sv *UserService) DeleteUser(ctx context.Context, id int) error {
 }
 
 // UpdateTelegramChatID updates the Telegram chat ID for a user
-func (sv *UserService) UpdateTelegramChatID(ctx context.Context, userID int, chatID int64) error {
+func (sv *UserService) UpdateTelegramChatID(ctx context.Context, userID int, chatID *int64) error {
 	return sv.rp.SaveTelegramChatID(ctx, userID, chatID)
 }
 

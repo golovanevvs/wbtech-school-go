@@ -10,7 +10,7 @@ type User struct {
 	Name                  string    `json:"name" db:"name"`
 	PasswordHash          string    `json:"-" db:"password_hash"`
 	TelegramUsername      *string   `json:"telegramUsername,omitempty" db:"telegram_username"`
-	TelegramChatID        *int64    `json:"telegramChatID,omitempty" db:"telegram_chat_id"`
+	TelegramChatID        *int64    `json:"telegramChatID" db:"telegram_chat_id"`
 	TelegramNotifications bool      `json:"telegramNotifications" db:"telegram_notifications"`
 	EmailNotifications    bool      `json:"emailNotifications" db:"email_notifications"`
 	CreatedAt             time.Time `json:"created_at" db:"created_at"`

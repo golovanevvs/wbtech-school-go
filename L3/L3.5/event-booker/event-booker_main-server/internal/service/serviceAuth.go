@@ -18,6 +18,7 @@ type IUserRpForAuth interface {
 	GetByID(id int) (*model.User, error)
 	Update(user *model.User) error
 	Delete(id int) error
+	SaveTelegramChatID(ctx context.Context, userID int, chatID *int64) error
 }
 
 // IRefreshTokenRp interface for refresh token repository
@@ -91,6 +92,11 @@ func (sv *AuthService) UpdateUser(ctx context.Context, user *model.User) error {
 // DeleteUser deletes a user by ID
 func (sv *AuthService) DeleteUser(ctx context.Context, id int) error {
 	return sv.userRp.Delete(id)
+}
+
+// UpdateTelegramChatID updates the Telegram chat ID for a user
+func (sv *AuthService) UpdateTelegramChatID(ctx context.Context, userID int, chatID *int64) error {
+	return sv.userRp.SaveTelegramChatID(ctx, userID, chatID)
 }
 
 // Login authenticates user and returns access and refresh tokens

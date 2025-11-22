@@ -22,6 +22,7 @@ type ISvForAuthHandler interface {
 	GetUserByID(ctx context.Context, id int) (*model.User, error)
 	UpdateUser(ctx context.Context, user *model.User) error
 	DeleteUser(ctx context.Context, id int) error
+	UpdateTelegramChatID(ctx context.Context, userID int, chatID *int64) error
 }
 
 // AuthHandler handles authentication requests
@@ -257,6 +258,7 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 		TelegramUsername      *string `json:"telegramUsername"`
 		TelegramNotifications *bool   `json:"telegramNotifications"`
 		EmailNotifications    *bool   `json:"emailNotifications"`
+		ResetTelegramChatID   *bool   `json:"resetTelegramChatID"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -280,13 +282,28 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 		user.EmailNotifications = *req.EmailNotifications
 	}
 
+	// Обновляем основные данные пользователя
 	err = hd.sv.UpdateUser(c.Request.Context(), user)
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to update user", pkgConst.Warn)
-		c.JSON(http.StatusInternalServerError, ginext.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Failed to update user"})
 		return
 	}
 
+	// Если нужно сбросить Telegram chatID
+	if req.ResetTelegramChatID != nil && *req.ResetTelegramChatID {
+		lg.Debug().Int("user_id", userIDInt).Msg("Resetting Telegram chat ID")
+
+		// Для сброса chatID передаем nil вместо 0, чтобы установить NULL в БД
+		var nilChatID *int64 = nil
+		err = hd.sv.UpdateTelegramChatID(c.Request.Context(), userIDInt, nilChatID)
+		if err != nil {
+			lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to reset Telegram chat ID", pkgConst.Warn)
+			// Не возвращаем ошибку, так как основное обновление прошло успешно
+		}
+	}
+
+	// Получаем обновленные данные пользователя
 	updatedUser, err := hd.sv.GetUserByID(c.Request.Context(), userIDInt)
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to get updated user", pkgConst.Warn)

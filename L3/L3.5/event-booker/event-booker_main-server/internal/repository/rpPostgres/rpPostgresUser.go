@@ -204,7 +204,7 @@ func (rp *UserRepository) Delete(id int) error {
 }
 
 // SaveTelegramChatID saves the Telegram chat ID for a user
-func (rp *UserRepository) SaveTelegramChatID(ctx context.Context, userID int, chatID int64) error {
+func (rp *UserRepository) SaveTelegramChatID(ctx context.Context, userID int, chatID *int64) error {
 	query := `
 
 		UPDATE
@@ -216,7 +216,7 @@ func (rp *UserRepository) SaveTelegramChatID(ctx context.Context, userID int, ch
 		
 		`
 
-	result, err := rp.db.DB.ExecContext(ctx, query, &chatID, time.Now(), userID)
+	result, err := rp.db.DB.ExecContext(ctx, query, chatID, time.Now(), userID)
 	if err != nil {
 		return fmt.Errorf("failed to update telegram chat ID: %w", err)
 	}

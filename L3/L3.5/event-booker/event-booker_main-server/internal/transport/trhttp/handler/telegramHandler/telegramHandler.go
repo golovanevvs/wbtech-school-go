@@ -62,22 +62,31 @@ func (hd *TelegramHandler) WebHookHandler(c *gin.Context) {
 		return
 	}
 
+	// Проверяем, что username не пустой
 	username := update.Message.From.UserName
-	chatID := update.Message.Chat.ID
-	message := update.Message.Text
-
-	if update.Message.IsCommand() && update.Message.Command() == "start" {
-		if err := hd.sv.Start(c.Request.Context(), username, chatID, message); err != nil {
-			lg.Warn().Int64("chatID", chatID).Str("message_body", message).Err(err).Msgf("%s failed to handle message", pkgConst.Warn)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		lg.Debug().Int64("chatID", chatID).Str("message_body", message).Msgf("%s Telegram /start command processed", pkgConst.OpSuccess)
+	if username == "" {
+		lg.Warn().Int64("chatID", update.Message.Chat.ID).Msg("Username is empty, cannot process /start command")
 		c.Status(http.StatusOK)
 		return
 	}
 
-	lg.Debug().Int64("chatID", chatID).Str("message_body", message).Msgf("%s Telegram message processed", pkgConst.OpSuccess)
+	chatID := update.Message.Chat.ID
+	message := update.Message.Text
+
+	if update.Message.IsCommand() && update.Message.Command() == "start" {
+		lg.Debug().Str("username", username).Int64("chatID", chatID).Msg("Processing /start command")
+
+		if err := hd.sv.Start(c.Request.Context(), username, chatID, message); err != nil {
+			lg.Warn().Str("username", username).Int64("chatID", chatID).Err(err).Msgf("%s failed to handle /start command", pkgConst.Warn)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		lg.Debug().Str("username", username).Int64("chatID", chatID).Msgf("%s Telegram /start command processed successfully", pkgConst.OpSuccess)
+		c.Status(http.StatusOK)
+		return
+	}
+
+	lg.Debug().Str("username", username).Int64("chatID", chatID).Str("message_body", message).Msgf("%s Telegram message processed", pkgConst.OpSuccess)
 	c.Status(http.StatusOK)
 }

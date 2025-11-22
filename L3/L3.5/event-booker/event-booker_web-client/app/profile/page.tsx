@@ -40,7 +40,7 @@ export default function ProfilePage() {
     fetchUser()
   }, [authUser, authLoading, router])
 
-  const handleUpdate = async (userData: UpdateUserRequest) => {
+  const handleUpdate = async (userData: UpdateUserRequest, shouldLaunchTelegram?: boolean) => {
     if (!user) return
 
     setSaving(true)
@@ -49,15 +49,19 @@ export default function ProfilePage() {
     try {
       const updatedUser = await updateUser(userData)
       setUser(updatedUser)
+      
+      // Если нужно запустить Telegram и у пользователя есть username
+      if (shouldLaunchTelegram && updatedUser.telegramUsername) {
+        // Небольшая задержка, чтобы дать время пользователю увидеть обновленные данные
+        setTimeout(() => {
+          window.open("tg://resolve?domain=v_delayed_notifier_bot", "_blank")
+        }, 500)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update user")
     } finally {
       setSaving(false)
     }
-  }
-
-  const handleSubscribeToTelegram = () => {
-    window.open("tg://resolve?domain=v_delayed_notifier_bot", "_blank")
   }
 
   const handleDeleteProfile = async () => {
@@ -161,7 +165,6 @@ export default function ProfilePage() {
             key={user.id}
             user={user}
             onUpdate={handleUpdate}
-            onSubscribeToTelegram={handleSubscribeToTelegram}
             onDeleteProfile={handleDeleteProfile}
             isLoading={saving}
             error={error || undefined}
