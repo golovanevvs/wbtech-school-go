@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Box, Typography, Stack, Alert } from "@mui/material"
+import { Box, Typography, Stack, Alert, Paper } from "@mui/material"
 import ProfileForm from "../ui/profile/ProfileForm"
 import { getCurrentUser, updateUser } from "../api/auth"
 import { useAuth } from "../context/AuthContext"
@@ -17,10 +17,8 @@ export default function ProfilePage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Если не загружается контекст аутентификации, ждем
     if (authLoading) return
 
-    // Если пользователь не аутентифицирован, перенаправляем на /auth
     if (!authUser) {
       router.push("/auth")
       return
@@ -28,8 +26,7 @@ export default function ProfilePage() {
 
     const fetchUser = async () => {
       try {
-        // Используем пользователя из контекста или получаем новые данные
-        const userData = authUser || await getCurrentUser()
+        const userData = authUser || (await getCurrentUser())
         setUser(userData)
       } catch (err) {
         setError(
@@ -122,22 +119,33 @@ export default function ProfilePage() {
     <Box
       sx={{
         width: "100%",
-        minHeight: "100vh",
-        px: { xs: 0, sm: 2 },
-        py: 2,
+        px: { xs: 2, sm: 2 },
+        py: 1,
         bgcolor: "background.default",
         maxWidth: "100vw",
         mx: "auto",
       }}
     >
-      <Stack spacing={4} alignItems="center">
-        <ProfileForm
-          user={user}
-          onUpdate={handleUpdate}
-          onSubscribeToTelegram={handleSubscribeToTelegram}
-          isLoading={saving}
-          error={error || undefined}
-        />
+      <Stack spacing={2} alignItems="center">
+        {error && <Alert severity="error">{error}</Alert>}
+        <Paper
+          sx={{
+            p: { xs: 0, sm: 2 },
+            width: "100%",
+            maxWidth: 500,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
+          <ProfileForm
+            user={user}
+            onUpdate={handleUpdate}
+            onSubscribeToTelegram={handleSubscribeToTelegram}
+            isLoading={saving}
+            error={error || undefined}
+          />
+        </Paper>
       </Stack>
     </Box>
   )
