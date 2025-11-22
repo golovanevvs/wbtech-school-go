@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Box, Typography, Stack, Alert, Paper } from "@mui/material"
 import ProfileForm from "../ui/profile/ProfileForm"
-import { getCurrentUser, updateUser } from "../api/auth"
+import { getCurrentUser, updateUser, deleteUser } from "../api/auth"
 import { useAuth } from "../context/AuthContext"
 import { User, UpdateUserRequest } from "../lib/types"
 
@@ -58,6 +58,25 @@ export default function ProfilePage() {
 
   const handleSubscribeToTelegram = () => {
     window.open("tg://resolve?domain=v_delayed_notifier_bot", "_blank")
+  }
+
+  const handleDeleteProfile = async () => {
+    if (!user) return
+
+    setSaving(true)
+    setError(null)
+
+    try {
+      // Вызываем API для удаления профиля
+      await deleteUser()
+      
+      // Перенаправляем на страницу авторизации
+      router.push("/auth")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete profile")
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (authLoading || loading) {
@@ -139,9 +158,11 @@ export default function ProfilePage() {
           }}
         >
           <ProfileForm
+            key={user.id}
             user={user}
             onUpdate={handleUpdate}
             onSubscribeToTelegram={handleSubscribeToTelegram}
+            onDeleteProfile={handleDeleteProfile}
             isLoading={saving}
             error={error || undefined}
           />

@@ -7,14 +7,16 @@ import {
   FormControlLabel,
   Switch,
   Stack,
+  Divider,
 } from "@mui/material"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { User, UpdateUserRequest } from "../../lib/types"
 
 interface ProfileFormProps {
   user: User
   onUpdate: (userData: UpdateUserRequest) => void
   onSubscribeToTelegram: () => void
+  onDeleteProfile: () => void
   isLoading?: boolean
   error?: string
 }
@@ -23,6 +25,7 @@ export default function ProfileForm({
   user,
   onUpdate,
   onSubscribeToTelegram,
+  onDeleteProfile,
   isLoading,
   error,
 }: ProfileFormProps) {
@@ -30,8 +33,25 @@ export default function ProfileForm({
   const [telegramUsername, setTelegramUsername] = useState(
     user.telegramUsername || ""
   )
-  const [telegramNotifications, setTelegramNotifications] = useState(false)
-  const [emailNotifications, setEmailNotifications] = useState(true)
+  const [telegramNotifications, setTelegramNotifications] = useState(
+    user.telegramNotifications || false
+  )
+  const [emailNotifications, setEmailNotifications] = useState(
+    user.emailNotifications || false
+  )
+
+  // Переключатель Telegram активен только если есть аккаунт
+  const telegramEnabled = !!user.telegramChatID
+  // Кнопка подписки активна только если включены telegram уведомления и есть аккаунт
+  const canSubscribeToTelegram = telegramEnabled && telegramNotifications
+
+  // Синхронизируем локальное состояние с данными пользователя
+  useEffect(() => {
+    setName(user.name)
+    setTelegramUsername(user.telegramUsername || "")
+    setTelegramNotifications(user.telegramNotifications || false)
+    setEmailNotifications(user.emailNotifications || false)
+  }, [user])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,6 +61,16 @@ export default function ProfileForm({
       telegramNotifications,
       emailNotifications,
     })
+  }
+
+  const handleDeleteProfile = () => {
+    if (
+      window.confirm(
+        "Вы уверены, что хотите удалить профиль? Это действие нельзя отменить. Все ваши мероприятия будут также удалены."
+      )
+    ) {
+      onDeleteProfile()
+    }
   }
 
   return (
@@ -78,17 +108,13 @@ export default function ProfileForm({
         helperText="Введите ваш Telegram username (без @)"
       />
 
-      <Stack spacing={2} sx={{ mt: 2 }}>
-       <FormControlLabel
-          control={
-            <Switch
-              checked={telegramNotifications}
-              onChange={(e) => setTelegramNotifications(e.target.checked)}
-            />
-          }
-          label="Уведомления через Telegram"
-        />
+      <Divider sx={{ my: 3 }} />
 
+      <Typography variant="h6" gutterBottom>
+        Настройки уведомлений
+      </Typography>
+
+      <Stack spacing={2} sx={{ mt: 2 }}>
         <FormControlLabel
           control={
             <Switch
@@ -96,7 +122,22 @@ export default function ProfileForm({
               onChange={(e) => setEmailNotifications(e.target.checked)}
             />
           }
-          label="Уведомления на Email"
+          label="Уведомления по электронной почте"
+        />
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={telegramNotifications}
+              onChange={(e) => setTelegramNotifications(e.target.checked)}
+              disabled={!telegramEnabled}
+            />
+          }
+          label={
+            telegramEnabled 
+              ? "Уведомления через Telegram" 
+              : "Уведомления через Telegram (недоступно - подключите аккаунт)"
+          }
         />
       </Stack>
 
@@ -104,7 +145,7 @@ export default function ProfileForm({
         sx={{
           display: "flex",
           gap: 2,
-          mt: 2,
+          mt: 3,
           flexDirection: { xs: "column", sm: "row" },
         }}
       >
@@ -121,21 +162,36 @@ export default function ProfileForm({
           variant="outlined"
           fullWidth
           onClick={onSubscribeToTelegram}
-          disabled={!!user.telegramChatID}
+          disabled={!canSubscribeToTelegram}
         >
-          {user.telegramChatID ? "Подписан" : "Подписаться на Telegram-бота"}
+          {user.telegramChatID ? "Подписан на Telegram-бота" : "Подписаться на Telegram-бота"}
         </Button>
       </Box>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+      <Divider sx={{ my: 3 }} />
+
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         <strong>Как это работает:</strong>
         <br />
         1. Если вы находитесь на устройстве, где есть Telegram, введите Telegram username и сохраните профиль.
         <br />
-        2. Нажмите Подписаться на Telegram-бота.
+        2. Включите переключатель "Уведомления через Telegram".
         <br />
-        3. Откроется Telegram-бот в Telegram. Нажмите /Start. В Telegram должно появиться сообщение, что Telegram-бот укспешно привязан.
+        3. Нажмите "Подписаться на Telegram-бота".
+        <br />
+        4. Откроется Telegram-бот в Telegram. Нажмите /Start. В Telegram должно появиться сообщение, что Telegram-бот успешно привязан.
       </Typography>
+
+      <Button
+        variant="outlined"
+        color="error"
+        fullWidth
+        onClick={handleDeleteProfile}
+        disabled={isLoading}
+        sx={{ mt: 2 }}
+      >
+        Удалить профиль
+      </Button>
     </Box>
   )
 }

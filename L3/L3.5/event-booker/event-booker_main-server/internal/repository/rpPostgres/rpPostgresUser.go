@@ -26,9 +26,9 @@ func (rp *UserRepository) Create(user *model.User) (*model.User, error) {
 	query := `
 
 		INSERT INTO users
-			(email, name, password_hash, created_at, updated_at) 
+			(email, name, password_hash, telegram_notifications, email_notifications, created_at, updated_at) 
 		VALUES
-			($1, $2, $3, $4, $5) 
+			($1, $2, $3, $4, $5, $6, $7) 
 		RETURNING
 			id
 		
@@ -42,6 +42,8 @@ func (rp *UserRepository) Create(user *model.User) (*model.User, error) {
 		user.Email,
 		user.Name,
 		user.PasswordHash,
+		user.TelegramNotifications,
+		user.EmailNotifications,
 		user.CreatedAt,
 		user.UpdatedAt,
 	).Scan(
@@ -58,9 +60,9 @@ func (rp *UserRepository) Create(user *model.User) (*model.User, error) {
 // GetByID returns a user by ID
 func (rp *UserRepository) GetByID(id int) (*model.User, error) {
 	query := `
-
+	
 		SELECT
-			id, email, name, password_hash, telegram_chat_id, created_at, updated_at 	
+			id, email, name, password_hash, telegram_username, telegram_chat_id, telegram_notifications, email_notifications, created_at, updated_at 
 		FROM
 			users
 		WHERE
@@ -75,7 +77,10 @@ func (rp *UserRepository) GetByID(id int) (*model.User, error) {
 		&user.Email,
 		&user.Name,
 		&user.PasswordHash,
+		&user.TelegramUsername,
 		&user.TelegramChatID,
+		&user.TelegramNotifications,
+		&user.EmailNotifications,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -93,9 +98,9 @@ func (rp *UserRepository) GetByID(id int) (*model.User, error) {
 // GetByEmail returns a user by email
 func (rp *UserRepository) GetByEmail(email string) (*model.User, error) {
 	query := `
-		
+
 		SELECT
-			id, email, name, password_hash, telegram_chat_id, created_at, updated_at 
+			id, email, name, password_hash, telegram_username, telegram_chat_id, telegram_notifications, email_notifications, created_at, updated_at 
 		FROM
 			users
 		WHERE
@@ -110,7 +115,10 @@ func (rp *UserRepository) GetByEmail(email string) (*model.User, error) {
 		&user.Email,
 		&user.Name,
 		&user.PasswordHash,
+		&user.TelegramUsername,
 		&user.TelegramChatID,
+		&user.TelegramNotifications,
+		&user.EmailNotifications,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -134,9 +142,11 @@ func (rp *UserRepository) Update(user *model.User) error {
 		SET
 			name = $1, 
             telegram_username = $2, 
-            updated_at = $3  
+            telegram_notifications = $3,
+            email_notifications = $4,
+            updated_at = $5  
 		WHERE
-			id = $4
+			id = $6
 		
 		`
 
@@ -145,6 +155,8 @@ func (rp *UserRepository) Update(user *model.User) error {
 		query,
 		user.Name,
 		user.TelegramUsername,
+		user.TelegramNotifications,
+		user.EmailNotifications,
 		user.UpdatedAt,
 		user.ID,
 	)
@@ -226,7 +238,7 @@ func (rp *UserRepository) GetByTelegramChatID(ctx context.Context, chatID int64)
 	query := `
 		
 		SELECT
-			id, email, name, password_hash, telegram_chat_id, created_at, updated_at 
+			id, email, name, password_hash, telegram_username, telegram_chat_id, telegram_notifications, email_notifications, created_at, updated_at 
 		FROM
 			users
 		WHERE
@@ -241,7 +253,10 @@ func (rp *UserRepository) GetByTelegramChatID(ctx context.Context, chatID int64)
 		&user.Email,
 		&user.Name,
 		&user.PasswordHash,
+		&user.TelegramUsername,
 		&user.TelegramChatID,
+		&user.TelegramNotifications,
+		&user.EmailNotifications,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -291,7 +306,7 @@ func (rp *UserRepository) GetByTelegramUsername(ctx context.Context, username st
 	query := `
 		
 		SELECT
-			id, email, name, password_hash, telegram_username, telegram_chat_id, created_at, updated_at 
+			id, email, name, password_hash, telegram_username, telegram_chat_id, telegram_notifications, email_notifications, created_at, updated_at 
 		FROM
 			users
 		WHERE
@@ -308,6 +323,8 @@ func (rp *UserRepository) GetByTelegramUsername(ctx context.Context, username st
 		&user.PasswordHash,
 		&user.TelegramUsername,
 		&user.TelegramChatID,
+		&user.TelegramNotifications,
+		&user.EmailNotifications,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)

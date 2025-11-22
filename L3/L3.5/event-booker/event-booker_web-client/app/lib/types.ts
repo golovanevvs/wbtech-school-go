@@ -4,6 +4,10 @@ export interface User {
   name: string
   telegramUsername?: string | null
   telegramChatID?: number | null
+  telegramNotifications?: boolean
+  emailNotifications?: boolean
+  created_at: string
+  updated_at: string
 }
 
 export interface Event {

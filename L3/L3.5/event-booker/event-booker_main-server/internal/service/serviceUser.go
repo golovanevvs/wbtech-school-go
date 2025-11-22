@@ -67,6 +67,11 @@ func (sv *UserService) Delete(ctx context.Context, id int) error {
 	return sv.rp.Delete(id)
 }
 
+// DeleteUser deletes a user by ID (alias for Delete for consistency)
+func (sv *UserService) DeleteUser(ctx context.Context, id int) error {
+	return sv.rp.Delete(id)
+}
+
 // UpdateTelegramChatID updates the Telegram chat ID for a user
 func (sv *UserService) UpdateTelegramChatID(ctx context.Context, userID int, chatID int64) error {
 	return sv.rp.SaveTelegramChatID(ctx, userID, chatID)

@@ -17,6 +17,7 @@ type IUserRpForAuth interface {
 	Create(user *model.User) (*model.User, error)
 	GetByID(id int) (*model.User, error)
 	Update(user *model.User) error
+	Delete(id int) error
 }
 
 // IRefreshTokenRp interface for refresh token repository
@@ -60,11 +61,13 @@ func (sv *AuthService) Register(ctx context.Context, email, password, name strin
 	}
 
 	user := &model.User{
-		Email:        email,
-		Name:         name,
-		PasswordHash: string(hashedPassword),
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		Email:                 email,
+		Name:                  name,
+		PasswordHash:          string(hashedPassword),
+		TelegramNotifications: false,
+		EmailNotifications:    true,
+		CreatedAt:             time.Now(),
+		UpdatedAt:             time.Now(),
 	}
 
 	createdUser, err := sv.userRp.Create(user)
@@ -83,6 +86,11 @@ func (sv *AuthService) GetUserByID(ctx context.Context, id int) (*model.User, er
 // UpdateUser updates a user
 func (sv *AuthService) UpdateUser(ctx context.Context, user *model.User) error {
 	return sv.userRp.Update(user)
+}
+
+// DeleteUser deletes a user by ID
+func (sv *AuthService) DeleteUser(ctx context.Context, id int) error {
+	return sv.userRp.Delete(id)
 }
 
 // Login authenticates user and returns access and refresh tokens

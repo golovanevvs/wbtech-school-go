@@ -21,6 +21,7 @@ type ISvForAuthHandler interface {
 	ValidateToken(ctx context.Context, tokenString string) (int, string, error)
 	GetUserByID(ctx context.Context, id int) (*model.User, error)
 	UpdateUser(ctx context.Context, user *model.User) error
+	DeleteUser(ctx context.Context, id int) error
 }
 
 // AuthHandler handles authentication requests
@@ -57,6 +58,7 @@ func (hd *AuthHandler) RegisterProtectedRoutes(rt *ginext.RouterGroup) {
 	{
 		auth.GET("/me", hd.GetCurrentUser)
 		auth.PUT("/update", hd.UpdateUser)
+		auth.DELETE("/delete", hd.DeleteUser)
 	}
 }
 
@@ -263,10 +265,19 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
+	// Создаем объект пользователя для обновления
 	user := &model.User{
 		ID:               userIDInt,
 		Name:             req.Name,
 		TelegramUsername: req.TelegramUsername,
+	}
+
+	// Обновляем поля уведомлений, если они предоставлены
+	if req.TelegramNotifications != nil {
+		user.TelegramNotifications = *req.TelegramNotifications
+	}
+	if req.EmailNotifications != nil {
+		user.EmailNotifications = *req.EmailNotifications
 	}
 
 	err = hd.sv.UpdateUser(c.Request.Context(), user)
@@ -286,6 +297,56 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 	lg.Debug().Int("user_id", userIDInt).Msgf("%s user updated successfully", pkgConst.OpSuccess)
 
 	c.JSON(http.StatusOK, updatedUser)
+}
+
+// DeleteUser handles user deletion
+func (hd *AuthHandler) DeleteUser(c *gin.Context) {
+	lg := hd.lg.With().Str("handler", "DeleteUser").Logger()
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		lg.Warn().Msgf("%s User ID not found in context", pkgConst.Warn)
+		c.JSON(http.StatusUnauthorized, ginext.H{"error": pkgErrors.ErrUnauthorized.Error()})
+		return
+	}
+
+	userIDInt, ok := userID.(int)
+	if !ok {
+		lg.Warn().Msgf("%s User ID is not of type int", pkgConst.Warn)
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Internal server error"})
+		return
+	}
+
+	// Проверяем, что пользователь существует в БД
+	_, err := hd.sv.GetUserByID(c.Request.Context(), userIDInt)
+	if err != nil {
+		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s user not found in database, clearing invalid cookies", pkgConst.Warn)
+
+		// Если пользователь не найден в БД, удаляем cookies
+		c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
+		c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
+
+		c.JSON(http.StatusUnauthorized, ginext.H{"error": "User not found"})
+		return
+	}
+
+	// Удаляем пользователя из БД (это также удалит его мероприятия и бронирования благодаря CASCADE)
+	err = hd.sv.DeleteUser(c.Request.Context(), userIDInt)
+	if err != nil {
+		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to delete user", pkgConst.Warn)
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Failed to delete user"})
+		return
+	}
+
+	lg.Debug().Int("user_id", userIDInt).Msgf("%s user deleted successfully", pkgConst.OpSuccess)
+
+	// Удаляем cookies
+	c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
+	c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
+
+	c.JSON(http.StatusOK, ginext.H{
+		"message": "User deleted successfully",
+	})
 }
 
 // Logout handles user logout

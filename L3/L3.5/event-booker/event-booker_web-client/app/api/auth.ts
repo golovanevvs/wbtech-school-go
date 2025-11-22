@@ -98,6 +98,13 @@ export const updateUser = async (userData: UpdateUserRequest): Promise<User> => 
   })
 }
 
+export const deleteUser = async (): Promise<{ message: string }> => {
+  console.log("Deleting user profile")
+  return apiRequest<{ message: string }>("/auth/delete", {
+    method: "DELETE",
+  })
+}
+
 export const logout = async (): Promise<void> => {
   try {
     await apiRequest<{ message: string }>("/auth/logout", {
