@@ -138,19 +138,19 @@ func (rp *UserRepository) Update(user *model.User) error {
 		UPDATE
 			users 
 		SET
-			email = $1, name = $2, password_hash = $3, telegram_chat_id = $4, updated_at = $5 
+			name = $1, 
+            telegram_username = $2, 
+            updated_at = $3  
 		WHERE
-			id = $6
+			id = $4
 		
 		`
 
 	result, err := rp.db.DB.ExecContext(
 		context.Background(),
 		query,
-		user.Email,
 		user.Name,
-		user.PasswordHash,
-		user.TelegramChatID,
+		user.TelegramUsername,
 		user.UpdatedAt,
 		user.ID,
 	)

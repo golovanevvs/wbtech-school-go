@@ -2,7 +2,10 @@ module github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.5/event-booker/ev
 
 go 1.25.2
 
-require github.com/wb-go/wbf v0.0.9
+require (
+	github.com/wb-go/wbf v0.0.9
+	golang.org/x/crypto v0.41.0
+)
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -39,7 +42,6 @@ require (
 	go.uber.org/mock v0.5.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/arch v0.20.0 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/mod v0.26.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect

@@ -12,7 +12,7 @@ export default function Card({ children }: CardProps) {
       sx={{
         maxWidth: "400px",
         mx: "auto",
-        p: 3,
+        p: { xs: 2, sm: 2 },
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

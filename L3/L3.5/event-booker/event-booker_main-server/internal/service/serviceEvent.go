@@ -15,6 +15,7 @@ type IEventRp interface {
 	Update(event *model.Event) error
 	Delete(id int) error
 	UpdateAvailablePlaces(eventID int, newAvailablePlaces int) error
+	GetByOwnerID(ownerID int) ([]*model.Event, error)
 }
 
 // EventService service for working with events
@@ -50,6 +51,11 @@ func (sv *EventService) GetByID(ctx context.Context, id int) (*model.Event, erro
 // GetAll returns all events
 func (sv *EventService) GetAll(ctx context.Context) ([]*model.Event, error) {
 	return sv.rp.GetAll()
+}
+
+// GetByOwnerID returns all events owned by a user
+func (sv *EventService) GetByOwnerID(ctx context.Context, ownerID int) ([]*model.Event, error) {
+	return sv.rp.GetByOwnerID(ownerID)
 }
 
 // Update updates an event

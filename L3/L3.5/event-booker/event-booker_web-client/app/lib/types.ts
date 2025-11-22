@@ -1,8 +1,9 @@
 export interface User {
-  id: number;
-  email: string;
-  name: string;
-  telegramChatID?: number | null;
+  id: number
+  email: string
+  name: string
+  telegramUsername?: string | null
+  telegramChatID?: number | null
 }
 
 export interface Event {
@@ -12,7 +13,7 @@ export interface Event {
   description: string
   totalPlaces: number
   availablePlaces: number
-  bookingDeadline: number // время в минутах до отмены брони
+  bookingDeadline: number
   createdAt: string
   updatedAt: string
 }
@@ -31,6 +32,7 @@ export interface Booking {
 export interface AuthResponse {
   user: User
   token: string
+  refreshToken?: string
 }
 
 export interface LoginRequest {
@@ -42,4 +44,23 @@ export interface RegisterRequest {
   email: string
   password: string
   name: string
+}
+
+export interface LoginResponse {
+  token: string
+  refreshToken: string
+  user?: User
+}
+
+export interface RegisterResponse {
+  token: string
+  refreshToken: string
+  user?: User
+}
+
+export interface UpdateUserRequest {
+  name?: string
+  telegramUsername?: string | null
+  telegramNotifications?: boolean
+  emailNotifications?: boolean
 }

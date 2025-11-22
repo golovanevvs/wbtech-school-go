@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     telegram_username VARCHAR(255),
     telegram_chat_id BIGINT,
+    telegram_notifications BOOLEAN NOT NULL DEFAULT false,
+    email_notifications BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -17,6 +19,7 @@ CREATE TABLE IF NOT EXISTS events (
     total_places INTEGER NOT NULL,
     available_places INTEGER NOT NULL,
     booking_deadline INTEGER NOT NULL,
+    owner_id INTEGER REFERENCES users(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

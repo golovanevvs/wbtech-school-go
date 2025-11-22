@@ -1,18 +1,26 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Box, Typography, Stack, Alert } from "@mui/material"
 import ProfileForm from "../ui/profile/ProfileForm"
 import { getCurrentUser, updateUser } from "../api/auth"
-import { User } from "../lib/types"
+import { User, UpdateUserRequest } from "../lib/types"
 
 export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (!token) {
+      router.push("/auth")
+      return
+    }
+
     const fetchUser = async () => {
       try {
         const userData = await getCurrentUser()
@@ -27,16 +35,16 @@ export default function ProfilePage() {
     }
 
     fetchUser()
-  }, [])
+  }, [router])
 
-  const handleUpdate = async (userData: Partial<User>) => {
+  const handleUpdate = async (userData: UpdateUserRequest) => {
     if (!user) return
 
     setSaving(true)
     setError(null)
 
     try {
-      const updatedUser = await updateUser({ ...user, ...userData })
+      const updatedUser = await updateUser(userData)
       setUser(updatedUser)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update user")
@@ -46,8 +54,7 @@ export default function ProfilePage() {
   }
 
   const handleSubscribeToTelegram = () => {
-    // Открываем Telegram бота в новом окне
-    window.open("https://t.me/your_bot_name", "_blank")
+    window.open("tg://resolve?domain=v_delayed_notifier_bot", "_blank")
   }
 
   if (loading) {

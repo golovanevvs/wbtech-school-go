@@ -1,15 +1,23 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Box, Stack, Alert, Paper } from "@mui/material"
 import EventForm from "../../ui/events/EventForm"
 import { createEvent } from "../../api/events"
-import { useRouter } from "next/navigation"
 import { Event } from "../../lib/types"
 
 export default function CreateEventPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (!token) {
+      router.push("/auth")
+      return
+    }
+  }, [router])
 
   const handleSubmit = async (
     eventData: Omit<Event, "id" | "createdAt" | "updatedAt" | "availablePlaces">
@@ -43,7 +51,7 @@ export default function CreateEventPage() {
         {error && <Alert severity="error">{error}</Alert>}
         <Paper
           sx={{
-            p: {xs:0,sm:2},
+            p: { xs: 0, sm: 2 },
             width: "100%",
             maxWidth: 500,
             display: "flex",

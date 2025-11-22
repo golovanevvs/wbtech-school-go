@@ -1,3 +1,4 @@
+// app/auth/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -14,10 +15,8 @@ export default function AuthPage() {
       setMode(modeParam === "register" ? "register" : "login")
     }
 
-    // Установка начального значения
     handlePopState()
 
-    // Подписка на изменение URL
     window.addEventListener("popstate", handlePopState)
 
     return () => {
@@ -25,18 +24,27 @@ export default function AuthPage() {
     }
   }, [])
 
+  // 👇 Колбэк для успешной авторизации
+  const handleAuthSuccess = () => {
+    // Header автоматически обновится через контекст AuthContext
+    console.log("Auth successful!")
+  }
+
   return (
     <Box
       sx={{
         display: "flex",
         justifyContent: "center",
-        px: { xs: 0, sm: 2 },
+        px: { xs: 2, sm: 2 },
         py: 2,
         bgcolor: "background.default",
-        maxWidth:330,
+        maxWidth: 500,
       }}
     >
-      <AuthForm mode={mode} />
+      <AuthForm 
+        mode={mode} 
+        onAuthSuccess={handleAuthSuccess} // 👈 Теперь без ошибки
+      />
     </Box>
   )
 }

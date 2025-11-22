@@ -1,4 +1,3 @@
-import { useState } from "react"
 import {
   Box,
   TextField,
@@ -9,11 +8,12 @@ import {
   Switch,
   Stack,
 } from "@mui/material"
-import { User } from "../../lib/types"
+import { useState } from "react"
+import { User, UpdateUserRequest } from "../../lib/types"
 
 interface ProfileFormProps {
   user: User
-  onUpdate: (userData: Partial<User>) => void
+  onUpdate: (userData: UpdateUserRequest) => void
   onSubscribeToTelegram: () => void
   isLoading?: boolean
   error?: string
@@ -27,14 +27,19 @@ export default function ProfileForm({
   error,
 }: ProfileFormProps) {
   const [name, setName] = useState(user.name)
-  const [telegramEnabled, setTelegramEnabled] = useState(!!user.telegramChatID)
+  const [telegramUsername, setTelegramUsername] = useState(
+    user.telegramUsername || ""
+  )
+  const [telegramNotifications, setTelegramNotifications] = useState(false)
   const [emailNotifications, setEmailNotifications] = useState(true)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onUpdate({
       name,
-      telegramChatID: user.telegramChatID ? user.telegramChatID : null,
+      telegramUsername: telegramUsername || null,
+      telegramNotifications,
+      emailNotifications,
     })
   }
 
@@ -63,13 +68,22 @@ export default function ProfileForm({
         required
       />
 
+      <TextField
+        label="Telegram username"
+        fullWidth
+        margin="normal"
+        value={telegramUsername}
+        onChange={(e) => setTelegramUsername(e.target.value)}
+        placeholder="без @, например: ivan_ivanov"
+        helperText="Введите ваш Telegram username (без @)"
+      />
+
       <Stack spacing={2} sx={{ mt: 2 }}>
-        <FormControlLabel
+       <FormControlLabel
           control={
             <Switch
-              checked={telegramEnabled}
-              onChange={(e) => setTelegramEnabled(e.target.checked)}
-              disabled={!user.telegramChatID}
+              checked={telegramNotifications}
+              onChange={(e) => setTelegramNotifications(e.target.checked)}
             />
           }
           label="Уведомления через Telegram"
@@ -112,6 +126,16 @@ export default function ProfileForm({
           {user.telegramChatID ? "Подписан" : "Подписаться на Telegram-бота"}
         </Button>
       </Box>
+
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+        <strong>Как это работает:</strong>
+        <br />
+        1. Если вы находитесь на устройстве, где есть Telegram, введите Telegram username и сохраните профиль.
+        <br />
+        2. Нажмите Подписаться на Telegram-бота.
+        <br />
+        3. Откроется Telegram-бот в Telegram. Нажмите /Start. В Telegram должно появиться сообщение, что Telegram-бот укспешно привязан.
+      </Typography>
     </Box>
   )
 }

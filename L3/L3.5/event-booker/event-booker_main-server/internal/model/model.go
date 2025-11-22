@@ -5,26 +5,31 @@ import (
 )
 
 type User struct {
-	ID               int       `json:"id" db:"id"`
-	Email            string    `json:"email" db:"email"`
-	Name             string    `json:"name" db:"name"`
-	PasswordHash     string    `json:"-" db:"password_hash"`
-	TelegramUsername *string   `json:"telegram_username,omitempty" db:"telegram_username"`
-	TelegramChatID   *int64    `json:"telegram_chat_id,omitempty" db:"telegram_chat_id"`
-	CreatedAt        time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at" db:"updated_at"`
+	ID                    int       `json:"id" db:"id"`
+	Email                 string    `json:"email" db:"email"`
+	Name                  string    `json:"name" db:"name"`
+	PasswordHash          string    `json:"-" db:"password_hash"`
+	TelegramUsername      *string   `json:"telegram_username,omitempty" db:"telegram_username"`
+	TelegramChatID        *int64    `json:"telegram_chat_id,omitempty" db:"telegram_chat_id"`
+	TelegramNotifications bool      `json:"telegram_notifications" db:"telegram_notifications"`
+	EmailNotifications    bool      `json:"email_notifications" db:"email_notifications"`
+	CreatedAt             time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt             time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type Event struct {
-	ID              int       `json:"id" db:"id"`
-	Title           string    `json:"title" db:"title"`
-	Date            time.Time `json:"date" db:"date"`
-	Description     string    `json:"description" db:"description"`
-	TotalPlaces     int       `json:"total_places" db:"total_places"`
-	AvailablePlaces int       `json:"available_places" db:"available_places"`
-	BookingDeadline int       `json:"booking_deadline" db:"booking_deadline"` // minute
-	CreatedAt       time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at" db:"updated_at"`
+	ID                    int       `json:"id" db:"id"`
+	Title                 string    `json:"title" db:"title"`
+	Date                  time.Time `json:"date" db:"date"`
+	Description           string    `json:"description" db:"description"`
+	TotalPlaces           int       `json:"total_places" db:"total_places"`
+	AvailablePlaces       int       `json:"available_places" db:"available_places"`
+	BookingDeadline       int       `json:"booking_deadline" db:"booking_deadline"` // minute
+	OwnerID               int       `json:"owner_id" db:"owner_id"`
+	TelegramNotifications bool      `json:"telegram_notifications" db:"telegram_notifications"`
+	EmailNotifications    bool      `json:"email_notifications" db:"email_notifications"`
+	CreatedAt             time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt             time.Time `json:"updated_at" db:"updated_at"`
 }
 
 type BookingStatus string
@@ -54,13 +59,11 @@ type RefreshToken struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
-// NotificationChannels specifies which channels to use for notification
 type NotificationChannels struct {
 	Telegram bool
 	Email    bool
 }
 
-// Notice represents a notification to be sent
 type Notice struct {
 	UserID   int
 	Message  string

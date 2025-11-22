@@ -7,23 +7,25 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.5/event-booker/event-booker_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.5/event-booker/event-booker_main-server/internal/pkg/pkgErrors"
 	"github.com/wb-go/wbf/zlog"
 )
 
-// IServiceForAuthHandler interface for auth handler
-type IServiceForAuthHandler interface {
+// ISvForAuthHandler interface for auth handler
+type ISvForAuthHandler interface {
 	ValidateToken(ctx context.Context, tokenString string) (userID int, userEmail string, err error)
+	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 }
 
 // AuthMiddleware handles JWT authentication
 type AuthMiddleware struct {
 	lg *zlog.Zerolog
-	sv IServiceForAuthHandler
+	sv ISvForAuthHandler
 }
 
 // NewAuthMiddleware creates a new AuthMiddleware
-func NewAuthMiddleware(parentLg *zlog.Zerolog, sv IServiceForAuthHandler) *AuthMiddleware {
+func NewAuthMiddleware(parentLg *zlog.Zerolog, sv ISvForAuthHandler) *AuthMiddleware {
 	lg := parentLg.With().Str("component", "middleware-auth").Logger()
 	return &AuthMiddleware{
 		lg: &lg,
@@ -51,6 +53,8 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 		return
 	}
 
+	lg.Debug().Msgf("%s Validating token...", pkgConst.Starting)
+
 	userID, userEmail, err := mw.sv.ValidateToken(c.Request.Context(), tokenString)
 	if err != nil {
 		lg.Warn().Err(err).Msg("Failed to validate token")
@@ -62,6 +66,8 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 	// Set user ID in context for use in handlers
 	c.Set("user_id", userID)
 	c.Set("user_email", userEmail)
+
+	lg.Debug().Int("user_id", userID).Str("email", userEmail).Msgf("%s Token validated successfully", pkgConst.Finished)
 
 	c.Next()
 }

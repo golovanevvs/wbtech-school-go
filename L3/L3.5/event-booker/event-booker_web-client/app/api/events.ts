@@ -1,8 +1,7 @@
 import { Event } from "../lib/types"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
-// Интерфейс для обработки ошибок API
 class ApiError extends Error {
   constructor(message: string, public status: number) {
     super(message)
@@ -10,7 +9,6 @@ class ApiError extends Error {
   }
 }
 
-// Функция для выполнения API запросов
 const apiRequest = async <T>(
   endpoint: string,
   options: RequestInit = {}
@@ -34,7 +32,6 @@ const apiRequest = async <T>(
   return response.json()
 }
 
-// Функция для получения токена из localStorage
 const getToken = (): string | null => {
   if (typeof window !== "undefined") {
     return localStorage.getItem("token")
@@ -42,17 +39,20 @@ const getToken = (): string | null => {
   return null
 }
 
-// Функция для получения всех событий
 export const getEvents = async (): Promise<Event[]> => {
-  return apiRequest<Event[]>("/events")
+  try {
+    const response = await apiRequest<Event[]>("/events")
+    return response || []
+  } catch (error) {
+    console.error("Failed to load events:", error)
+    return []
+  }
 }
 
-// Функция для получения события по ID
 export const getEventById = async (id: number): Promise<Event> => {
   return apiRequest<Event>(`/events/${id}`)
 }
 
-// Функция для создания события
 export const createEvent = async (
   eventData: Omit<Event, "id" | "createdAt" | "updatedAt" | "availablePlaces">
 ): Promise<Event> => {
@@ -62,7 +62,6 @@ export const createEvent = async (
   })
 }
 
-// Функция для обновления события
 export const updateEvent = async (
   id: number,
   eventData: Partial<Event>
@@ -73,7 +72,6 @@ export const updateEvent = async (
   })
 }
 
-// Функция для удаления события
 export const deleteEvent = async (id: number): Promise<void> => {
   await apiRequest(`/events/${id}`, {
     method: "DELETE",

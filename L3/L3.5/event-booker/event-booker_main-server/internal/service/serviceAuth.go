@@ -16,6 +16,7 @@ type IUserRpForAuth interface {
 	GetByEmail(email string) (*model.User, error)
 	Create(user *model.User) (*model.User, error)
 	GetByID(id int) (*model.User, error)
+	Update(user *model.User) error
 }
 
 // IRefreshTokenRp interface for refresh token repository
@@ -72,6 +73,16 @@ func (sv *AuthService) Register(ctx context.Context, email, password, name strin
 	}
 
 	return createdUser, nil
+}
+
+// GetUserByID returns a user by ID
+func (sv *AuthService) GetUserByID(ctx context.Context, id int) (*model.User, error) {
+	return sv.userRp.GetByID(id)
+}
+
+// UpdateUser updates a user
+func (sv *AuthService) UpdateUser(ctx context.Context, user *model.User) error {
+	return sv.userRp.Update(user)
 }
 
 // Login authenticates user and returns access and refresh tokens
@@ -142,6 +153,7 @@ func (sv *AuthService) RefreshTokens(ctx context.Context, refreshToken string) (
 	}
 
 	if token.ExpiresAt.Before(time.Now()) {
+		_ = sv.refreshTokenRp.DeleteByToken(refreshToken)
 		return "", "", fmt.Errorf("refresh token has expired")
 	}
 

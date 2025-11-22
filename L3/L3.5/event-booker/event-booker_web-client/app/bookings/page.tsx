@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Box, Stack, Typography, Alert, Button } from "@mui/material"
-import Header from "../ui/Header"
 import BookingList from "../ui/bookings/BookingList"
 import { getUserBookings, confirmBooking, cancelBooking } from "../api/bookings"
 import { Booking } from "../lib/types"
@@ -11,8 +11,15 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
+    const token = localStorage.getItem("token")
+    if (!token) {
+      router.push("/auth")
+      return
+    }
+
     const fetchBookings = async () => {
       try {
         setLoading(true)
@@ -26,12 +33,11 @@ export default function BookingsPage() {
     }
 
     fetchBookings()
-  }, [])
+  }, [router])
 
   const handleConfirm = async (id: number) => {
     try {
       await confirmBooking(id)
-      // Обновляем список бронирований
       const updatedBookings = await getUserBookings()
       setBookings(updatedBookings)
     } catch (err) {
@@ -42,7 +48,6 @@ export default function BookingsPage() {
   const handleCancel = async (id: number) => {
     try {
       await cancelBooking(id)
-      // Обновляем список бронирований
       const updatedBookings = await getUserBookings()
       setBookings(updatedBookings)
     } catch (err) {
@@ -81,7 +86,6 @@ export default function BookingsPage() {
         }}
       >
         <Stack spacing={4}>
-          <Header />
           <Alert severity="error" sx={{ mx: 2 }}>
             {error}
             <Button onClick={() => setError(null)} sx={{ mt: 1 }} size="small">
@@ -106,7 +110,6 @@ export default function BookingsPage() {
       }}
     >
       <Stack spacing={4} alignItems="center">
-        <Header />
         <Typography variant="h2" align="center">
           Мои бронирования
         </Typography>

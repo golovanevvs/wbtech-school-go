@@ -29,6 +29,8 @@ export default function EventForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    const isoDate = new Date(date).toISOString()
+
     if (!title || !date || !totalPlaces || !bookingDeadline) {
       setError("Все поля обязательны для заполнения")
       return
@@ -50,7 +52,7 @@ export default function EventForm({
     onSubmit({
       title,
       description,
-      date,
+      date: isoDate,
       totalPlaces: totalPlacesNum,
       bookingDeadline: bookingDeadlineNum,
     })

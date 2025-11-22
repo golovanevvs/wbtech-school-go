@@ -5,6 +5,7 @@ import ThemeProvider from "./ui/ThemeProvider"
 import ThemeToggle from "./ui/ThemeToggle"
 import Header from "./ui/Header"
 import Footer from "./ui/Footer"
+import { AuthProvider } from "./context/AuthContext"
 import { Box, Stack } from "@mui/material"
 
 const geistSans = Geist({
@@ -34,26 +35,28 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AppRouterCacheProvider>
-          <ThemeProvider>
-            <ThemeToggle />
-            <Box
-              sx={{
-                width: "100%",
-                minHeight: "100vh",
-                px: { xs: 0, sm: 2 },
-                py: 2,
-                bgcolor: "background.default",
-                maxWidth: "100vw",
-                mx: "auto",
-              }}
-            >
-              <Stack spacing={2} alignItems="center">
-                <Header />
-                <main>{children}</main>
-                <Footer />
-              </Stack>
-            </Box>
-          </ThemeProvider>
+          <AuthProvider>
+            <ThemeProvider>
+              <ThemeToggle />
+              <Box
+                sx={{
+                  width: "100%",
+                  minHeight: "100vh",
+                  px: { xs: 0, sm: 2 },
+                  py: 2,
+                  bgcolor: "background.default",
+                  maxWidth: "100vw",
+                  mx: "auto",
+                }}
+              >
+                <Stack spacing={4} alignItems="center">
+                  <Header />
+                  <main>{children}</main>
+                  <Footer />
+                </Stack>
+              </Box>
+            </ThemeProvider>
+          </AuthProvider>
         </AppRouterCacheProvider>
       </body>
     </html>

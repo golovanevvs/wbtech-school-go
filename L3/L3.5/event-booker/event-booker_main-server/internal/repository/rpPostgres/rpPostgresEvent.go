@@ -26,11 +26,11 @@ func (rp *EventRepository) Create(event *model.Event) (*model.Event, error) {
 	query := `
 
 		INSERT INTO
-			events (title, date, description, total_places, available_places, booking_deadline, created_at, updated_at) 
+			events (title, date, description, total_places, available_places, booking_deadline, owner_id, created_at, updated_at) 
 		VALUES
-			($1, $2, $3, $4, $5, $6, $7, $8) 
+			($1, $2, $3, $4, $5, $6, $7, $8, $9) 
 		RETURNING
-			id, title, date, description, total_places, available_places, booking_deadline, created_at, updated_at
+			id, title, date, description, total_places, available_places, booking_deadline, owner_id, created_at, updated_at
 		
 		`
 
@@ -44,6 +44,7 @@ func (rp *EventRepository) Create(event *model.Event) (*model.Event, error) {
 		event.TotalPlaces,
 		event.AvailablePlaces,
 		event.BookingDeadline,
+		event.OwnerID,
 		event.CreatedAt,
 		event.UpdatedAt,
 	).Scan(
@@ -54,6 +55,7 @@ func (rp *EventRepository) Create(event *model.Event) (*model.Event, error) {
 		&createdEvent.TotalPlaces,
 		&createdEvent.AvailablePlaces,
 		&createdEvent.BookingDeadline,
+		&createdEvent.OwnerID,
 		&createdEvent.CreatedAt,
 		&createdEvent.UpdatedAt,
 	)
@@ -70,7 +72,7 @@ func (rp *EventRepository) GetByID(id int) (*model.Event, error) {
 	query := `
 
 		SELECT
-			id, title, date, description, total_places, available_places, booking_deadline, created_at, updated_at
+			id, title, date, description, total_places, available_places, booking_deadline, owner_id, created_at, updated_at
 		FROM
 			events
 		WHERE
@@ -88,6 +90,7 @@ func (rp *EventRepository) GetByID(id int) (*model.Event, error) {
 		&event.TotalPlaces,
 		&event.AvailablePlaces,
 		&event.BookingDeadline,
+		&event.OwnerID,
 		&event.CreatedAt,
 		&event.UpdatedAt,
 	)
@@ -107,7 +110,7 @@ func (rp *EventRepository) GetAll() ([]*model.Event, error) {
 	query := `
 
 		SELECT
-			id, title, date, description, total_places, available_places, booking_deadline, created_at, updated_at
+			id, title, date, description, total_places, available_places, booking_deadline, owner_id, created_at, updated_at
 		FROM
 			events
 		ORDER BY
@@ -132,6 +135,7 @@ func (rp *EventRepository) GetAll() ([]*model.Event, error) {
 			&event.TotalPlaces,
 			&event.AvailablePlaces,
 			&event.BookingDeadline,
+			&event.OwnerID,
 			&event.CreatedAt,
 			&event.UpdatedAt,
 		)
@@ -247,4 +251,49 @@ func (rp *EventRepository) UpdateAvailablePlaces(eventID int, newAvailablePlaces
 	}
 
 	return nil
+}
+
+// GetByOwnerID returns all events owned by a user
+func (rp *EventRepository) GetByOwnerID(ownerID int) ([]*model.Event, error) {
+	query := `
+
+		SELECT
+			id, title, date, description, total_places, available_places, booking_deadline, owner_id, created_at, updated_at
+		FROM
+			events
+		WHERE
+			owner_id = $1
+		ORDER BY
+			date
+		
+		`
+
+	rows, err := rp.db.DB.QueryContext(context.Background(), query, ownerID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get events by owner ID: %w", err)
+	}
+	defer rows.Close()
+
+	var events []*model.Event
+	for rows.Next() {
+		var event model.Event
+		err := rows.Scan(
+			&event.ID,
+			&event.Title,
+			&event.Date,
+			&event.Description,
+			&event.TotalPlaces,
+			&event.AvailablePlaces,
+			&event.BookingDeadline,
+			&event.OwnerID,
+			&event.CreatedAt,
+			&event.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan event: %w", err)
+		}
+		events = append(events, &event)
+	}
+
+	return events, nil
 }

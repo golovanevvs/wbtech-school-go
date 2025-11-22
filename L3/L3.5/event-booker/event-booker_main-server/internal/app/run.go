@@ -14,5 +14,7 @@ func (a *App) Run(cancel context.CancelFunc) error {
 		return fmt.Errorf("failed to start http server: %w", err)
 	}
 
+	go a.deps.sv.Background.StartExpiredBookingProcessor(context.Background(), 15*time.Second)
+
 	return nil
 }
