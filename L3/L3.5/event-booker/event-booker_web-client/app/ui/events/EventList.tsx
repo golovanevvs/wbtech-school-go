@@ -58,7 +58,7 @@ export default function EventList({
             currentUserId={currentUserId}
             bookingStatus={bookingInfo.status}
             bookingExpiresAt={bookingInfo.expiresAt}
-            currentTime={currentTime}
+            {...(currentTime !== undefined && { currentTime })}
           />
         )
       })}

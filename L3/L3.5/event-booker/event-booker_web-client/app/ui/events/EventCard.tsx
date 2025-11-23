@@ -152,8 +152,8 @@ export default function EventCard({
           sx={{ mt: 1 }}
         />
 
-        {/* Показываем предупреждение о истекающей брони */}
-        {bookingStatus === "pending" && bookingExpiresAt && (
+        {/* Показываем предупреждение о истекающей брони только если currentTime доступен */}
+        {showTimer && (
           <Alert severity="warning" sx={{ mt: 1 }}>
             У вас есть бронирование. Подтвердите его до истечения времени.
             <br />
