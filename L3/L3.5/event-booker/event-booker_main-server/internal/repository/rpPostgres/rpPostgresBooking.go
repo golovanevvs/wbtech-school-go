@@ -338,18 +338,16 @@ func (rp *BookingRepository) UpdateStatus(id int, status model.BookingStatus) er
 		UPDATE
 			bookings
 		SET
-			status = $1, updated_at = $2
+			status = $1
 		WHERE
-			id = $3
+			id = $2
 		
 		`
-	currentTime := time.Now()
 
 	result, err := rp.db.DB.ExecContext(
 		context.Background(),
 		query,
 		status,
-		currentTime,
 		id,
 	)
 	if err != nil {

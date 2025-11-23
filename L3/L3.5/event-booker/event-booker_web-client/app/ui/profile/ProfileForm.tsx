@@ -104,7 +104,7 @@ export default function ProfileForm({
     <Box
       component="form"
       onSubmit={handleSubmit}
-      sx={{ width: "100%", maxWidth: 500, mx: "auto", p: 2 }}
+      sx={{ width: "100%", maxWidth: 420, mx: "auto", p: 2 }}
     >
       <Typography variant="h5" component="h2" gutterBottom align="center">
         Профиль пользователя
