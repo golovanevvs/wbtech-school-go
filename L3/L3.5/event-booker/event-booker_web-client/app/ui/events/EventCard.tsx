@@ -7,6 +7,7 @@ import {
   Chip,
   Box,
   IconButton,
+  Alert,
 } from "@mui/material"
 import EditIcon from "@mui/icons-material/Edit"
 import DeleteIcon from "@mui/icons-material/Delete"
@@ -15,17 +16,28 @@ import { Event } from "../../lib/types"
 interface EventCardProps {
   event: Event
   onBook?: (eventId: number) => void
+  onConfirmBooking?: (eventId: number) => void
   onEdit?: (eventId: number) => void
   onDelete?: (eventId: number) => void
   currentUserId?: number
+  // Новое: информация о статусе брони для текущего пользователя
+  bookingStatus?: "pending" | "confirmed" | null
+  // Новое: время до истечения брони (в миллисекундах)
+  bookingExpiresAt?: number | null
+  // Новое: текущее время для расчета истечения брони
+  currentTime?: number
 }
 
 export default function EventCard({ 
   event, 
   onBook, 
+  onConfirmBooking,
   onEdit, 
   onDelete, 
-  currentUserId 
+  currentUserId,
+  bookingStatus,
+  bookingExpiresAt,
+  currentTime
 }: EventCardProps) {
   // Отладочное логирование
   console.log("EventCard received event data:", event)
@@ -38,10 +50,17 @@ export default function EventCard({
     date: event?.date,
     description: event?.description
   })
+  console.log("Booking status:", bookingStatus, "Expires at:", bookingExpiresAt, "Current time:", currentTime)
 
   const handleBookClick = () => {
     if (onBook) {
       onBook(event.id)
+    }
+  }
+
+  const handleConfirmClick = () => {
+    if (onConfirmBooking) {
+      onConfirmBooking(event.id)
     }
   }
 
@@ -63,6 +82,20 @@ export default function EventCard({
   // Проверяем доступность мест
   const isAvailable = event.availablePlaces > 0
   console.log("Available places check:", event.availablePlaces, "isAvailable:", isAvailable)
+
+  // Проверяем, есть ли у пользователя активная бронь на это мероприятие
+  const hasActiveBooking = bookingStatus === "pending" || bookingStatus === "confirmed"
+
+  // Только показываем таймер если currentTime передан (т.е. мы в контексте с таймером)
+  const showTimer = currentTime !== undefined && bookingStatus === "pending" && bookingExpiresAt
+
+  // Проверяем, истекла ли бронь (только если currentTime доступен)
+  const isBookingExpired = showTimer && currentTime > bookingExpiresAt!
+
+  // Вычисляем оставшееся время для отображения (только если currentTime доступен)
+  const timeLeft = showTimer 
+    ? Math.max(0, Math.ceil((bookingExpiresAt! - currentTime) / 1000))
+    : 0
 
   return (
     <Card sx={{ minWidth: 300, maxWidth: 400, margin: "10px" }}>
@@ -118,15 +151,48 @@ export default function EventCard({
           color={isAvailable ? "success" : "error"}
           sx={{ mt: 1 }}
         />
+
+        {/* Показываем предупреждение о истекающей брони */}
+        {bookingStatus === "pending" && bookingExpiresAt && (
+          <Alert severity="warning" sx={{ mt: 1 }}>
+            У вас есть бронирование. Подтвердите его до истечения времени.
+            <br />
+            Осталось: {timeLeft} сек
+          </Alert>
+        )}
+
+        {bookingStatus === "confirmed" && (
+          <Alert severity="success" sx={{ mt: 1 }}>
+            Ваше бронирование подтверждено
+          </Alert>
+        )}
+
+        {isBookingExpired && (
+          <Alert severity="error" sx={{ mt: 1 }}>
+            Ваше бронирование истекло
+          </Alert>
+        )}
       </CardContent>
       <CardActions>
-        <Button
-          size="small"
-          disabled={!isAvailable}
-          onClick={handleBookClick}
-        >
-          Забронировать
-        </Button>
+        {hasActiveBooking ? (
+          <Button
+            size="small"
+            variant="contained"
+            color="warning"
+            onClick={handleConfirmClick}
+            disabled={!!isBookingExpired}
+          >
+            Подтвердить бронь
+          </Button>
+        ) : (
+          <Button
+            size="small"
+            disabled={!isAvailable || !currentUserId}
+            onClick={handleBookClick}
+          >
+            {!currentUserId ? "Войдите для бронирования" : "Забронировать"}
+          </Button>
+        )}
       </CardActions>
     </Card>
   )

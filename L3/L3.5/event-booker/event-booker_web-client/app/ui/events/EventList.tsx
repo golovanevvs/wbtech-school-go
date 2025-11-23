@@ -5,17 +5,25 @@ import { Event } from "../../lib/types"
 interface EventListProps {
   events: Event[] | null
   onBook?: (eventId: number) => void
+  onConfirmBooking?: (eventId: number) => void
   onEdit?: (eventId: number) => void
   onDelete?: (eventId: number) => void
   currentUserId?: number
+  // Новое: информация о статусе брони для каждого мероприятия
+  bookingsMap?: Record<number, { status: "pending" | "confirmed" | null; expiresAt?: number | null }>
+  // Новое: текущее время для расчета истечения брони
+  currentTime?: number
 }
 
 export default function EventList({ 
   events, 
   onBook, 
+  onConfirmBooking,
   onEdit, 
   onDelete, 
-  currentUserId 
+  currentUserId,
+  bookingsMap = {},
+  currentTime
 }: EventListProps) {
   if (!events) {
     return (
@@ -37,16 +45,23 @@ export default function EventList({
         px: 2,
       }}
     >
-      {events.map((event) => (
-        <EventCard
-          key={event.id}
-          event={event}
-          onBook={onBook}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          currentUserId={currentUserId}
-        />
-      ))}
+      {events.map((event) => {
+        const bookingInfo = bookingsMap[event.id] || { status: null, expiresAt: null }
+        return (
+          <EventCard
+            key={event.id}
+            event={event}
+            onBook={onBook}
+            onConfirmBooking={onConfirmBooking}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            currentUserId={currentUserId}
+            bookingStatus={bookingInfo.status}
+            bookingExpiresAt={bookingInfo.expiresAt}
+            currentTime={currentTime}
+          />
+        )
+      })}
     </Box>
   )
 }
