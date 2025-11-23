@@ -59,6 +59,30 @@ export const baseTheme = createTheme({
         },
       },
     },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          borderRadius: 4,
+          fontWeight: 700,
+          fontSize: "0.7rem",
+          textTransform: "uppercase",
+          padding: "2px 4px",
+          height: "20px",
+        },
+        label: {
+          padding: 0,
+          lineHeight: "1.2",
+        },
+        colorSuccess: {
+          backgroundColor: "#a5d6a7",
+          color: "#1b5e20",
+        },
+        colorError: {
+          backgroundColor: "#ff8a80",
+          color: "#b71c1c",
+        },
+      },
+    },
   },
 })
 
