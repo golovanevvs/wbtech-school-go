@@ -309,7 +309,7 @@ export default function EventsPage() {
       }}
     >
       <Stack spacing={4} alignItems="center">
-        <Box sx={{ width: "100%", maxWidth: 1200, px: 2 }}>
+        <Box sx={{ width: "100%", maxWidth: 1200, px: { xs: 0, sm: 2 } }}>
           <Typography variant="h2" align="center" sx={{ mb: 2 }}>
             Мероприятия
           </Typography>
