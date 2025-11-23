@@ -36,6 +36,12 @@ export interface Booking {
   cancelledAt?: string
 }
 
+// Новый интерфейс для запроса бронирования (соответствует серверу)
+export interface CreateBookingRequest {
+  event_id: number
+  booking_deadline_minutes?: number
+}
+
 export interface AuthResponse {
   user: User
 }

@@ -142,10 +142,49 @@ func (rp *BookingRepository) GetByUserID(userID int) ([]*model.Booking, error) {
 	return bookings, nil
 }
 
+// GetByUserIDAndEventID returns a booking for a user and event
+func (rp *BookingRepository) GetByUserIDAndEventID(userID int, eventID int) (*model.Booking, error) {
+	query := `
+
+		SELECT
+			id, user_id, event_id, status, created_at, expires_at, confirmed_at, cancelled_at
+		FROM
+			bookings
+		WHERE
+			user_id = $1 AND event_id = $2
+		ORDER BY
+			created_at DESC
+		LIMIT 1
+		
+		`
+	var booking model.Booking
+
+	row := rp.db.DB.QueryRowContext(context.Background(), query, userID, eventID)
+	err := row.Scan(
+		&booking.ID,
+		&booking.UserID,
+		&booking.EventID,
+		&booking.Status,
+		&booking.CreatedAt,
+		&booking.ExpiresAt,
+		&booking.ConfirmedAt,
+		&booking.CancelledAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("booking for user %d and event %d not found", userID, eventID)
+		}
+		return nil, fmt.Errorf("failed to get booking: %w", err)
+	}
+
+	return &booking, nil
+}
+
 // GetByEventID returns all bookings for an event
 func (rp *BookingRepository) GetByEventID(eventID int) ([]*model.Booking, error) {
 	query := `
-
+	
 		SELECT
 			id, user_id, event_id, status, created_at, expires_at, confirmed_at, cancelled_at
 		FROM
@@ -188,9 +227,8 @@ func (rp *BookingRepository) GetByEventID(eventID int) ([]*model.Booking, error)
 // Update updates a booking
 func (rp *BookingRepository) Update(booking *model.Booking) error {
 	query := `
-
 		UPDATE
-			bookings 
+			bookings
 		SET
 			user_id = $1, event_id = $2, status = $3, expires_at = $4, confirmed_at = $5, cancelled_at = $6 
 		WHERE
@@ -227,8 +265,7 @@ func (rp *BookingRepository) Update(booking *model.Booking) error {
 
 // Delete deletes a booking by ID
 func (rp *BookingRepository) Delete(id int) error {
-	query := `
-	
+	query := `	
 		DELETE FROM
 			bookings
 		WHERE

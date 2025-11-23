@@ -13,6 +13,7 @@ type IBookingRp interface {
 	Create(booking *model.Booking) (*model.Booking, error)
 	GetByID(id int) (*model.Booking, error)
 	GetByUserID(userID int) ([]*model.Booking, error)
+	GetByUserIDAndEventID(userID int, eventID int) (*model.Booking, error)
 	GetByEventID(eventID int) ([]*model.Booking, error)
 	Update(booking *model.Booking) error
 	Delete(id int) error
@@ -80,6 +81,11 @@ func (sv *BookingService) GetByID(ctx context.Context, id int) (*model.Booking, 
 // GetByUserID returns all bookings for a user
 func (sv *BookingService) GetByUserID(ctx context.Context, userID int) ([]*model.Booking, error) {
 	return sv.rp.GetByUserID(userID)
+}
+
+// GetByUserIDAndEventID returns a booking for a user and event
+func (sv *BookingService) GetByUserIDAndEventID(ctx context.Context, userID int, eventID int) (*model.Booking, error) {
+	return sv.rp.GetByUserIDAndEventID(userID, eventID)
 }
 
 // GetByEventID returns all bookings for an event

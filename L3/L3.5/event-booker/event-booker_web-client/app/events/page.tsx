@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation"
 import { Box, Typography, Stack, Alert, Button } from "@mui/material"
 import EventList from "../ui/events/EventList"
 import { getEvents, deleteEvent } from "../api/events"
-import { bookEvent, confirmBooking, getUserBookings } from "../api/bookings"
+import { bookEvent, confirmBooking, getUserBookings, getUserBookingByEventId } from "../api/bookings"
 import { useAuth } from "../context/AuthContext"
 import { Event } from "../lib/types"
 
 type BookingInfo = {
   status: "pending" | "confirmed" | null
   expiresAt?: number | null
+  bookingId?: number // Добавляем bookingId для быстрого доступа
 }
 
 export default function EventsPage() {
@@ -66,7 +67,8 @@ export default function EventsPage() {
             const expiresAt = new Date(booking.expiresAt).getTime()
             bookingsMap[booking.eventId] = {
               status: booking.status,
-              expiresAt: expiresAt
+              expiresAt: expiresAt,
+              bookingId: booking.id // Сохраняем bookingId
             }
           }
         })
@@ -94,15 +96,23 @@ export default function EventsPage() {
       return
     }
 
+    // Проверяем, есть ли уже бронь у пользователя на это мероприятие
+    const existingBooking = bookingsMap[eventId]
+    if (existingBooking && (existingBooking.status === "pending" || existingBooking.status === "confirmed")) {
+      setError("У вас уже есть бронь на это мероприятие")
+      return
+    }
+
     try {
-      const booking = await bookEvent({ eventId })
+      const booking = await bookEvent({ event_id: eventId })
       
       // Обновляем карту брони с новой информацией
       setBookingsMap(prev => ({
         ...prev,
         [eventId]: {
           status: "pending",
-          expiresAt: new Date(booking.expiresAt).getTime()
+          expiresAt: new Date(booking.expiresAt).getTime(),
+          bookingId: booking.id
         }
       }))
 
@@ -119,18 +129,38 @@ export default function EventsPage() {
     }
 
     try {
-      const booking = await confirmBooking(eventId)
+      // Проверяем, есть ли bookingId в bookingsMap
+      const existingBooking = bookingsMap[eventId]
+      let bookingId: number
+
+      if (existingBooking?.bookingId) {
+        // Если bookingId уже есть в состоянии, используем его
+        bookingId = existingBooking.bookingId
+      } else {
+        // Иначе получаем бронь через API
+        const booking = await getUserBookingByEventId(eventId)
+        
+        if (!booking) {
+          setError("Бронь не найдена")
+          return
+        }
+        bookingId = booking.id
+      }
+
+      // Подтверждаем бронь по её ID
+      const confirmedBooking = await confirmBooking(bookingId)
       
       // Обновляем статус брони на подтвержденную
       setBookingsMap(prev => ({
         ...prev,
         [eventId]: {
           status: "confirmed",
-          expiresAt: null
+          expiresAt: null,
+          bookingId: bookingId // Сохраняем bookingId
         }
       }))
 
-      console.log("Booking confirmed:", booking)
+      console.log("Booking confirmed:", confirmedBooking)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to confirm booking")
     }
@@ -142,6 +172,7 @@ export default function EventsPage() {
       return
     }
     router.push(`/events/${eventId}/edit`)
+
   }
 
   const handleDeleteEvent = async (eventId: number) => {

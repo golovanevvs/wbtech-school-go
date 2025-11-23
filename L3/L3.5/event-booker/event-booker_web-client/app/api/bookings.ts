@@ -1,4 +1,4 @@
-import { Booking } from "../lib/types"
+import { Booking, CreateBookingRequest } from "../lib/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -40,17 +40,25 @@ export const getUserBookings = async (): Promise<Booking[]> => {
   return apiRequest<Booking[]>("/bookings")
 }
 
+export const getUserBookingByEventId = async (eventId: number): Promise<Booking | null> => {
+  console.log(`Fetching user booking for event ${eventId}`)
+  try {
+    const booking = await apiRequest<Booking>(`/bookings/user/event/${eventId}`)
+    return booking
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      return null // Бронь не найдена
+    }
+    throw error
+  }
+}
+
 export const getBookingById = async (id: number): Promise<Booking> => {
   console.log(`Fetching booking ${id}`)
   return apiRequest<Booking>(`/bookings/${id}`)
 }
 
-export const bookEvent = async (
-  bookingData: Omit<
-    Booking,
-    "id" | "userId" | "status" | "createdAt" | "expiresAt"
-  >
-): Promise<Booking> => {
+export const bookEvent = async (bookingData: CreateBookingRequest): Promise<Booking> => {
   console.log("Booking event with data:", bookingData)
   return apiRequest<Booking>("/bookings", {
     method: "POST",

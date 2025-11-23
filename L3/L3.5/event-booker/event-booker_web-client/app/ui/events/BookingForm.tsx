@@ -1,15 +1,10 @@
 import { useState } from "react"
 import { Box, Button, Typography, Alert } from "@mui/material"
-import { Booking } from "../../lib/types"
+import { CreateBookingRequest } from "../../lib/types"
 
 interface BookingFormProps {
   eventId: number
-  onBook: (
-    bookingData: Omit<
-      Booking,
-      "id" | "userId" | "status" | "createdAt" | "expiresAt"
-    >
-  ) => void
+  onBook: (bookingData: CreateBookingRequest) => void
   onCancel?: () => void
   eventTitle: string
 }
@@ -25,10 +20,9 @@ export default function BookingForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Для простоты, создаем бронь без дополнительных данных
-    // В реальном приложении здесь может быть логика для получения ID пользователя
+    // Передаем данные в формате, который ожидает сервер (snake_case)
     onBook({
-      eventId,
+      event_id: eventId,
     })
   }
 

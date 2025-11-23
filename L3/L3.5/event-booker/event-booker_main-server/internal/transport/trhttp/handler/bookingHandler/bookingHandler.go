@@ -18,6 +18,7 @@ type ISvForBookingHandler interface {
 	Create(ctx context.Context, userID int, eventID int, bookingDeadlineMinutes int) (*model.Booking, error)
 	GetByID(ctx context.Context, id int) (*model.Booking, error)
 	GetByUserID(ctx context.Context, userID int) ([]*model.Booking, error)
+	GetByUserIDAndEventID(ctx context.Context, userID int, eventID int) (*model.Booking, error)
 	Confirm(ctx context.Context, bookingID int) error
 	Cancel(ctx context.Context, bookingID int) error
 }
@@ -45,6 +46,7 @@ func (hd *BookingHandler) RegisterRoutes(rt *ginext.RouterGroup) {
 		bookings.POST("", hd.Create)
 		bookings.GET("/:id", hd.GetByID)
 		bookings.GET("/user/:userID", hd.GetByUserID)
+		bookings.GET("/user/event/:eventID", hd.GetByUserIDAndEventID)
 		bookings.POST("/:id/confirm", hd.Confirm)
 		bookings.POST("/:id/cancel", hd.Cancel)
 	}
@@ -134,6 +136,42 @@ func (hd *BookingHandler) GetByUserID(c *gin.Context) {
 	c.JSON(http.StatusOK, bookings)
 }
 
+// GetByUserIDAndEventID handles getting a booking by user ID and event ID
+func (hd *BookingHandler) GetByUserIDAndEventID(c *gin.Context) {
+	lg := hd.lg.With().Str("handler", "GetByUserIDAndEventID").Logger()
+
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		lg.Warn().Msg("User ID not found in context")
+		c.JSON(http.StatusUnauthorized, ginext.H{"error": pkgErrors.ErrUnauthorized.Error()})
+		return
+	}
+
+	userID, ok := userIDInterface.(int)
+	if !ok {
+		lg.Warn().Msg("User ID is not of type int")
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Internal server error"})
+		return
+	}
+
+	eventID, err := strconv.Atoi(c.Param("eventID"))
+	if err != nil {
+		lg.Warn().Err(err).Str("event_id", c.Param("eventID")).Msgf("%s invalid event ID", pkgConst.Warn)
+		c.JSON(http.StatusBadRequest, ginext.H{"error": pkgErrors.ErrInvalidID.Error()})
+		return
+	}
+
+	booking, err := hd.sv.GetByUserIDAndEventID(c.Request.Context(), userID, eventID)
+	if err != nil {
+		lg.Warn().Err(err).Int("user_id", userID).Int("event_id", eventID).Msgf("%s failed to get booking", pkgConst.Warn)
+		c.JSON(http.StatusNotFound, ginext.H{"error": "Booking not found"})
+		return
+	}
+
+	lg.Debug().Int("booking_id", booking.ID).Int("user_id", userID).Int("event_id", eventID).Msgf("%s booking retrieved successfully", pkgConst.OpSuccess)
+	c.JSON(http.StatusOK, booking)
+}
+
 // Confirm handles booking confirmation
 func (hd *BookingHandler) Confirm(c *gin.Context) {
 	lg := hd.lg.With().Str("handler", "Confirm").Logger()
@@ -152,8 +190,16 @@ func (hd *BookingHandler) Confirm(c *gin.Context) {
 		return
 	}
 
+	// Получаем обновленную бронь для возврата клиенту
+	updatedBooking, err := hd.sv.GetByID(c.Request.Context(), id)
+	if err != nil {
+		lg.Warn().Err(err).Int("id", id).Msgf("%s failed to get updated booking", pkgConst.Warn)
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Failed to retrieve updated booking"})
+		return
+	}
+
 	lg.Debug().Int("id", id).Msgf("%s booking confirmed successfully", pkgConst.OpSuccess)
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, updatedBooking)
 }
 
 // Cancel handles booking cancellation
