@@ -65,12 +65,15 @@ export default function ProfileForm({
       return
     }
 
+    // Сначала переводим переключатель в состояние false
+    setTelegramNotifications(false)
+
     // Обновляем данные пользователя с текущим Telegram username
     // и сбрасываем chatID (передаем 0 для сброса на сервере)
     onUpdate({
       name: name.trim(),
       telegramUsername: username,
-      telegramNotifications,
+      telegramNotifications: false, // явно устанавливаем false
       emailNotifications,
       resetTelegramChatID: true, // специальный флаг для сброса chatID
     }, true) // передаем shouldLaunchTelegram = true
