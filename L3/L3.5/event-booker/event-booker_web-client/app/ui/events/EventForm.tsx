@@ -10,6 +10,39 @@ interface EventFormProps {
   event?: Event
 }
 
+// Функция для преобразования ISO date string в формат datetime-local
+const formatDateForInput = (isoDate: string): string => {
+  if (!isoDate) return ""
+  
+  try {
+    const date = new Date(isoDate)
+    // Получаем локальные компоненты даты и времени
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`
+  } catch (error) {
+    console.error("Error formatting date:", error)
+    return ""
+  }
+}
+
+// Функция для преобразования datetime-local значения в ISO string
+const formatDateFromInput = (inputDate: string): string => {
+  if (!inputDate) return ""
+  
+  try {
+    const date = new Date(inputDate)
+    return date.toISOString()
+  } catch (error) {
+    console.error("Error parsing date:", error)
+    return ""
+  }
+}
+
 export default function EventForm({
   onSubmit,
   onCancel,
@@ -17,7 +50,7 @@ export default function EventForm({
 }: EventFormProps) {
   const [title, setTitle] = useState(event?.title || "")
   const [description, setDescription] = useState(event?.description || "")
-  const [date, setDate] = useState(event?.date || "")
+  const [date, setDate] = useState(event?.date ? formatDateForInput(event.date) : "")
   const [totalPlaces, setTotalPlaces] = useState(
     event?.totalPlaces?.toString() || ""
   )
@@ -26,10 +59,12 @@ export default function EventForm({
   )
   const [error, setError] = useState("")
 
+  console.log("EventForm received event:", event)
+  console.log("Event date:", event?.date)
+  console.log("Formatted date for input:", event?.date ? formatDateForInput(event.date) : "")
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
-    const isoDate = new Date(date).toISOString()
 
     if (!title || !date || !totalPlaces || !bookingDeadline) {
       setError("Все поля обязательны для заполнения")
@@ -49,13 +84,25 @@ export default function EventForm({
       return
     }
 
-    onSubmit({
+    // Преобразуем дату обратно в ISO формат для отправки на сервер
+    const isoDate = formatDateFromInput(date)
+    console.log("Submitting date:", date, "-> ISO:", isoDate)
+
+    const submitData = {
       title,
       description,
       date: isoDate,
       totalPlaces: totalPlacesNum,
       bookingDeadline: bookingDeadlineNum,
-    })
+      ownerId: event?.ownerId || 0,
+      telegramNotifications: event?.telegramNotifications,
+      emailNotifications: event?.emailNotifications,
+    }
+    
+    console.log("EventForm submit data:", submitData)
+    console.log("Submitting availablePlaces: undefined (as expected - should not be sent)")
+
+    onSubmit(submitData)
   }
 
   return (

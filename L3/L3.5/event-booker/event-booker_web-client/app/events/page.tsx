@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Box, Typography, Stack, Alert, Button } from "@mui/material"
 import EventList from "../ui/events/EventList"
-import { getEvents } from "../api/events"
+import { getEvents, deleteEvent } from "../api/events"
 import { useAuth } from "../context/AuthContext"
 import { Event } from "../lib/types"
 
@@ -37,6 +37,41 @@ export default function EventsPage() {
       return
     }
     router.push("/events/create")
+  }
+
+  const handleBookEvent = async (eventId: number) => {
+    if (!user) {
+      router.push("/auth?mode=login")
+      return
+    }
+    // Здесь будет логика бронирования
+    console.log("Booking event:", eventId)
+    // TODO: Реализовать бронирование
+  }
+
+  const handleEditEvent = (eventId: number) => {
+    if (!user) {
+      router.push("/auth?mode=login")
+      return
+    }
+    router.push(`/events/${eventId}/edit`)
+  }
+
+  const handleDeleteEvent = async (eventId: number) => {
+    if (!user) {
+      router.push("/auth?mode=login")
+      return
+    }
+
+    if (window.confirm("Вы уверены, что хотите удалить это мероприятие?")) {
+      try {
+        await deleteEvent(eventId)
+        // Обновляем список мероприятий
+        setEvents(events.filter(event => event.id !== eventId))
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to delete event")
+      }
+    }
   }
 
   if (loading) {
@@ -106,7 +141,13 @@ export default function EventsPage() {
             </Box>
           )}
           
-          <EventList events={events} />
+          <EventList 
+            events={events}
+            onBook={handleBookEvent}
+            onEdit={handleEditEvent}
+            onDelete={handleDeleteEvent}
+            currentUserId={user?.id}
+          />
         </Box>
       </Stack>
     </Box>

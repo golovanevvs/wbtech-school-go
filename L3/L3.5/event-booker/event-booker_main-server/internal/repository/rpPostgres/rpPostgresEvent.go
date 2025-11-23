@@ -150,6 +150,26 @@ func (rp *EventRepository) GetAll() ([]*model.Event, error) {
 
 // Update updates an event
 func (rp *EventRepository) Update(event *model.Event) error {
+	// Если изменяется количество мест, нужно пересчитать available_places
+	if event.TotalPlaces != 0 {
+		// Получаем текущее состояние события
+		currentEvent, err := rp.GetByID(event.ID)
+		if err != nil {
+			return fmt.Errorf("failed to get current event for available places calculation: %w", err)
+		}
+
+		// Вычисляем количество занятых мест
+		bookedPlaces := currentEvent.TotalPlaces - currentEvent.AvailablePlaces
+
+		// Пересчитываем доступные места
+		event.AvailablePlaces = event.TotalPlaces - bookedPlaces
+
+		// Если доступных мест получилось отрицательное число, устанавливаем в 0
+		if event.AvailablePlaces < 0 {
+			event.AvailablePlaces = 0
+		}
+	}
+
 	query := `
 
 		UPDATE
@@ -192,7 +212,7 @@ func (rp *EventRepository) Update(event *model.Event) error {
 // Delete deletes an event by ID
 func (rp *EventRepository) Delete(id int) error {
 	query := `
-	
+
 		DELETE FROM
 			events
 		WHERE
@@ -219,7 +239,7 @@ func (rp *EventRepository) Delete(id int) error {
 // UpdateAvailablePlaces updates the available places for an event
 func (rp *EventRepository) UpdateAvailablePlaces(eventID int, newAvailablePlaces int) error {
 	query := `
-	
+
 		UPDATE
 			events
 		SET

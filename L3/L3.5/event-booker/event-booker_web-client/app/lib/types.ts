@@ -18,6 +18,9 @@ export interface Event {
   totalPlaces: number
   availablePlaces: number
   bookingDeadline: number
+  ownerId: number
+  telegramNotifications?: boolean
+  emailNotifications?: boolean
   createdAt: string
   updatedAt: string
 }

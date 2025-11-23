@@ -4,9 +4,19 @@ import { Event } from "../../lib/types"
 
 interface EventListProps {
   events: Event[] | null
+  onBook?: (eventId: number) => void
+  onEdit?: (eventId: number) => void
+  onDelete?: (eventId: number) => void
+  currentUserId?: number
 }
 
-export default function EventList({ events }: EventListProps) {
+export default function EventList({ 
+  events, 
+  onBook, 
+  onEdit, 
+  onDelete, 
+  currentUserId 
+}: EventListProps) {
   if (!events) {
     return (
       <Box sx={{ width: "100%", textAlign: "center", py: 2 }}>
@@ -31,10 +41,10 @@ export default function EventList({ events }: EventListProps) {
         <EventCard
           key={event.id}
           event={event}
-          onBook={(eventId) => {
-            // Здесь будет логика бронирования
-            console.log("Book event:", eventId)
-          }}
+          onBook={onBook}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          currentUserId={currentUserId}
         />
       ))}
     </Box>
