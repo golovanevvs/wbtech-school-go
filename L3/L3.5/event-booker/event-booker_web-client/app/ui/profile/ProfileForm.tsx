@@ -11,13 +11,21 @@ import {
   Collapse,
   IconButton,
 } from "@mui/material"
-import { Cancel, CheckCircle, ExpandMore, ExpandLess } from "@mui/icons-material"
+import {
+  Cancel,
+  CheckCircle,
+  ExpandMore,
+  ExpandLess,
+} from "@mui/icons-material"
 import { useState } from "react"
 import { User, UpdateUserRequest } from "../../lib/types"
 
 interface ProfileFormProps {
   user: User
-  onUpdate: (userData: UpdateUserRequest, shouldLaunchTelegram?: boolean) => void
+  onUpdate: (
+    userData: UpdateUserRequest,
+    shouldLaunchTelegram?: boolean
+  ) => void
   onDeleteProfile: () => void
   isLoading?: boolean
   error?: string
@@ -41,14 +49,15 @@ export default function ProfileForm({
   const [emailNotifications, setEmailNotifications] = useState(
     user.emailNotifications || false
   )
-  const [isTelegramInstructionsOpen, setIsTelegramInstructionsOpen] = useState(false)
+  const [isTelegramInstructionsOpen, setIsTelegramInstructionsOpen] =
+    useState(false)
 
   // Переключатель активен только если есть chatID
   const telegramEnabled = !!user.telegramChatID
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     onUpdate({
       name: name.trim(),
       telegramUsername: telegramUsername.trim() || null,
@@ -70,24 +79,30 @@ export default function ProfileForm({
 
     // Обновляем данные пользователя с текущим Telegram username
     // и сбрасываем chatID (передаем 0 для сброса на сервере)
-    onUpdate({
-      name: name.trim(),
-      telegramUsername: username,
-      telegramNotifications: false, // явно устанавливаем false
-      emailNotifications,
-      resetTelegramChatID: true, // специальный флаг для сброса chatID
-    }, true) // передаем shouldLaunchTelegram = true
+    onUpdate(
+      {
+        name: name.trim(),
+        telegramUsername: username,
+        telegramNotifications: false, // явно устанавливаем false
+        emailNotifications,
+        resetTelegramChatID: true, // специальный флаг для сброса chatID
+      },
+      true
+    ) // передаем shouldLaunchTelegram = true
   }
 
   const handleCheckSubscription = async () => {
     // Просто обновляем данные пользователя без изменений
     // чтобы получить актуальное состояние от сервера
-    onUpdate({
-      name: name.trim(),
-      telegramUsername: telegramUsername.trim() || null,
-      telegramNotifications,
-      emailNotifications,
-    }, false) // передаем shouldLaunchTelegram = false
+    onUpdate(
+      {
+        name: name.trim(),
+        telegramUsername: telegramUsername.trim() || null,
+        telegramNotifications,
+        emailNotifications,
+      },
+      false
+    ) // передаем shouldLaunchTelegram = false
   }
 
   const handleDeleteProfile = () => {
@@ -145,9 +160,14 @@ export default function ProfileForm({
             }
             label={
               <Box>
-                <Box>Уведомления по электронной почте</Box>
+                <Box>
+                  <div>Уведомления по электронной почте</div>
+                  <div>(может попасть в спам)</div>
+                </Box>
                 <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
-                  <CheckCircle sx={{ color: "success.main", fontSize: 16, mr: 0.5 }} />
+                  <CheckCircle
+                    sx={{ color: "success.main", fontSize: 16, mr: 0.5 }}
+                  />
                   <Typography variant="caption" color="success.main">
                     Доступно
                   </Typography>
@@ -170,21 +190,25 @@ export default function ProfileForm({
             label={
               <Box>
                 <Box>
-                  {telegramEnabled 
-                    ? "Уведомления через Telegram" 
+                  {telegramEnabled
+                    ? "Уведомления через Telegram"
                     : "Уведомления через Telegram (требуется подключение)"}
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
                   {telegramEnabled ? (
                     <>
-                      <CheckCircle sx={{ color: "success.main", fontSize: 16, mr: 0.5 }} />
+                      <CheckCircle
+                        sx={{ color: "success.main", fontSize: 16, mr: 0.5 }}
+                      />
                       <Typography variant="caption" color="success.main">
                         Доступно
                       </Typography>
                     </>
                   ) : (
                     <>
-                      <Cancel sx={{ color: "error.main", fontSize: 16, mr: 0.5 }} />
+                      <Cancel
+                        sx={{ color: "error.main", fontSize: 16, mr: 0.5 }}
+                      />
                       <Typography variant="caption" color="error.main">
                         Недоступно
                       </Typography>
@@ -198,9 +222,11 @@ export default function ProfileForm({
 
         {/* 2. Инструкция и элементы управления в Collapse */}
         <Box sx={{ mt: 1, mb: 2 }}>
-          <Box 
-            sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-            onClick={() => setIsTelegramInstructionsOpen(!isTelegramInstructionsOpen)}
+          <Box
+            sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+            onClick={() =>
+              setIsTelegramInstructionsOpen(!isTelegramInstructionsOpen)
+            }
           >
             <Typography variant="body2" color="text.secondary">
               <strong>Как подключить уведомления через Telegram</strong>
@@ -219,7 +245,7 @@ export default function ProfileForm({
               <br />
               4. Проверьте состояние подписки кнопкой ниже
             </Typography>
-              
+
             {/* Поле для ввода Telegram username */}
             <TextField
               label="Telegram username"
@@ -242,7 +268,7 @@ export default function ProfileForm({
               >
                 {isLoading ? "Сохранение..." : "Подписаться на Telegram-бота"}
               </Button>
-              
+
               <Button
                 variant="outlined"
                 fullWidth
@@ -283,22 +309,24 @@ export default function ProfileForm({
       {/* 6. Информация о профиле */}
       <Box sx={{ mt: 3, textAlign: "left" }}>
         <Typography variant="caption" color="text.secondary">
-          Профиль создан: {new Date(user.created_at).toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+          Профиль создан:{" "}
+          {new Date(user.created_at).toLocaleDateString("ru-RU", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
           })}
         </Typography>
         <br />
         <Typography variant="caption" color="text.secondary">
-          Профиль обновлён: {new Date(user.updated_at).toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+          Профиль обновлён:{" "}
+          {new Date(user.updated_at).toLocaleDateString("ru-RU", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
           })}
         </Typography>
       </Box>
