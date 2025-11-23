@@ -10,8 +10,8 @@ $(foreach file,$(ENV_FILES), \
 export
 
 BOT_TOKEN ?= $(TELEGRAM_TOKEN)
-WEBHOOK_URL = $(APP_TRANSPORT_HTTP_PUBLIC_HOST)/telegram/webhook
-PORT = $(APP_TRANSPORT_HTTP_PORT)
+WEBHOOK_URL = https://incompletely-elemental-moonfish.cloudpub.ru/delayed-notifier_main-server/telegram/webhook
+PORT = 80
 
 .PHONY: install check delete test help
 
@@ -29,8 +29,7 @@ check:
 delete:
 	@echo "Deleting webhook..."
 	@curl -s -X GET \
-		"https://api.telegram.org/bot$(BOT_TOKEN)/deleteWebhook" | \
-		python3 -m json.tool
+		"https://api.telegram.org/bot$(BOT_TOKEN)/deleteWebhook"
 	@echo "Webhook deleted successfully!"
 
 test:
