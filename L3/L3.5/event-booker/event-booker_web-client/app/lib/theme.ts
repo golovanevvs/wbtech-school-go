@@ -142,4 +142,24 @@ export const darkTheme = createTheme({
       paper: "#2c1b2f",
     },
   },
+  components: {
+    ...baseTheme.components,
+    MuiChip: {
+      styleOverrides: {
+        ...(baseTheme.components?.MuiChip?.styleOverrides || {}),
+        colorSuccess: {
+          backgroundColor: "#2e7d32",
+          color: "#a5d6a7",
+        },
+        colorError: {
+          backgroundColor: "#c62828",
+          color: "#ff8a80",
+        },
+        colorPrimary: {
+          backgroundColor: "#4a148c",
+          color: "#ce93d8",
+        },
+      },
+    },
+  },
 })
