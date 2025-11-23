@@ -36,6 +36,32 @@ export interface Booking {
   cancelledAt?: string
 }
 
+// Интерфейс для бронирования с сервера (snake_case)
+export interface BookingFromServer {
+  id: number
+  user_id: number
+  event_id: number
+  status: "pending" | "confirmed" | "cancelled"
+  created_at: string
+  expires_at: string
+  confirmed_at?: string
+  cancelled_at?: string
+}
+
+// Функция трансформации snake_case → camelCase
+export function transformBookingFromServer(booking: BookingFromServer): Booking {
+  return {
+    id: booking.id,
+    userId: booking.user_id,
+    eventId: booking.event_id,
+    status: booking.status,
+    createdAt: booking.created_at,
+    expiresAt: booking.expires_at,
+    confirmedAt: booking.confirmed_at,
+    cancelledAt: booking.cancelled_at,
+  }
+}
+
 // Новый интерфейс для запроса бронирования (соответствует серверу)
 export interface CreateBookingRequest {
   event_id: number

@@ -7,7 +7,7 @@ import EventList from "../ui/events/EventList"
 import { getEvents, deleteEvent } from "../api/events"
 import { bookEvent, confirmBooking, cancelBooking, getUserBookings, getUserBookingByEventId } from "../api/bookings"
 import { useAuth } from "../context/AuthContext"
-import { Event } from "../lib/types"
+import { Event, transformBookingFromServer, Booking } from "../lib/types"
 
 type BookingInfo = {
   status: "pending" | "confirmed" | null
@@ -60,22 +60,32 @@ export default function EventsPage() {
       }
 
       try {
-        console.log("Fetching user bookings from server...")
-        const bookings = await getUserBookings()
-        console.log("Raw bookings from server:", bookings)
+        console.log("🔍 FETCHING USER BOOKINGS FROM SERVER...")
+        const rawBookings = await getUserBookings()
+        console.log("📦 Raw bookings from server:", rawBookings)
+        console.log("📊 Bookings count:", rawBookings?.length || 0)
+        
+        // Трансформируем данные из snake_case в camelCase
+        const bookings: Booking[] = rawBookings.map(transformBookingFromServer)
+        console.log("🔄 Transformed bookings:", bookings)
         
         const bookingsMap: Record<number, BookingInfo> = {}
         
         bookings.forEach(booking => {
           console.log("Processing booking:", booking)
           if (booking.status === "pending" || booking.status === "confirmed") {
-            const expiresAt = new Date(booking.expiresAt).getTime()
-            bookingsMap[booking.eventId] = {
-              status: booking.status,
-              expiresAt: expiresAt,
-              bookingId: booking.id // Сохраняем bookingId
+            const expiresAt = booking.expiresAt ? new Date(booking.expiresAt).getTime() : null
+            
+            if (booking.eventId) {
+              bookingsMap[booking.eventId] = {
+                status: booking.status,
+                expiresAt: expiresAt,
+                bookingId: booking.id // Сохраняем bookingId
+              }
+              console.log(`Added booking for event ${booking.eventId}:`, bookingsMap[booking.eventId])
+            } else {
+              console.warn("Booking has no eventId:", booking)
             }
-            console.log(`Added booking for event ${booking.eventId}:`, bookingsMap[booking.eventId])
           }
         })
         

@@ -44,6 +44,7 @@ func (hd *BookingHandler) RegisterRoutes(rt *ginext.RouterGroup) {
 	bookings := rt.Group("/bookings")
 	{
 		bookings.POST("", hd.Create)
+		bookings.GET("", hd.GetCurrentUserBookings)
 		bookings.GET("/:id", hd.GetByID)
 		bookings.GET("/user/:userID", hd.GetByUserID)
 		bookings.GET("/user/event/:eventID", hd.GetByUserIDAndEventID)
@@ -230,4 +231,34 @@ func (hd *BookingHandler) Cancel(c *gin.Context) {
 
 	lg.Debug().Int("id", id).Msgf("%s booking cancelled successfully", pkgConst.OpSuccess)
 	c.JSON(http.StatusOK, updatedBooking)
+}
+
+// GetCurrentUserBookings handles getting bookings for the current user
+func (hd *BookingHandler) GetCurrentUserBookings(c *gin.Context) {
+	lg := hd.lg.With().Str("handler", "GetCurrentUserBookings").Logger()
+
+	// Получаем user_id из контекста
+	userIDInterface, exists := c.Get("user_id")
+	if !exists {
+		lg.Warn().Msg("User ID not found in context")
+		c.JSON(http.StatusUnauthorized, ginext.H{"error": pkgErrors.ErrUnauthorized.Error()})
+		return
+	}
+
+	userID, ok := userIDInterface.(int)
+	if !ok {
+		lg.Warn().Msg("User ID is not of type int")
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Internal server error"})
+		return
+	}
+
+	bookings, err := hd.sv.GetByUserID(c.Request.Context(), userID)
+	if err != nil {
+		lg.Warn().Err(err).Int("user_id", userID).Msgf("%s failed to get bookings", pkgConst.Warn)
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": err.Error()})
+		return
+	}
+
+	lg.Debug().Int("user_id", userID).Int("count", len(bookings)).Msgf("%s bookings retrieved successfully", pkgConst.OpSuccess)
+	c.JSON(http.StatusOK, bookings)
 }

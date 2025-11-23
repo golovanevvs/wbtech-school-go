@@ -1,4 +1,4 @@
-import { Booking, CreateBookingRequest } from "../lib/types"
+import { Booking, CreateBookingRequest, BookingFromServer } from "../lib/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -35,9 +35,9 @@ const apiRequest = async <T>(
   return response.json()
 }
 
-export const getUserBookings = async (): Promise<Booking[]> => {
+export const getUserBookings = async (): Promise<BookingFromServer[]> => {
   console.log("Fetching user bookings")
-  return apiRequest<Booking[]>("/bookings")
+  return apiRequest<BookingFromServer[]>("/bookings")
 }
 
 export const getUserBookingByEventId = async (eventId: number): Promise<Booking | null> => {
