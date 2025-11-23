@@ -89,12 +89,15 @@ export default function EventCard({
   // Только показываем таймер если currentTime передан (т.е. мы в контексте с таймером)
   const showTimer = currentTime !== undefined && bookingStatus === "pending" && bookingExpiresAt
 
+  // Отладочное логирование
+  console.log("Timer debug:", { currentTime, bookingStatus, bookingExpiresAt, showTimer })
+
   // Проверяем, истекла ли бронь (только если currentTime доступен)
   const isBookingExpired = showTimer && currentTime > bookingExpiresAt!
 
   // Вычисляем оставшееся время для отображения (только если currentTime доступен)
-  const timeLeft = showTimer 
-    ? Math.max(0, Math.ceil((bookingExpiresAt! - currentTime) / 1000))
+  const timeLeft = showTimer && bookingExpiresAt && currentTime
+    ? Math.max(0, Math.ceil((bookingExpiresAt - currentTime) / 1000))
     : 0
 
   return (

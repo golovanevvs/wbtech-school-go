@@ -29,8 +29,10 @@ type BackgroundService struct {
 }
 
 // NewBackgroundService creates a new BackgroundService
-func NewBackgroundService(bookingRp IBookingRpForBackground, eventRp IEventRpForBackground) *BackgroundService {
+func NewBackgroundService(parentLg *zlog.Zerolog, bookingRp IBookingRpForBackground, eventRp IEventRpForBackground) *BackgroundService {
+	lg := parentLg.With().Str("component", "service-BackgroundService").Logger()
 	return &BackgroundService{
+		lg:        &lg,
 		bookingRp: bookingRp,
 		eventRp:   eventRp,
 	}

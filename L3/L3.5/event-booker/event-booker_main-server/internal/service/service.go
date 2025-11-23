@@ -38,7 +38,7 @@ func New(
 	eventService := NewEventService(rp.Event())
 	bookingService := NewBookingService(rp.Booking(), rp.Event())
 	authService := NewAuthService(cfg, rp.User(), rp.RefreshToken())
-	backgroundService := NewBackgroundService(rp.Booking(), rp.Event())
+	backgroundService := NewBackgroundService(&lg, rp.Booking(), rp.Event())
 	telegramStartService := NewTelegramStartService(tgClient, rp.User())
 	noticeService := NewNoticeService(&lg, rs, tgClient, emailClient, rp.NoticeRepository)
 
