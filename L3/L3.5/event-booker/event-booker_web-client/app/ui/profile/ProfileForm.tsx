@@ -8,7 +8,10 @@ import {
   Switch,
   Stack,
   Divider,
+  Collapse,
+  IconButton,
 } from "@mui/material"
+import { Cancel, CheckCircle, ExpandMore, ExpandLess } from "@mui/icons-material"
 import { useState } from "react"
 import { User, UpdateUserRequest } from "../../lib/types"
 
@@ -27,7 +30,7 @@ export default function ProfileForm({
   isLoading = false,
   error,
 }: ProfileFormProps) {
-  // Инициализируем состояние один раз из user prop
+  // Локальное состояние для формы
   const [name, setName] = useState(user.name)
   const [telegramUsername, setTelegramUsername] = useState(
     user.telegramUsername || ""
@@ -38,6 +41,7 @@ export default function ProfileForm({
   const [emailNotifications, setEmailNotifications] = useState(
     user.emailNotifications || false
   )
+  const [isTelegramInstructionsOpen, setIsTelegramInstructionsOpen] = useState(false)
 
   // Переключатель активен только если есть chatID
   const telegramEnabled = !!user.telegramChatID
@@ -119,7 +123,7 @@ export default function ProfileForm({
         required
       />
 
-      <Divider sx={{ my: 3 }} />
+      <Divider sx={{ my: 2 }} />
 
       {/* 2. Настройки уведомлений */}
       <Typography variant="h6" gutterBottom>
@@ -129,9 +133,6 @@ export default function ProfileForm({
       <Stack spacing={3} sx={{ mt: 2 }}>
         {/* 2.1 Для e-mail */}
         <Box>
-          <Typography variant="subtitle1" gutterBottom>
-            Электронная почта
-          </Typography>
           <FormControlLabel
             control={
               <Switch
@@ -139,17 +140,22 @@ export default function ProfileForm({
                 onChange={(e) => setEmailNotifications(e.target.checked)}
               />
             }
-            label="Уведомления по электронной почте"
+            label={
+              <Box>
+                <Box>Уведомления по электронной почте</Box>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
+                  <CheckCircle sx={{ color: "success.main", fontSize: 16, mr: 0.5 }} />
+                  <Typography variant="caption" color="success.main">
+                    Доступно
+                  </Typography>
+                </Box>
+              </Box>
+            }
           />
         </Box>
 
         {/* 2.2 Для Telegram */}
         <Box>
-          <Typography variant="subtitle1" gutterBottom>
-            Telegram
-          </Typography>
-          
-          {/* 1. Переключатель (не активен пока нет chatID) */}
           <FormControlLabel
             control={
               <Switch
@@ -159,60 +165,95 @@ export default function ProfileForm({
               />
             }
             label={
-              telegramEnabled 
-                ? "Уведомления через Telegram" 
-                : "Уведомления через Telegram (требуется подключение)"
+              <Box>
+                <Box>
+                  {telegramEnabled 
+                    ? "Уведомления через Telegram" 
+                    : "Уведомления через Telegram (требуется подключение)"}
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
+                  {telegramEnabled ? (
+                    <>
+                      <CheckCircle sx={{ color: "success.main", fontSize: 16, mr: 0.5 }} />
+                      <Typography variant="caption" color="success.main">
+                        Доступно
+                      </Typography>
+                    </>
+                  ) : (
+                    <>
+                      <Cancel sx={{ color: "error.main", fontSize: 16, mr: 0.5 }} />
+                      <Typography variant="caption" color="error.main">
+                        Недоступно
+                      </Typography>
+                    </>
+                  )}
+                </Box>
+              </Box>
             }
           />
+        </Box>
 
-          {/* 2. Инструкция */}
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-            <strong>Как подключить уведомления через Telegram:</strong>
-            <br />
-            1. Введите ваш Telegram username (без @) в поле ниже
-            <br />
-            2. Нажмите кнопку Подписаться на Telegram-бота
-            <br />
-            3. Откроется Telegram-бот. Нажмите /Start для привязки аккаунта
-            <br />
-            4. Проверьте состояние подписки кнопкой ниже
-          </Typography>
-
-          {/* 3. Поле для ввода Telegram username */}
-          <TextField
-            label="Telegram username"
-            fullWidth
-            margin="normal"
-            value={telegramUsername}
-            onChange={(e) => setTelegramUsername(e.target.value)}
-            placeholder="без @, например: ivan_ivanov"
-            helperText="Введите ваш Telegram username (без @)"
-          />
-
-          {/* 4. Кнопки */}
-          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-            <Button
-              variant="outlined"
+        {/* 2. Инструкция и элементы управления в Collapse */}
+        <Box sx={{ mt: 1, mb: 2 }}>
+          <Box 
+            sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+            onClick={() => setIsTelegramInstructionsOpen(!isTelegramInstructionsOpen)}
+          >
+            <Typography variant="body2" color="text.secondary">
+              <strong>Как подключить уведомления через Telegram</strong>
+            </Typography>
+            <IconButton size="small" sx={{ ml: 1 }}>
+              {isTelegramInstructionsOpen ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+          </Box>
+          <Collapse in={isTelegramInstructionsOpen}>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              1. Введите ваш Telegram username (без @) в поле ниже
+              <br />
+              2. Нажмите кнопку &quot;Подписаться на Telegram-бота&quot;
+              <br />
+              3. Откроется Telegram-бот. Нажмите /Start для привязки аккаунта
+              <br />
+              4. Проверьте состояние подписки кнопкой ниже
+            </Typography>
+              
+            {/* Поле для ввода Telegram username */}
+            <TextField
+              label="Telegram username"
               fullWidth
-              onClick={handleSubscribeToTelegram}
-              disabled={isLoading}
-            >
-              {isLoading ? "Сохранение..." : "Подписаться на Telegram-бота"}
-            </Button>
-            
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={handleCheckSubscription}
-              disabled={isLoading}
-            >
-              {isLoading ? "Проверка..." : "Проверить состояние подписки"}
-            </Button>
-          </Stack>
+              margin="normal"
+              value={telegramUsername}
+              onChange={(e) => setTelegramUsername(e.target.value)}
+              placeholder="без @, например: ivan_ivanov"
+              helperText="Введите ваш Telegram username (без @)"
+              sx={{ mt: 2 }}
+            />
+
+            {/* Кнопки */}
+            <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={handleSubscribeToTelegram}
+                disabled={isLoading}
+              >
+                {isLoading ? "Сохранение..." : "Подписаться на Telegram-бота"}
+              </Button>
+              
+              <Button
+                variant="outlined"
+                fullWidth
+                onClick={handleCheckSubscription}
+                disabled={isLoading}
+              >
+                {isLoading ? "Проверка..." : "Проверить состояние подписки"}
+              </Button>
+            </Stack>
+          </Collapse>
         </Box>
       </Stack>
 
-      <Divider sx={{ my: 3 }} />
+      <Divider sx={{ my: 2 }} />
 
       {/* 5. Кнопки управления профилем */}
       <Stack spacing={2}>
@@ -235,6 +276,29 @@ export default function ProfileForm({
           Удалить профиль
         </Button>
       </Stack>
+
+      {/* 6. Информация о профиле */}
+      <Box sx={{ mt: 3, textAlign: "left" }}>
+        <Typography variant="caption" color="text.secondary">
+          Профиль создан: {new Date(user.created_at).toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </Typography>
+        <br />
+        <Typography variant="caption" color="text.secondary">
+          Профиль обновлён: {new Date(user.updated_at).toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </Typography>
+      </Box>
     </Box>
   )
 }
