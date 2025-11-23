@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter"
 import ThemeProvider from "./ui/ThemeProvider"
-import ThemeToggle from "./ui/ThemeToggle"
 import Header from "./ui/Header"
 import Footer from "./ui/Footer"
 import { AuthProvider } from "./context/AuthContext"
@@ -37,7 +36,6 @@ export default function RootLayout({
         <AppRouterCacheProvider>
           <AuthProvider>
             <ThemeProvider>
-              <ThemeToggle />
               <Box
                 sx={{
                   width: "100%",

@@ -4,10 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppBar, Toolbar, Typography, Button, Box, IconButton, Menu, MenuItem, CircularProgress } from '@mui/material'
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
+import Brightness4Icon from '@mui/icons-material/Brightness4'
+import Brightness7Icon from '@mui/icons-material/Brightness7'
+import LogoutIcon from '@mui/icons-material/Logout'
 import { useAuth } from '../context/AuthContext'
+import { useThemeContext } from './ThemeProvider'
 
 export default function Header() {
   const { user, loading, logout } = useAuth()
+  const { mode, toggleTheme } = useThemeContext()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const router = useRouter()
 
@@ -29,6 +34,11 @@ export default function Header() {
 
   const handleProfile = () => {
     router.push('/profile')
+    handleMenuClose()
+  }
+
+  const handleToggleTheme = () => {
+    toggleTheme()
     handleMenuClose()
   }
 
@@ -142,10 +152,22 @@ export default function Header() {
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
               >
                 <MenuItem onClick={handleProfile}>
-                  Профиль
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <AccountCircleIcon fontSize="small" />
+                    Профиль
+                  </Box>
+                </MenuItem>
+                <MenuItem onClick={handleToggleTheme}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {mode === 'dark' ? <Brightness7Icon fontSize="small" /> : <Brightness4Icon fontSize="small" />}
+                    {mode === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+                  </Box>
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>
-                  Выйти
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LogoutIcon fontSize="small" />
+                    Выйти
+                  </Box>
                 </MenuItem>
               </Menu>
             </>
