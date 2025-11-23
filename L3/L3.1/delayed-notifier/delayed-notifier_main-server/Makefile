@@ -404,3 +404,24 @@ prometheus-ps:
 	$(MAKE_CMD) -C $(PROMETHEUS) ps
 prometheus-exec:
 	$(MAKE_CMD) -C $(PROMETHEUS) exec
+
+# ========================
+# TELEGRAM
+# ========================
+
+TELEGRAM = providers/telegram
+
+.PHONY: telegram-install telegram-check telegram-delete telegram-test telegram-help
+
+telegram-install:
+	$(MAKE_CMD) -C $(TELEGRAM) install
+telegram-check:
+	$(MAKE_CMD) -C $(TELEGRAM) check
+telegram-delete:
+	$(MAKE_CMD) -C $(TELEGRAM) delete
+telegram-test:
+	$(MAKE_CMD) -C $(TELEGRAM) test
+telegram-install-detailed:
+	$(MAKE_CMD) -C $(TELEGRAM) install-detailed
+telegram-help:
+	$(MAKE_CMD) -C $(TELEGRAM) help
