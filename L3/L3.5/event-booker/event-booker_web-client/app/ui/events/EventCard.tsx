@@ -17,14 +17,12 @@ interface EventCardProps {
   event: Event
   onBook?: (eventId: number) => void
   onConfirmBooking?: (eventId: number) => void
+  onCancelBooking?: (eventId: number) => void
   onEdit?: (eventId: number) => void
   onDelete?: (eventId: number) => void
   currentUserId?: number
-  // Новое: информация о статусе брони для текущего пользователя
   bookingStatus?: "pending" | "confirmed" | null
-  // Новое: время до истечения брони (в миллисекундах)
   bookingExpiresAt?: number | null
-  // Новое: текущее время для расчета истечения брони
   currentTime?: number
 }
 
@@ -32,6 +30,7 @@ export default function EventCard({
   event, 
   onBook, 
   onConfirmBooking,
+  onCancelBooking,
   onEdit, 
   onDelete, 
   currentUserId,
@@ -64,6 +63,12 @@ export default function EventCard({
     }
   }
 
+  const handleCancelClick = () => {
+    if (onCancelBooking) {
+      onCancelBooking(event.id)
+    }
+  }
+
   const handleEditClick = () => {
     if (onEdit) {
       onEdit(event.id)
@@ -88,7 +93,7 @@ export default function EventCard({
 
   // Только показываем таймер если currentTime передан (т.е. мы в контексте с таймером)
   const showTimer = currentTime !== undefined && bookingStatus === "pending" && bookingExpiresAt
-
+  
   // Отладочное логирование
   console.log("Timer debug:", { currentTime, bookingStatus, bookingExpiresAt, showTimer })
 
@@ -163,7 +168,7 @@ export default function EventCard({
             Осталось: {timeLeft} сек
           </Alert>
         )}
-
+        
         {bookingStatus === "confirmed" && (
           <Alert severity="success" sx={{ mt: 1 }}>
             Ваше бронирование подтверждено
@@ -177,17 +182,28 @@ export default function EventCard({
         )}
       </CardContent>
       <CardActions>
-        {hasActiveBooking ? (
+        {bookingStatus === "pending" && (
           <Button
             size="small"
-            variant="contained"
             color="warning"
             onClick={handleConfirmClick}
             disabled={!!isBookingExpired}
           >
             Подтвердить бронь
           </Button>
-        ) : (
+        )}
+        
+        {bookingStatus === "confirmed" && (
+          <Button
+            size="small"
+            color="error"
+            onClick={handleCancelClick}
+          >
+            Отменить бронь
+          </Button>
+        )}
+        
+        {!hasActiveBooking && (
           <Button
             size="small"
             disabled={!isAvailable || !currentUserId}

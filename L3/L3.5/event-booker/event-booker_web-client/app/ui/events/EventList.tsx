@@ -6,6 +6,7 @@ interface EventListProps {
   events: Event[] | null
   onBook?: (eventId: number) => void
   onConfirmBooking?: (eventId: number) => void
+  onCancelBooking?: (eventId: number) => void
   onEdit?: (eventId: number) => void
   onDelete?: (eventId: number) => void
   currentUserId?: number
@@ -19,6 +20,7 @@ export default function EventList({
   events, 
   onBook, 
   onConfirmBooking,
+  onCancelBooking,
   onEdit, 
   onDelete, 
   currentUserId,
@@ -53,6 +55,7 @@ export default function EventList({
             event={event}
             onBook={onBook}
             onConfirmBooking={onConfirmBooking}
+            onCancelBooking={onCancelBooking}
             onEdit={onEdit}
             onDelete={onDelete}
             currentUserId={currentUserId}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Box, Typography, Stack, Alert, Button } from "@mui/material"
 import EventList from "../ui/events/EventList"
 import { getEvents, deleteEvent } from "../api/events"
-import { bookEvent, confirmBooking, getUserBookings, getUserBookingByEventId } from "../api/bookings"
+import { bookEvent, confirmBooking, cancelBooking, getUserBookings, getUserBookingByEventId } from "../api/bookings"
 import { useAuth } from "../context/AuthContext"
 import { Event } from "../lib/types"
 
@@ -166,6 +166,47 @@ export default function EventsPage() {
     }
   }
 
+  const handleCancelBooking = async (eventId: number) => {
+    if (!user) {
+      router.push("/auth?mode=login")
+      return
+    }
+
+    try {
+      // Проверяем, есть ли bookingId в bookingsMap
+      const existingBooking = bookingsMap[eventId]
+      let bookingId: number
+
+      if (existingBooking?.bookingId) {
+        // Если bookingId уже есть в состоянии, используем его
+        bookingId = existingBooking.bookingId
+      } else {
+        // Иначе получаем бронь через API
+        const booking = await getUserBookingByEventId(eventId)
+        
+        if (!booking) {
+          setError("Бронь не найдена")
+          return
+        }
+        bookingId = booking.id
+      }
+
+      // Отменяем бронь по её ID
+      const cancelledBooking = await cancelBooking(bookingId)
+      
+      // Удаляем бронь из bookingsMap (так как она отменена)
+      setBookingsMap(prev => {
+        const newMap = { ...prev }
+        delete newMap[eventId]
+        return newMap
+      })
+
+      console.log("Booking cancelled:", cancelledBooking)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to cancel booking")
+    }
+  }
+
   const handleEditEvent = (eventId: number) => {
     if (!user) {
       router.push("/auth?mode=login")
@@ -286,6 +327,7 @@ export default function EventsPage() {
             events={events}
             onBook={handleBookEvent}
             onConfirmBooking={handleConfirmBooking}
+            onCancelBooking={handleCancelBooking}
             onEdit={handleEditEvent}
             onDelete={handleDeleteEvent}
             currentUserId={user?.id}
