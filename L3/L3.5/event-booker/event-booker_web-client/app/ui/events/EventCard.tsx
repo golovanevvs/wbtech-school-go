@@ -148,17 +148,19 @@ export default function EventCard({
           Срок бронирования: {event.bookingDeadline ?? 'Не указано'} мин
         </Typography>
         
-        {isOwner && (
-          <Typography variant="caption" color="primary" sx={{ mt: 1, display: 'block' }}>
-            Вы создали это мероприятие
-          </Typography>
-        )}
-        
-        <Chip
-          label={isAvailable ? "Доступно" : "Заполнено"}
-          color={isAvailable ? "success" : "error"}
-          sx={{ mt: 1 }}
-        />
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1, alignItems: 'flex-start' }}>
+          {isOwner && (
+            <Chip
+              label="Вы создали это мероприятие"
+              color="primary"
+            />
+          )}
+          
+          <Chip
+            label={isAvailable ? "Доступно" : "Заполнено"}
+            color={isAvailable ? "success" : "error"}
+          />
+        </Box>
 
         {/* Показываем предупреждение о истекающей брони только если currentTime доступен */}
         {showTimer && (

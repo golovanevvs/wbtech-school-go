@@ -81,6 +81,10 @@ export const baseTheme = createTheme({
           backgroundColor: "#ff8a80",
           color: "#b71c1c",
         },
+        colorPrimary: {
+          backgroundColor: "#bbdefb",
+          color: "#1565c0",
+        },
       },
     },
   },
