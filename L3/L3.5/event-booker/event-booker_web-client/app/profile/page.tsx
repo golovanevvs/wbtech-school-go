@@ -54,7 +54,7 @@ export default function ProfilePage() {
       if (shouldLaunchTelegram && updatedUser.telegramUsername) {
         // Небольшая задержка, чтобы дать время пользователю увидеть обновленные данные
         setTimeout(() => {
-          window.open("tg://resolve?domain=v_delayed_notifier_bot", "_blank")
+          window.open("tg://resolve?domain=v_event_booker_bot", "_blank")
         }, 500)
       }
     } catch (err) {
