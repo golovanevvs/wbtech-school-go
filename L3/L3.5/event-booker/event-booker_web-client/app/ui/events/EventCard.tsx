@@ -183,24 +183,23 @@ export default function EventCard({
       </CardContent>
       <CardActions>
         {bookingStatus === "pending" && (
-          <Button
-            size="small"
-            color="warning"
-            onClick={handleConfirmClick}
-            disabled={!!isBookingExpired}
-          >
-            Подтвердить бронь
-          </Button>
-        )}
-        
-        {bookingStatus === "confirmed" && (
-          <Button
-            size="small"
-            color="error"
-            onClick={handleCancelClick}
-          >
-            Отменить бронь
-          </Button>
+          <>
+            <Button
+              size="small"
+              color="warning"
+              onClick={handleConfirmClick}
+              disabled={!!isBookingExpired}
+            >
+              Подтвердить бронь
+            </Button>
+            <Button
+              size="small"
+              color="error"
+              onClick={handleCancelClick}
+            >
+              Отменить бронь
+            </Button>
+          </>
         )}
         
         {!hasActiveBooking && (

@@ -220,6 +220,14 @@ func (hd *BookingHandler) Cancel(c *gin.Context) {
 		return
 	}
 
+	// Получаем обновленную бронь для возврата клиенту
+	updatedBooking, err := hd.sv.GetByID(c.Request.Context(), id)
+	if err != nil {
+		lg.Warn().Err(err).Int("id", id).Msgf("%s failed to get updated booking", pkgConst.Warn)
+		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Failed to retrieve updated booking"})
+		return
+	}
+
 	lg.Debug().Int("id", id).Msgf("%s booking cancelled successfully", pkgConst.OpSuccess)
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, updatedBooking)
 }
