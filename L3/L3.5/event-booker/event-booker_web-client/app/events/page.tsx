@@ -16,22 +16,12 @@ type BookingInfo = {
 }
 
 export default function EventsPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [bookingsMap, setBookingsMap] = useState<Record<number, BookingInfo>>({})
-  const [currentTime, setCurrentTime] = useState(Date.now())
   const router = useRouter()
-
-  // Обновляем текущее время каждую секунду для отслеживания истечения брони
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(Date.now())
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [])
 
   // Загружаем мероприятия
   useEffect(() => {
@@ -53,16 +43,31 @@ export default function EventsPage() {
   // Загружаем брони пользователя
   useEffect(() => {
     const fetchUserBookings = async () => {
+      console.log("=== FETCH USER BOOKINGS DEBUG ===")
+      console.log("authLoading:", authLoading)
+      console.log("user:", user)
+      
+      // Если аутентификация еще загружается, не загружаем брони
+      if (authLoading) {
+        console.log("Auth still loading, skipping bookings fetch")
+        return
+      }
+
       if (!user) {
+        console.log("No user, setting empty bookings map")
         setBookingsMap({})
         return
       }
 
       try {
+        console.log("Fetching user bookings from server...")
         const bookings = await getUserBookings()
+        console.log("Raw bookings from server:", bookings)
+        
         const bookingsMap: Record<number, BookingInfo> = {}
         
         bookings.forEach(booking => {
+          console.log("Processing booking:", booking)
           if (booking.status === "pending" || booking.status === "confirmed") {
             const expiresAt = new Date(booking.expiresAt).getTime()
             bookingsMap[booking.eventId] = {
@@ -70,17 +75,20 @@ export default function EventsPage() {
               expiresAt: expiresAt,
               bookingId: booking.id // Сохраняем bookingId
             }
+            console.log(`Added booking for event ${booking.eventId}:`, bookingsMap[booking.eventId])
           }
         })
         
+        console.log("Final bookingsMap:", bookingsMap)
         setBookingsMap(bookingsMap)
+        console.log("=== END FETCH USER BOOKINGS ===")
       } catch (err) {
         console.error("Failed to load user bookings:", err)
       }
     }
 
     fetchUserBookings()
-  }, [user])
+  }, [user, authLoading])
 
   const handleCreateEvent = () => {
     if (!user) {
@@ -239,22 +247,7 @@ export default function EventsPage() {
     }
   }
 
-  // Фильтруем истекшие брони
-  useEffect(() => {
-    setBookingsMap(prev => {
-      const filtered = { ...prev }
-      Object.keys(filtered).forEach(eventId => {
-        const bookingInfo = filtered[parseInt(eventId)]
-        if (bookingInfo.status === "pending" && 
-            bookingInfo.expiresAt && 
-            currentTime > bookingInfo.expiresAt) {
-          // Бронь истекла, удаляем её из карты
-          delete filtered[parseInt(eventId)]
-        }
-      })
-      return filtered
-    })
-  }, [currentTime])
+  
 
   if (loading) {
     return (
@@ -332,7 +325,6 @@ export default function EventsPage() {
             onDelete={handleDeleteEvent}
             currentUserId={user?.id}
             bookingsMap={bookingsMap}
-            currentTime={currentTime}
           />
         </Box>
       </Stack>

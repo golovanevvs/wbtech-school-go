@@ -23,7 +23,6 @@ interface EventCardProps {
   currentUserId?: number
   bookingStatus?: "pending" | "confirmed" | null
   bookingExpiresAt?: number | null
-  currentTime?: number
 }
 
 export default function EventCard({ 
@@ -35,21 +34,9 @@ export default function EventCard({
   onDelete, 
   currentUserId,
   bookingStatus,
-  bookingExpiresAt,
-  currentTime
+  bookingExpiresAt
 }: EventCardProps) {
-  // Отладочное логирование
-  console.log("EventCard received event data:", event)
-  console.log("Event fields:", {
-    id: event?.id,
-    title: event?.title,
-    totalPlaces: event?.totalPlaces,
-    availablePlaces: event?.availablePlaces,
-    bookingDeadline: event?.bookingDeadline,
-    date: event?.date,
-    description: event?.description
-  })
-  console.log("Booking status:", bookingStatus, "Expires at:", bookingExpiresAt, "Current time:", currentTime)
+  
 
   const handleBookClick = () => {
     if (onBook) {
@@ -90,20 +77,6 @@ export default function EventCard({
 
   // Проверяем, есть ли у пользователя активная бронь на это мероприятие
   const hasActiveBooking = bookingStatus === "pending" || bookingStatus === "confirmed"
-
-  // Только показываем таймер если currentTime передан (т.е. мы в контексте с таймером)
-  const showTimer = currentTime !== undefined && bookingStatus === "pending" && bookingExpiresAt
-  
-  // Отладочное логирование
-  console.log("Timer debug:", { currentTime, bookingStatus, bookingExpiresAt, showTimer })
-
-  // Проверяем, истекла ли бронь (только если currentTime доступен)
-  const isBookingExpired = showTimer && currentTime > bookingExpiresAt!
-
-  // Вычисляем оставшееся время для отображения (только если currentTime доступен)
-  const timeLeft = showTimer && bookingExpiresAt && currentTime
-    ? Math.max(0, Math.ceil((bookingExpiresAt - currentTime) / 1000))
-    : 0
 
   return (
     <Card sx={{ minWidth: 300, maxWidth: 400, margin: "10px" }}>
@@ -162,24 +135,9 @@ export default function EventCard({
           />
         </Box>
 
-        {/* Показываем предупреждение о истекающей брони только если currentTime доступен */}
-        {showTimer && (
-          <Alert severity="warning" sx={{ mt: 1 }}>
-            У вас есть бронирование. Подтвердите его до истечения времени.
-            <br />
-            Осталось: {timeLeft} сек
-          </Alert>
-        )}
-        
         {bookingStatus === "confirmed" && (
           <Alert severity="success" sx={{ mt: 1 }}>
             Ваше бронирование подтверждено
-          </Alert>
-        )}
-
-        {isBookingExpired && (
-          <Alert severity="error" sx={{ mt: 1 }}>
-            Ваше бронирование истекло
           </Alert>
         )}
       </CardContent>
@@ -190,7 +148,6 @@ export default function EventCard({
               size="small"
               color="warning"
               onClick={handleConfirmClick}
-              disabled={!!isBookingExpired}
             >
               Подтвердить бронь
             </Button>

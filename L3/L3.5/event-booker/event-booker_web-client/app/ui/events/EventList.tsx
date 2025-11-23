@@ -12,8 +12,6 @@ interface EventListProps {
   currentUserId?: number
   // Новое: информация о статусе брони для каждого мероприятия
   bookingsMap?: Record<number, { status: "pending" | "confirmed" | null; expiresAt?: number | null }>
-  // Новое: текущее время для расчета истечения брони
-  currentTime?: number
 }
 
 export default function EventList({ 
@@ -24,8 +22,7 @@ export default function EventList({
   onEdit, 
   onDelete, 
   currentUserId,
-  bookingsMap = {},
-  currentTime
+  bookingsMap = {}
 }: EventListProps) {
   if (!events) {
     return (
@@ -61,7 +58,6 @@ export default function EventList({
             currentUserId={currentUserId}
             bookingStatus={bookingInfo.status}
             bookingExpiresAt={bookingInfo.expiresAt}
-            {...(currentTime !== undefined && { currentTime })}
           />
         )
       })}
