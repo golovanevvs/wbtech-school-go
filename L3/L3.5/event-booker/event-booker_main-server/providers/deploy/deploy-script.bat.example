@@ -1,12 +1,12 @@
 @echo off
-echo =====================================================
-echo    Starting image-processor_main-server deployment
+echo ==================================================
+echo    Starting event-booker_main-server deployment
 echo    Time: %date% %time%
-echo =====================================================
+echo ==================================================
 echo.
 
 echo Changing to project directory...
-cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.4\image-processor\image-processor_main-server\providers\deploy"
+cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.5\event-booker\event-booker_main-server\providers\deploy"
 
 echo Stopping existing containers...
 docker compose down
@@ -15,11 +15,11 @@ echo Pulling latest image...
 docker compose pull
 
 echo Starting new containers...
-docker compose -p image-processor_main-server up -d
+docker compose -p event-booker_main-server up -d
 
 echo.
 echo Checking container status...
-docker ps --filter "name=image-processor_main-server"
+docker ps --filter "name=event-booker_main-server"
 
 echo.
 echo ========================================
