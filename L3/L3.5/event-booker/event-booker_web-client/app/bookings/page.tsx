@@ -6,7 +6,7 @@ import { Box, Stack, Typography, Alert, Button } from "@mui/material"
 import BookingList from "../ui/bookings/BookingList"
 import { getUserBookings, confirmBooking, cancelBooking } from "../api/bookings"
 import { useAuth } from "../context/AuthContext"
-import { Booking } from "../lib/types"
+import { Booking, transformBookingFromServer } from "../lib/types"
 
 export default function BookingsPage() {
   const { user, loading: authLoading } = useAuth()
@@ -29,7 +29,7 @@ export default function BookingsPage() {
       try {
         setLoading(true)
         const data = await getUserBookings()
-        setBookings(data)
+        setBookings(data.map(transformBookingFromServer))
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load bookings")
       } finally {
@@ -44,7 +44,7 @@ export default function BookingsPage() {
     try {
       await confirmBooking(id)
       const updatedBookings = await getUserBookings()
-      setBookings(updatedBookings)
+      setBookings(updatedBookings.map(transformBookingFromServer))
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to confirm booking")
     }
@@ -54,7 +54,7 @@ export default function BookingsPage() {
     try {
       await cancelBooking(id)
       const updatedBookings = await getUserBookings()
-      setBookings(updatedBookings)
+      setBookings(updatedBookings.map(transformBookingFromServer))
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to cancel booking")
     }
