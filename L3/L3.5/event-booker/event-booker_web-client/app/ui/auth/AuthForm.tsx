@@ -142,12 +142,18 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
       <Box sx={{ mt: 2, textAlign: "center" }}>
         <Typography variant="body2" color="text.secondary">
           {mode === "login" ? "Нет аккаунта? " : "Уже есть аккаунт? "}
-          <Link
-            href={mode === "login" ? "/auth?mode=register" : "/auth?mode=login"}
-            style={{ color: 'inherit', textDecoration: 'underline' }}
-          >
-            {mode === "login" ? "Зарегистрироваться" : "Войти"}
-          </Link>
+          <Box component="span" sx={{ display: 'inline' }}>
+            <Link
+              href={mode === "login" ? "/auth?mode=register" : "/auth?mode=login"}
+              style={{ 
+                color: 'inherit', 
+                textDecoration: 'underline',
+                cursor: 'pointer'
+              }}
+            >
+              {mode === "login" ? "Зарегистрироваться" : "Войти"}
+            </Link>
+          </Box>
         </Typography>
       </Box>
     </Card>

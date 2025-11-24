@@ -1,28 +1,18 @@
 // app/auth/page.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useMemo } from "react"
+import { useSearchParams } from "next/navigation"
 import { Box } from "@mui/material"
 import AuthForm from "../ui/auth/AuthForm"
 
 export default function AuthPage() {
-  const [mode, setMode] = useState<"login" | "register">("login")
-
-  useEffect(() => {
-    const handlePopState = () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const modeParam = urlParams.get("mode")
-      setMode(modeParam === "register" ? "register" : "login")
-    }
-
-    handlePopState()
-
-    window.addEventListener("popstate", handlePopState)
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState)
-    }
-  }, [])
+  const searchParams = useSearchParams()
+  
+  const mode = useMemo(() => {
+    const modeParam = searchParams.get("mode")
+    return modeParam === "register" ? "register" : "login"
+  }, [searchParams])
 
   // 👇 Колбэк для успешной авторизации
   const handleAuthSuccess = () => {
