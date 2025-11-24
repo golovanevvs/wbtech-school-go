@@ -1,25 +1,29 @@
 // app/auth/page.tsx
 "use client"
 
-import { useMemo } from "react"
+import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Box } from "@mui/material"
 import AuthForm from "../ui/auth/AuthForm"
 
-export default function AuthPage() {
+function AuthFormWrapper() {
   const searchParams = useSearchParams()
   
-  const mode = useMemo(() => {
-    const modeParam = searchParams.get("mode")
-    return modeParam === "register" ? "register" : "login"
-  }, [searchParams])
-
-  // 👇 Колбэк для успешной авторизации
+  const mode = searchParams.get("mode") === "register" ? "register" : "login"
+  
   const handleAuthSuccess = () => {
-    // Header автоматически обновится через контекст AuthContext
     console.log("Auth successful!")
   }
 
+  return (
+    <AuthForm 
+      mode={mode} 
+      onAuthSuccess={handleAuthSuccess}
+    />
+  )
+}
+
+export default function AuthPage() {
   return (
     <Box
       sx={{
@@ -31,10 +35,11 @@ export default function AuthPage() {
         maxWidth: 500,
       }}
     >
-      <AuthForm 
-        mode={mode} 
-        onAuthSuccess={handleAuthSuccess} // 👈 Теперь без ошибки
-      />
+      <Suspense fallback={<div>Загрузка...</div>}>
+        <AuthFormWrapper />
+      </Suspense>
     </Box>
   )
 }
+
+  
