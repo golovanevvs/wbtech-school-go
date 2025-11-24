@@ -1,4 +1,4 @@
-WEB_CLIENT_NAME=event-booker_web-client
+WEB_CLIENT_NAME=sales-tracker_web-client
 
 .PHONY: web-client-create web-client-deps-init
 
