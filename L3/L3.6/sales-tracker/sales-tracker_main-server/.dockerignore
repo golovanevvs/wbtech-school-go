@@ -1,0 +1,9 @@
+**/.env
+**/.exe
+**/node_modules
+**/.git
+**/*.log
+**/tmp
+**/dist
+**/.DS_Store
+resources/data
