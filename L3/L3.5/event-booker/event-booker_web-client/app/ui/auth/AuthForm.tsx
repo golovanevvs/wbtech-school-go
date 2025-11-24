@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Box, Typography, Alert } from "@mui/material"
 import Card from "../Card"
 import Button from "../Button"
@@ -141,11 +142,12 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
       <Box sx={{ mt: 2, textAlign: "center" }}>
         <Typography variant="body2" color="text.secondary">
           {mode === "login" ? "Нет аккаунта? " : "Уже есть аккаунт? "}
-          <a
+          <Link
             href={mode === "login" ? "/auth?mode=register" : "/auth?mode=login"}
+            style={{ color: 'inherit', textDecoration: 'underline' }}
           >
             {mode === "login" ? "Зарегистрироваться" : "Войти"}
-          </a>
+          </Link>
         </Typography>
       </Box>
     </Card>

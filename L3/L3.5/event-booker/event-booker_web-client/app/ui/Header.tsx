@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { AppBar, Toolbar, Typography, Button, Box, IconButton, Menu, MenuItem, CircularProgress } from '@mui/material'
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
 import Brightness4Icon from '@mui/icons-material/Brightness4'
@@ -63,28 +64,30 @@ export default function Header() {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography 
-            variant="h6" 
-            component="div" 
-            sx={{ 
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              '&:hover': {
-                opacity: 0.8
-              }
-            }}
-            onClick={() => router.push('/')}
-          >
-            Event Booker
-          </Typography>
+          <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Typography 
+              variant="h6" 
+              component="div" 
+              sx={{ 
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                '&:hover': {
+                  opacity: 0.8
+                }
+              }}
+            >
+              Event Booker
+            </Typography>
+          </Link>
           
-          <Button 
-            color="inherit" 
-            onClick={() => router.push('/events')}
-            sx={{ textTransform: 'none' }}
-          >
-            Мероприятия
-          </Button>
+          <Link href="/events" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Button 
+              color="inherit" 
+              sx={{ textTransform: 'none' }}
+            >
+              Мероприятия
+            </Button>
+          </Link>
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
