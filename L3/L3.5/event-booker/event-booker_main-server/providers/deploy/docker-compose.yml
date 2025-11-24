@@ -4,9 +4,9 @@ services:
     container_name: ${APP_CONTAINER}
     environment:
       - ENV=prod
-      - APP_SERVICE_JWT_SECRET=$(APP_SERVICE_JWT_SECRET)
-      - APP_SERVICE_JWT_ACCESS_TOKEN_EXPIRY=$(APP_SERVICE_JWT_ACCESS_TOKEN_EXPIRY)
-      - APP_SERVICE_JWT_REFRESH_TOKEN_EXPIRY=$(APP_SERVICE_JWT_REFRESH_TOKEN_EXPIRY)
+      - APP_SERVICE_JWT_SECRET=${APP_SERVICE_JWT_SECRET}
+      - APP_SERVICE_JWT_ACCESS_TOKEN_EXPIRY=${APP_SERVICE_JWT_ACCESS_TOKEN_EXPIRY}
+      - APP_SERVICE_JWT_REFRESH_TOKEN_EXPIRY=${APP_SERVICE_JWT_REFRESH_TOKEN_EXPIRY}
       - APP_TRANSPORT_HTTP_PUBLIC_HOST=https://${PUBLIC_HOST_DOCKER}/${APP_CONTAINER}
       - APP_TRANSPORT_HTTP_WEB_PUBLIC_HOST=https://${PUBLIC_HOST_DOCKER}/${WEB_CLIENT_CONTAINER}
       - APP_TRANSPORT_HTTP_PORT=${APP_TRANSPORT_HTTP_PORT}
@@ -17,27 +17,17 @@ services:
       - POSTGRES_MASTER_PORT=${POSTGRES_MASTER_PORT}
       - POSTGRES_MASTER_HOST=${POSTGRES_MASTER_HOST}
       - POSTGRES_DB=${POSTGRES_DB}
-      - EMAIL_SMTP_HOST=$(EMAIL_SMTP_HOST)
-      - EMAIL_SMTP_PORT=$(EMAIL_SMTP_PORT)
-      - EMAIL_USERNAME=$(EMAIL_USERNAME)
-      - EMAIL_PASSWORD=$(EMAIL_PASSWORD)
-      - EMAIL_FROM=$(EMAIL_FROM)
-      - TELEGRAM_TOKEN=$(TELEGRAM_TOKEN)
-    volumes:
-      - event-booker_storage:/root/resources/app/filestorage
+      - EMAIL_SMTP_HOST=${EMAIL_SMTP_HOST}
+      - EMAIL_SMTP_PORT=${EMAIL_SMTP_PORT}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
     networks:
       - proxy
-      - event-booker_main-server
     ports:
       - 7785:${APP_TRANSPORT_HTTP_PORT}
-
-volumes:
-  event-booker_storage:
-    driver: local
 
 networks:
   proxy:
     external: true
-  event-booker_main-server:
-    driver: bridge
-    name: event-booker_main-server 
