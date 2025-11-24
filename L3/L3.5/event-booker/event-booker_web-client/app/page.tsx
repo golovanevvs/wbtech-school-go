@@ -14,7 +14,6 @@ export default function HomePage() {
     const fetchEvents = async () => {
       try {
         const data = await getEvents()
-        // Берем только 6 последних событий
         setEvents(data.slice(0, 6))
       } catch (err) {
         console.error("Failed to load events:", err)

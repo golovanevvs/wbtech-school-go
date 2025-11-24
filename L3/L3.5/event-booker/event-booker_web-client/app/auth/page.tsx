@@ -1,4 +1,3 @@
-// app/auth/page.tsx
 "use client"
 
 import { Suspense } from "react"
@@ -8,19 +7,14 @@ import AuthForm from "../ui/auth/AuthForm"
 
 function AuthFormWrapper() {
   const searchParams = useSearchParams()
-  
+
   const mode = searchParams.get("mode") === "register" ? "register" : "login"
-  
+
   const handleAuthSuccess = () => {
     console.log("Auth successful!")
   }
 
-  return (
-    <AuthForm 
-      mode={mode} 
-      onAuthSuccess={handleAuthSuccess}
-    />
-  )
+  return <AuthForm mode={mode} onAuthSuccess={handleAuthSuccess} />
 }
 
 export default function AuthPage() {
@@ -41,5 +35,3 @@ export default function AuthPage() {
     </Box>
   )
 }
-
-  

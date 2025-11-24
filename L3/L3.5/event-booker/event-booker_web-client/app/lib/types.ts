@@ -36,7 +36,6 @@ export interface Booking {
   cancelledAt?: string
 }
 
-// Интерфейс для бронирования с сервера (snake_case)
 export interface BookingFromServer {
   id: number
   user_id: number
@@ -48,7 +47,6 @@ export interface BookingFromServer {
   cancelled_at?: string
 }
 
-// Функция трансформации snake_case → camelCase
 export function transformBookingFromServer(booking: BookingFromServer): Booking {
   return {
     id: booking.id,
@@ -62,7 +60,6 @@ export function transformBookingFromServer(booking: BookingFromServer): Booking 
   }
 }
 
-// Новый интерфейс для запроса бронирования (соответствует серверу)
 export interface CreateBookingRequest {
   event_id: number
   booking_deadline_minutes?: number
@@ -97,5 +94,5 @@ export interface UpdateUserRequest {
   telegramUsername?: string | null
   telegramNotifications?: boolean
   emailNotifications?: boolean
-  resetTelegramChatID?: boolean // специальный флаг для сброса chatID на сервере
+  resetTelegramChatID?: boolean
 }

@@ -43,7 +43,6 @@ export default function Header() {
     handleMenuClose()
   }
 
-  // 👇 Добавьте эту функцию для перехода на страницу логина
   const handleLogin = () => {
     router.push('/auth')
   }
@@ -92,7 +91,6 @@ export default function Header() {
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {loading ? (
-            // Показываем индикатор загрузки при проверке статуса аутентификации
             <CircularProgress size={24} sx={{ color: 'white' }} />
           ) : user ? (
             <>
@@ -177,7 +175,7 @@ export default function Header() {
           ) : (
             <Button 
               color="inherit" 
-              onClick={handleLogin} // 👈 Используем новую функцию
+              onClick={handleLogin}
               sx={{ textTransform: 'none' }}
             >
               Войти

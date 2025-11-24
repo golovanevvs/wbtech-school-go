@@ -14,18 +14,18 @@ const apiRequest = async <T>(
   options: RequestInit = {}
 ): Promise<T> => {
   console.log(`Making request to: ${API_BASE_URL}${endpoint}`)
-  
+
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
     },
-    credentials: 'include', // Включаем cookies в запросы
+    credentials: "include",
     ...options,
   })
 
   console.log(`Response status: ${response.status}`)
-  
+
   if (!response.ok) {
     const errorData = await response.text()
     console.error(`API Error: ${response.status}`, errorData)
@@ -40,14 +40,16 @@ export const getUserBookings = async (): Promise<BookingFromServer[]> => {
   return apiRequest<BookingFromServer[]>("/bookings")
 }
 
-export const getUserBookingByEventId = async (eventId: number): Promise<Booking | null> => {
+export const getUserBookingByEventId = async (
+  eventId: number
+): Promise<Booking | null> => {
   console.log(`Fetching user booking for event ${eventId}`)
   try {
     const booking = await apiRequest<Booking>(`/bookings/user/event/${eventId}`)
     return booking
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
-      return null // Бронь не найдена
+      return null
     }
     throw error
   }
@@ -58,7 +60,9 @@ export const getBookingById = async (id: number): Promise<Booking> => {
   return apiRequest<Booking>(`/bookings/${id}`)
 }
 
-export const bookEvent = async (bookingData: CreateBookingRequest): Promise<Booking> => {
+export const bookEvent = async (
+  bookingData: CreateBookingRequest
+): Promise<Booking> => {
   console.log("Booking event with data:", bookingData)
   return apiRequest<Booking>("/bookings", {
     method: "POST",

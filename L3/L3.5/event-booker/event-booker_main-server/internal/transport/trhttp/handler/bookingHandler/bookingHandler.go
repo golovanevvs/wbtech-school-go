@@ -67,7 +67,6 @@ func (hd *BookingHandler) Create(c *gin.Context) {
 		return
 	}
 
-	// Получаем user_id из контекста как int
 	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		lg.Warn().Msg("User ID not found in context")
@@ -191,7 +190,6 @@ func (hd *BookingHandler) Confirm(c *gin.Context) {
 		return
 	}
 
-	// Получаем обновленную бронь для возврата клиенту
 	updatedBooking, err := hd.sv.GetByID(c.Request.Context(), id)
 	if err != nil {
 		lg.Warn().Err(err).Int("id", id).Msgf("%s failed to get updated booking", pkgConst.Warn)
@@ -221,7 +219,6 @@ func (hd *BookingHandler) Cancel(c *gin.Context) {
 		return
 	}
 
-	// Получаем обновленную бронь для возврата клиенту
 	updatedBooking, err := hd.sv.GetByID(c.Request.Context(), id)
 	if err != nil {
 		lg.Warn().Err(err).Int("id", id).Msgf("%s failed to get updated booking", pkgConst.Warn)
@@ -237,7 +234,6 @@ func (hd *BookingHandler) Cancel(c *gin.Context) {
 func (hd *BookingHandler) GetCurrentUserBookings(c *gin.Context) {
 	lg := hd.lg.With().Str("handler", "GetCurrentUserBookings").Logger()
 
-	// Получаем user_id из контекста
 	userIDInterface, exists := c.Get("user_id")
 	if !exists {
 		lg.Warn().Msg("User ID not found in context")

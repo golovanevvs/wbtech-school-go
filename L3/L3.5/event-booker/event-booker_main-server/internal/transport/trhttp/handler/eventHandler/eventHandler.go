@@ -189,7 +189,6 @@ func (hd *EventHandler) Update(c *gin.Context) {
 		return
 	}
 
-	// Получаем обновленную запись для возврата клиенту
 	updatedEvent, err := hd.sv.GetByID(c.Request.Context(), id)
 	if err != nil {
 		lg.Warn().Err(err).Int("id", id).Msgf("%s failed to get updated event", pkgConst.Warn)

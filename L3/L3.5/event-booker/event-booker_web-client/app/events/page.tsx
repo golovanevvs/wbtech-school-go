@@ -5,14 +5,20 @@ import { useRouter } from "next/navigation"
 import { Box, Typography, Stack, Alert, Button } from "@mui/material"
 import EventList from "../ui/events/EventList"
 import { getEvents, deleteEvent } from "../api/events"
-import { bookEvent, confirmBooking, cancelBooking, getUserBookings, getUserBookingByEventId } from "../api/bookings"
+import {
+  bookEvent,
+  confirmBooking,
+  cancelBooking,
+  getUserBookings,
+  getUserBookingByEventId,
+} from "../api/bookings"
 import { useAuth } from "../context/AuthContext"
 import { Event, transformBookingFromServer, Booking } from "../lib/types"
 
 type BookingInfo = {
   status: "pending" | "confirmed" | null
   expiresAt?: number | null
-  bookingId?: number // Добавляем bookingId для быстрого доступа
+  bookingId?: number
 }
 
 export default function EventsPage() {
@@ -20,10 +26,11 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [bookingsMap, setBookingsMap] = useState<Record<number, BookingInfo>>({})
+  const [bookingsMap, setBookingsMap] = useState<Record<number, BookingInfo>>(
+    {}
+  )
   const router = useRouter()
 
-  // Загружаем мероприятия
   useEffect(() => {
     const fetchEvents = async () => {
       try {
@@ -40,14 +47,12 @@ export default function EventsPage() {
     fetchEvents()
   }, [])
 
-  // Загружаем брони пользователя
   useEffect(() => {
     const fetchUserBookings = async () => {
       console.log("=== FETCH USER BOOKINGS DEBUG ===")
       console.log("authLoading:", authLoading)
       console.log("user:", user)
-      
-      // Если аутентификация еще загружается, не загружаем брони
+
       if (authLoading) {
         console.log("Auth still loading, skipping bookings fetch")
         return
@@ -64,31 +69,35 @@ export default function EventsPage() {
         const rawBookings = await getUserBookings()
         console.log("📦 Raw bookings from server:", rawBookings)
         console.log("📊 Bookings count:", rawBookings?.length || 0)
-        
-        // Трансформируем данные из snake_case в camelCase
+
         const bookings: Booking[] = rawBookings.map(transformBookingFromServer)
         console.log("🔄 Transformed bookings:", bookings)
-        
+
         const bookingsMap: Record<number, BookingInfo> = {}
-        
-        bookings.forEach(booking => {
+
+        bookings.forEach((booking) => {
           console.log("Processing booking:", booking)
           if (booking.status === "pending" || booking.status === "confirmed") {
-            const expiresAt = booking.expiresAt ? new Date(booking.expiresAt).getTime() : null
-            
+            const expiresAt = booking.expiresAt
+              ? new Date(booking.expiresAt).getTime()
+              : null
+
             if (booking.eventId) {
               bookingsMap[booking.eventId] = {
                 status: booking.status,
                 expiresAt: expiresAt,
-                bookingId: booking.id // Сохраняем bookingId
+                bookingId: booking.id,
               }
-              console.log(`Added booking for event ${booking.eventId}:`, bookingsMap[booking.eventId])
+              console.log(
+                `Added booking for event ${booking.eventId}:`,
+                bookingsMap[booking.eventId]
+              )
             } else {
               console.warn("Booking has no eventId:", booking)
             }
           }
         })
-        
+
         console.log("Final bookingsMap:", bookingsMap)
         setBookingsMap(bookingsMap)
         console.log("=== END FETCH USER BOOKINGS ===")
@@ -114,24 +123,26 @@ export default function EventsPage() {
       return
     }
 
-    // Проверяем, есть ли уже бронь у пользователя на это мероприятие
     const existingBooking = bookingsMap[eventId]
-    if (existingBooking && (existingBooking.status === "pending" || existingBooking.status === "confirmed")) {
+    if (
+      existingBooking &&
+      (existingBooking.status === "pending" ||
+        existingBooking.status === "confirmed")
+    ) {
       setError("У вас уже есть бронь на это мероприятие")
       return
     }
 
     try {
       const booking = await bookEvent({ event_id: eventId })
-      
-      // Обновляем карту брони с новой информацией
-      setBookingsMap(prev => ({
+
+      setBookingsMap((prev) => ({
         ...prev,
         [eventId]: {
           status: "pending",
           expiresAt: new Date(booking.expiresAt).getTime(),
-          bookingId: booking.id
-        }
+          bookingId: booking.id,
+        },
       }))
 
       console.log("Booking created:", booking)
@@ -147,17 +158,14 @@ export default function EventsPage() {
     }
 
     try {
-      // Проверяем, есть ли bookingId в bookingsMap
       const existingBooking = bookingsMap[eventId]
       let bookingId: number
 
       if (existingBooking?.bookingId) {
-        // Если bookingId уже есть в состоянии, используем его
         bookingId = existingBooking.bookingId
       } else {
-        // Иначе получаем бронь через API
         const booking = await getUserBookingByEventId(eventId)
-        
+
         if (!booking) {
           setError("Бронь не найдена")
           return
@@ -165,17 +173,15 @@ export default function EventsPage() {
         bookingId = booking.id
       }
 
-      // Подтверждаем бронь по её ID
       const confirmedBooking = await confirmBooking(bookingId)
-      
-      // Обновляем статус брони на подтвержденную
-      setBookingsMap(prev => ({
+
+      setBookingsMap((prev) => ({
         ...prev,
         [eventId]: {
           status: "confirmed",
           expiresAt: null,
-          bookingId: bookingId // Сохраняем bookingId
-        }
+          bookingId: bookingId,
+        },
       }))
 
       console.log("Booking confirmed:", confirmedBooking)
@@ -191,17 +197,14 @@ export default function EventsPage() {
     }
 
     try {
-      // Проверяем, есть ли bookingId в bookingsMap
       const existingBooking = bookingsMap[eventId]
       let bookingId: number
 
       if (existingBooking?.bookingId) {
-        // Если bookingId уже есть в состоянии, используем его
         bookingId = existingBooking.bookingId
       } else {
-        // Иначе получаем бронь через API
         const booking = await getUserBookingByEventId(eventId)
-        
+
         if (!booking) {
           setError("Бронь не найдена")
           return
@@ -209,11 +212,9 @@ export default function EventsPage() {
         bookingId = booking.id
       }
 
-      // Отменяем бронь по её ID
       const cancelledBooking = await cancelBooking(bookingId)
-      
-      // Удаляем бронь из bookingsMap (так как она отменена)
-      setBookingsMap(prev => {
+
+      setBookingsMap((prev) => {
         const newMap = { ...prev }
         delete newMap[eventId]
         return newMap
@@ -231,7 +232,6 @@ export default function EventsPage() {
       return
     }
     router.push(`/events/${eventId}/edit`)
-
   }
 
   const handleDeleteEvent = async (eventId: number) => {
@@ -243,10 +243,8 @@ export default function EventsPage() {
     if (window.confirm("Вы уверены, что хотите удалить это мероприятие?")) {
       try {
         await deleteEvent(eventId)
-        // Обновляем список мероприятий
-        setEvents(events.filter(event => event.id !== eventId))
-        // Удаляем бронь из карты, если она была
-        setBookingsMap(prev => {
+        setEvents(events.filter((event) => event.id !== eventId))
+        setBookingsMap((prev) => {
           const newMap = { ...prev }
           delete newMap[eventId]
           return newMap
@@ -256,8 +254,6 @@ export default function EventsPage() {
       }
     }
   }
-
-  
 
   if (loading) {
     return (
@@ -313,11 +309,11 @@ export default function EventsPage() {
           <Typography variant="h2" align="center" sx={{ mb: 2 }}>
             Мероприятия
           </Typography>
-          
+
           {user && (
             <Box sx={{ textAlign: "center", mb: 2 }}>
-              <Button 
-                variant="contained" 
+              <Button
+                variant="contained"
                 onClick={handleCreateEvent}
                 sx={{ mb: 2 }}
               >
@@ -325,8 +321,8 @@ export default function EventsPage() {
               </Button>
             </Box>
           )}
-          
-          <EventList 
+
+          <EventList
             events={events}
             onBook={handleBookEvent}
             onConfirmBooking={handleConfirmBooking}

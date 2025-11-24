@@ -29,7 +29,7 @@ type ISvForAuthHandler interface {
 type AuthHandler struct {
 	lg      *zlog.Zerolog
 	sv      ISvForAuthHandler
-	webHost string // Домен фронтенда для установки cookies
+	webHost string
 }
 
 // New creates a new AuthHandler
@@ -49,7 +49,7 @@ func (hd *AuthHandler) RegisterPublicRoutes(rt *ginext.RouterGroup) {
 		auth.POST("/register", hd.Register)
 		auth.POST("/login", hd.Login)
 		auth.POST("/refresh", hd.Refresh)
-		auth.POST("/logout", hd.Logout) // Добавляем logout endpoint
+		auth.POST("/logout", hd.Logout)
 	}
 }
 
@@ -101,7 +101,6 @@ func (hd *AuthHandler) Register(c *gin.Context) {
 
 	lg.Debug().Int("user_id", user.ID).Str("email", user.Email).Msgf("%s user registered successfully", pkgConst.OpSuccess)
 
-	// Устанавливаем HttpOnly cookies для домена фронтенда
 	c.SetCookie("access_token", accessToken, 3600, "/", hd.webHost, false, true)
 	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", hd.webHost, false, true)
 
@@ -141,7 +140,6 @@ func (hd *AuthHandler) Login(c *gin.Context) {
 
 	lg.Debug().Str("email", req.Email).Msgf("%s user logged in successfully", pkgConst.OpSuccess)
 
-	// Устанавливаем HttpOnly cookies для домена фронтенда
 	c.SetCookie("access_token", accessToken, 3600, "/", hd.webHost, false, true)
 	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", hd.webHost, false, true)
 
@@ -179,7 +177,6 @@ func (hd *AuthHandler) Refresh(c *gin.Context) {
 
 	lg.Debug().Msgf("%s tokens refreshed successfully", pkgConst.OpSuccess)
 
-	// Устанавливаем новые HttpOnly cookies для домена фронтенда
 	c.SetCookie("access_token", newAccessToken, 3600, "/", hd.webHost, false, true)
 	c.SetCookie("refresh_token", newRefreshToken, 7*24*3600, "/", hd.webHost, false, true)
 
@@ -210,7 +207,6 @@ func (hd *AuthHandler) GetCurrentUser(c *gin.Context) {
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s user not found in database, clearing invalid cookies", pkgConst.Warn)
 
-		// Если пользователь не найден в БД, удаляем cookies
 		c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
 		c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
 
@@ -240,12 +236,10 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	// Проверяем, что пользователь существует в БД
 	_, err := hd.sv.GetUserByID(c.Request.Context(), userIDInt)
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s user not found in database, clearing invalid cookies", pkgConst.Warn)
 
-		// Если пользователь не найден в БД, удаляем cookies
 		c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
 		c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
 
@@ -267,14 +261,12 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	// Создаем объект пользователя для обновления
 	user := &model.User{
 		ID:               userIDInt,
 		Name:             req.Name,
 		TelegramUsername: req.TelegramUsername,
 	}
 
-	// Обновляем поля уведомлений, если они предоставлены
 	if req.TelegramNotifications != nil {
 		user.TelegramNotifications = *req.TelegramNotifications
 	}
@@ -282,7 +274,6 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 		user.EmailNotifications = *req.EmailNotifications
 	}
 
-	// Обновляем основные данные пользователя
 	err = hd.sv.UpdateUser(c.Request.Context(), user)
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to update user", pkgConst.Warn)
@@ -290,20 +281,16 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	// Если нужно сбросить Telegram chatID
 	if req.ResetTelegramChatID != nil && *req.ResetTelegramChatID {
 		lg.Debug().Int("user_id", userIDInt).Msg("Resetting Telegram chat ID")
 
-		// Для сброса chatID передаем nil вместо 0, чтобы установить NULL в БД
 		var nilChatID *int64 = nil
 		err = hd.sv.UpdateTelegramChatID(c.Request.Context(), userIDInt, nilChatID)
 		if err != nil {
 			lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to reset Telegram chat ID", pkgConst.Warn)
-			// Не возвращаем ошибку, так как основное обновление прошло успешно
 		}
 	}
 
-	// Получаем обновленные данные пользователя
 	updatedUser, err := hd.sv.GetUserByID(c.Request.Context(), userIDInt)
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to get updated user", pkgConst.Warn)
@@ -334,12 +321,10 @@ func (hd *AuthHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	// Проверяем, что пользователь существует в БД
 	_, err := hd.sv.GetUserByID(c.Request.Context(), userIDInt)
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s user not found in database, clearing invalid cookies", pkgConst.Warn)
 
-		// Если пользователь не найден в БД, удаляем cookies
 		c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
 		c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
 
@@ -347,7 +332,6 @@ func (hd *AuthHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	// Удаляем пользователя из БД (это также удалит его мероприятия и бронирования благодаря CASCADE)
 	err = hd.sv.DeleteUser(c.Request.Context(), userIDInt)
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to delete user", pkgConst.Warn)
@@ -357,7 +341,6 @@ func (hd *AuthHandler) DeleteUser(c *gin.Context) {
 
 	lg.Debug().Int("user_id", userIDInt).Msgf("%s user deleted successfully", pkgConst.OpSuccess)
 
-	// Удаляем cookies
 	c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
 	c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
 
@@ -372,7 +355,6 @@ func (hd *AuthHandler) Logout(c *gin.Context) {
 
 	lg.Debug().Msg("User logout initiated")
 
-	// Удаляем cookies на сервере, устанавливая их с прошедшим временем истечения
 	c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
 	c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
 

@@ -20,7 +20,6 @@ export default function BookingForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Передаем данные в формате, который ожидает сервер (snake_case)
     onBook({
       event_id: eventId,
     })

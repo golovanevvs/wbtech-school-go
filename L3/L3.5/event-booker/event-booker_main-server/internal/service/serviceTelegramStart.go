@@ -35,13 +35,11 @@ func NewTelegramStartService(tg *pkgTelegram.Client, rp ITelegramStartRp) *Teleg
 
 // Start handles the /start command and saves the chat ID
 func (sv *TelegramStartService) Start(ctx context.Context, username string, chatID int64, message string) error {
-	// Отправляем приветственное сообщение пользователю
 	err := sv.tg.HandleStart(chatID, message)
 	if err != nil {
 		return fmt.Errorf("failed to handle start command: %w", err)
 	}
 
-	// Ищем пользователя по Telegram username
 	user, err := sv.rp.GetByTelegramUsername(ctx, username)
 	if err != nil {
 		return fmt.Errorf("failed to find user by telegram username '%s': %w", username, err)
@@ -51,7 +49,6 @@ func (sv *TelegramStartService) Start(ctx context.Context, username string, chat
 		return fmt.Errorf("user with telegram username '%s' not found", username)
 	}
 
-	// Сохраняем chatID для пользователя
 	err = sv.rp.SaveTelegramChatID(ctx, user.ID, &chatID)
 	if err != nil {
 		return fmt.Errorf("failed to save telegram chat ID for user %d: %w", user.ID, err)

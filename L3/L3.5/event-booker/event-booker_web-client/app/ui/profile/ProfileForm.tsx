@@ -38,7 +38,6 @@ export default function ProfileForm({
   isLoading = false,
   error,
 }: ProfileFormProps) {
-  // Локальное состояние для формы
   const [name, setName] = useState(user.name)
   const [telegramUsername, setTelegramUsername] = useState(
     user.telegramUsername || ""
@@ -52,7 +51,6 @@ export default function ProfileForm({
   const [isTelegramInstructionsOpen, setIsTelegramInstructionsOpen] =
     useState(false)
 
-  // Переключатель активен только если есть chatID
   const telegramEnabled = !!user.telegramChatID
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,33 +65,27 @@ export default function ProfileForm({
   }
 
   const handleSubscribeToTelegram = async () => {
-    // Проверяем, что username не пустой
     const username = telegramUsername.trim()
     if (!username) {
       alert("Пожалуйста, введите Telegram username перед подпиской на бота")
       return
     }
 
-    // Сначала переводим переключатель в состояние false
     setTelegramNotifications(false)
 
-    // Обновляем данные пользователя с текущим Telegram username
-    // и сбрасываем chatID (передаем 0 для сброса на сервере)
     onUpdate(
       {
         name: name.trim(),
         telegramUsername: username,
-        telegramNotifications: false, // явно устанавливаем false
+        telegramNotifications: false,
         emailNotifications,
-        resetTelegramChatID: true, // специальный флаг для сброса chatID
+        resetTelegramChatID: true,
       },
       true
-    ) // передаем shouldLaunchTelegram = true
+    )
   }
 
   const handleCheckSubscription = async () => {
-    // Просто обновляем данные пользователя без изменений
-    // чтобы получить актуальное состояние от сервера
     onUpdate(
       {
         name: name.trim(),
@@ -102,7 +94,7 @@ export default function ProfileForm({
         emailNotifications,
       },
       false
-    ) // передаем shouldLaunchTelegram = false
+    )
   }
 
   const handleDeleteProfile = () => {

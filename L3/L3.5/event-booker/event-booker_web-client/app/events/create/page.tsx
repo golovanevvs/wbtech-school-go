@@ -14,10 +14,8 @@ export default function CreateEventPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Если не загружается контекст аутентификации, ждем
     if (loading) return
 
-    // Если пользователь не аутентифицирован, перенаправляем на /auth
     if (!user) {
       router.push("/auth")
       return

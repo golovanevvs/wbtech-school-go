@@ -57,7 +57,6 @@ func (sv *NoticeService) SendNotice(ctx context.Context, notice model.Notice) {
 
 	wg := sync.WaitGroup{}
 
-	// Send notification via Telegram if user has Telegram chat ID and wants Telegram notifications
 	if user.TelegramChatID != nil && notice.Channels.Telegram {
 		wg.Add(1)
 		go func() {
@@ -66,7 +65,6 @@ func (sv *NoticeService) SendNotice(ctx context.Context, notice model.Notice) {
 		}()
 	}
 
-	// Send notification via Email if user wants Email notifications
 	if notice.Channels.Email {
 		wg.Add(1)
 		go func() {

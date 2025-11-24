@@ -36,7 +36,6 @@ func NewAuthMiddleware(parentLg *zlog.Zerolog, sv ISvForAuthHandler) *AuthMiddle
 func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 	lg := mw.lg.With().Str("middleware", "JWTMiddleware").Logger()
 
-	// Получаем access token из cookie
 	tokenString, err := c.Cookie("access_token")
 	if err != nil || tokenString == "" {
 		lg.Warn().Msg("Access token cookie is missing")
@@ -51,7 +50,6 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 	if err != nil {
 		lg.Warn().Err(err).Msg("Failed to validate token, attempting refresh")
 
-		// Пытаемся обновить токен с помощью refresh token
 		refreshToken, err := c.Cookie("refresh_token")
 		if err != nil || refreshToken == "" {
 			lg.Warn().Msg("Refresh token cookie is missing")
@@ -60,7 +58,6 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 			return
 		}
 
-		// Обновляем токены
 		newAccessToken, newRefreshToken, err := mw.sv.RefreshTokens(c.Request.Context(), refreshToken)
 		if err != nil {
 			lg.Warn().Err(err).Msg("Failed to refresh tokens")
@@ -69,11 +66,9 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 			return
 		}
 
-		// Устанавливаем новые cookies
 		c.SetCookie("access_token", newAccessToken, 3600, "/", "", true, true)
 		c.SetCookie("refresh_token", newRefreshToken, 7*24*3600, "/", "", true, true)
 
-		// Валидируем новый access token
 		userID, userEmail, err = mw.sv.ValidateToken(c.Request.Context(), newAccessToken)
 		if err != nil {
 			lg.Warn().Err(err).Msg("Failed to validate refreshed token")
@@ -85,7 +80,6 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 		lg.Debug().Msg("Token refreshed and validated successfully")
 	}
 
-	// Set user ID in context for use in handlers
 	c.Set("user_id", userID)
 	c.Set("user_email", userEmail)
 

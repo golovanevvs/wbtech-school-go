@@ -32,7 +32,6 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
     setError("")
     setLoading(true)
 
-    // Проверка на совпадение паролей
     if (mode === "register") {
       if (password !== confirmPassword) {
         setError("Пароли не совпадают")
@@ -43,23 +42,19 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
 
     try {
       if (mode === "login") {
-        // Создание объекта с данными аунтификации
         const credentials: LoginRequest = { email, password }
         await loginApi(credentials)
       } else {
-        // Создание объекта с данными регистрации
         const credentials: RegisterRequest = { email, password, name }
         await registerApi(credentials)
       }
 
-      // Токены устанавливаются сервером через cookies
       await login()
 
       if (onAuthSuccess) {
         onAuthSuccess()
       }
 
-      // Перенаправление на страницу events
       router.push("/events")
       router.refresh()
     } catch (err) {
@@ -142,13 +137,15 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
       <Box sx={{ mt: 2, textAlign: "center" }}>
         <Typography variant="body2" color="text.secondary">
           {mode === "login" ? "Нет аккаунта? " : "Уже есть аккаунт? "}
-          <Box component="span" sx={{ display: 'inline' }}>
+          <Box component="span" sx={{ display: "inline" }}>
             <Link
-              href={mode === "login" ? "/auth?mode=register" : "/auth?mode=login"}
-              style={{ 
-                color: 'inherit', 
-                textDecoration: 'underline',
-                cursor: 'pointer'
+              href={
+                mode === "login" ? "/auth?mode=register" : "/auth?mode=login"
+              }
+              style={{
+                color: "inherit",
+                textDecoration: "underline",
+                cursor: "pointer",
               }}
             >
               {mode === "login" ? "Зарегистрироваться" : "Войти"}

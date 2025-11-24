@@ -10,19 +10,21 @@ interface EventListProps {
   onEdit?: (eventId: number) => void
   onDelete?: (eventId: number) => void
   currentUserId?: number
-  // Новое: информация о статусе брони для каждого мероприятия
-  bookingsMap?: Record<number, { status: "pending" | "confirmed" | null; expiresAt?: number | null }>
+  bookingsMap?: Record<
+    number,
+    { status: "pending" | "confirmed" | null; expiresAt?: number | null }
+  >
 }
 
-export default function EventList({ 
-  events, 
-  onBook, 
+export default function EventList({
+  events,
+  onBook,
   onConfirmBooking,
   onCancelBooking,
-  onEdit, 
-  onDelete, 
+  onEdit,
+  onDelete,
   currentUserId,
-  bookingsMap = {}
+  bookingsMap = {},
 }: EventListProps) {
   if (!events) {
     return (
@@ -45,7 +47,10 @@ export default function EventList({
       }}
     >
       {events.map((event) => {
-        const bookingInfo = bookingsMap[event.id] || { status: null, expiresAt: null }
+        const bookingInfo = bookingsMap[event.id] || {
+          status: null,
+          expiresAt: null,
+        }
         return (
           <EventCard
             key={event.id}

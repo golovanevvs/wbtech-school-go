@@ -40,7 +40,10 @@ export default function ProfilePage() {
     fetchUser()
   }, [authUser, authLoading, router])
 
-  const handleUpdate = async (userData: UpdateUserRequest, shouldLaunchTelegram?: boolean) => {
+  const handleUpdate = async (
+    userData: UpdateUserRequest,
+    shouldLaunchTelegram?: boolean
+  ) => {
     if (!user) return
 
     setSaving(true)
@@ -49,10 +52,8 @@ export default function ProfilePage() {
     try {
       const updatedUser = await updateUser(userData)
       setUser(updatedUser)
-      
-      // Если нужно запустить Telegram и у пользователя есть username
+
       if (shouldLaunchTelegram && updatedUser.telegramUsername) {
-        // Небольшая задержка, чтобы дать время пользователю увидеть обновленные данные
         setTimeout(() => {
           window.open("tg://resolve?domain=v_event_booker_bot", "_blank")
         }, 500)
@@ -71,10 +72,8 @@ export default function ProfilePage() {
     setError(null)
 
     try {
-      // Вызываем API для удаления профиля
       await deleteUser()
-      
-      // Перенаправляем на страницу авторизации
+
       router.push("/auth")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete profile")

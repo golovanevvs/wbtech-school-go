@@ -123,7 +123,6 @@ export default function EventDetailPage({ params }: PageProps) {
             variant="contained"
             disabled={event.availablePlaces === 0}
             onClick={() => {
-              // Логика бронирования
               console.log("Book event:", event.id)
             }}
           >

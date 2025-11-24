@@ -18,27 +18,23 @@ export default function EditEventPage() {
   const eventId = parseInt(params.id as string)
 
   useEffect(() => {
-    // Если не загружается контекст аутентификации, ждем
     if (loading) return
 
-    // Если пользователь не аутентифицирован, перенаправляем на /auth
     if (!user) {
       router.push("/auth")
       return
     }
 
-    // Загружаем данные мероприятия
     const fetchEvent = async () => {
       try {
         setLoadingEvent(true)
         const eventData = await getEventById(eventId)
-        
-        // Проверяем, является ли пользователь владельцем мероприятия
+
         if (eventData.ownerId !== user.id) {
           setError("Вы не можете редактировать это мероприятие")
           return
         }
-        
+
         setEvent(eventData)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load event")
@@ -146,9 +142,9 @@ export default function EditEventPage() {
             alignItems: "center",
           }}
         >
-          <EventForm 
-            onSubmit={handleSubmit} 
-            onCancel={handleCancel} 
+          <EventForm
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
             event={event}
           />
         </Paper>

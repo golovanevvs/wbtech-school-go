@@ -49,18 +49,14 @@ func (sv *BookingService) Create(ctx context.Context, userID int, eventID int, b
 		return nil, fmt.Errorf("no available places for event %d", eventID)
 	}
 
-	// Проверяем, есть ли уже бронь для этого пользователя и мероприятия
 	existingBooking, err := sv.rp.GetByUserIDAndEventID(userID, eventID)
 	if err == nil {
-		// Бронь найдена, проверяем её статус
 		if existingBooking.Status == model.BookingCancelled {
-			// Удаляем отмененную бронь, чтобы можно было создать новую
 			err = sv.rp.Delete(existingBooking.ID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to delete cancelled booking: %w", err)
 			}
 		} else {
-			// Бронь существует и не отменена, возвращаем ошибку
 			return nil, fmt.Errorf("booking already exists for user %d and event %d", userID, eventID)
 		}
 	}
@@ -120,7 +116,6 @@ func (sv *BookingService) Confirm(ctx context.Context, bookingID int) error {
 		return fmt.Errorf("booking is not in pending status")
 	}
 
-	// Update booking status to confirmed
 	confirmedTime := time.Now()
 	booking.Status = model.BookingConfirmed
 	booking.ConfirmedAt = &confirmedTime

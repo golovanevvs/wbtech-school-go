@@ -1,4 +1,10 @@
-import { User, LoginRequest, RegisterRequest, AuthResponse, UpdateUserRequest } from "../lib/types"
+import {
+  User,
+  LoginRequest,
+  RegisterRequest,
+  AuthResponse,
+  UpdateUserRequest,
+} from "../lib/types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -14,18 +20,18 @@ const apiRequest = async <T>(
   options: RequestInit = {}
 ): Promise<T> => {
   console.log(`Making request to: ${API_BASE_URL}${endpoint}`)
-  
+
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
     },
-    credentials: 'include', // Включаем cookies в запросы
+    credentials: "include",
     ...options,
   })
 
   console.log(`Response status: ${response.status}`)
-  
+
   if (!response.ok) {
     const errorData = await response.text()
     console.error(`API Error: ${response.status}`, errorData)
@@ -35,12 +41,10 @@ const apiRequest = async <T>(
   return response.json()
 }
 
-// Функция для удаления cookies (используется в logout)
 const removeCookie = (name: string): void => {
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`
 }
 
-// Интерфейсы для ответов API (упрощены для работы с cookies)
 interface LoginApiResponse {
   message: string
 }
@@ -60,8 +64,7 @@ export const login = async (
   })
 
   console.log("Login successful, cookies after login:", document.cookie)
-  
-  // Получаем данные пользователя
+
   const user = await getCurrentUser()
   console.log("User data retrieved:", user)
 
@@ -78,7 +81,10 @@ export const register = async (
     method: "POST",
     body: JSON.stringify(userData),
   })
-  console.log("Registration successful, cookies after registration:", document.cookie)
+  console.log(
+    "Registration successful, cookies after registration:",
+    document.cookie
+  )
   const user = await getCurrentUser()
   console.log("User data retrieved:", user)
   return {
@@ -90,7 +96,9 @@ export const getCurrentUser = async (): Promise<User> => {
   return apiRequest<User>("/auth/me")
 }
 
-export const updateUser = async (userData: UpdateUserRequest): Promise<User> => {
+export const updateUser = async (
+  userData: UpdateUserRequest
+): Promise<User> => {
   console.log("Sending to backend:", userData)
   return apiRequest<User>("/auth/update", {
     method: "PUT",
@@ -118,5 +126,3 @@ export const logout = async (): Promise<void> => {
     throw error
   }
 }
-
-// Функция refreshTokens больше не нужна - обновление токенов происходит автоматически на сервере

@@ -62,7 +62,6 @@ func (hd *TelegramHandler) WebHookHandler(c *gin.Context) {
 		return
 	}
 
-	// Проверяем, что username не пустой
 	username := update.Message.From.UserName
 	if username == "" {
 		lg.Warn().Int64("chatID", update.Message.Chat.ID).Msg("Username is empty, cannot process /start command")

@@ -25,24 +25,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      // Вызываем серверный endpoint для logout
       await apiLogout()
       console.log("Logout successful")
     } catch (error) {
       console.error("Logout failed:", error)
     } finally {
-      // Сбрасываем состояние пользователя
       setUser(null)
     }
   }
 
   const login = async (): Promise<void> => {
-    // Токены уже установлены через cookies
     try {
       const userData = await getCurrentUser()
       setUser(userData)
     } catch (error) {
-      // При ошибке просто пробросим ошибку - useEffect сам разберется с повторными попытками
       throw error
     }
   }
@@ -52,15 +48,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         console.log("Checking auth status...")
         console.log("Current cookies:", document.cookie)
-        
-        // Пробуем получить текущего пользователя
-        // Токены передаются через cookies автоматически
+
         const userData = await getCurrentUser()
         console.log("Auth check successful:", userData)
         setUser(userData)
       } catch (error) {
-        // Если токен недействителен или пользователь не авторизован
-        if (error instanceof Error && error.message.includes('401')) {
+        if (error instanceof Error && error.message.includes("401")) {
           console.log("User is not authenticated (expected behavior)")
         } else {
           console.error("Auth check failed:", error)

@@ -16,10 +16,8 @@ export default function BookingsPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Если не загружается контекст аутентификации, ждем
     if (authLoading) return
 
-    // Если пользователь не аутентифицирован, перенаправляем на /auth
     if (!user) {
       router.push("/auth")
       return
