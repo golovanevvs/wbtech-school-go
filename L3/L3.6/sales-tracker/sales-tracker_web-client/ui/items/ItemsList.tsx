@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Box, Typography, Alert, FormControl, InputLabel, Select, MenuItem, Button } from "@mui/material"
-import { MaterialReactTable, type MRT_ColumnDef, type MRT_SortingState } from "material-react-table"
+import { useState, useEffect, useCallback } from "react"
+import { Box, Typography, Alert, FormControl, InputLabel, Select, MenuItem, Button, IconButton } from "@mui/material"
+import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table"
+import { Edit, Delete } from "@mui/icons-material"
 import { SalesRecord, SortOptions } from "../../libs/types"
 import { getSalesRecords, updateSalesRecord, deleteSalesRecord } from "../../libs/api/sales"
 import EditItemForm from "./EditItemForm"
@@ -11,16 +12,11 @@ export default function ItemsList() {
   const [records, setRecords] = useState<SalesRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [sorting, setSorting] = useState<MRT_SortingState>([])
   const [editingRecord, setEditingRecord] = useState<SalesRecord | null>(null)
   const [sortField, setSortField] = useState<"id" | "type" | "category" | "date" | "amount">("id")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
 
-  useEffect(() => {
-    fetchRecords()
-  }, [sortField, sortDirection])
-
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     try {
       setLoading(true)
       const sortOptions: SortOptions = {
@@ -35,7 +31,11 @@ export default function ItemsList() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [sortField, sortDirection])
+
+  useEffect(() => {
+    fetchRecords()
+  }, [fetchRecords])
 
   const handleSort = async () => {
     const newDirection = sortDirection === "asc" ? "desc" : "asc"
@@ -109,7 +109,7 @@ export default function ItemsList() {
       size: 180,
       Cell: ({ cell }) => {
         const date = new Date(cell.getValue<string>())
-        return date.toLocaleString("ru-RU")
+        return date.toLocaleDateString("ru-RU")
       },
     },
     {
@@ -124,24 +124,23 @@ export default function ItemsList() {
     {
       id: "actions",
       header: "Действия",
-      size: 150,
+      size: 100,
       Cell: ({ row }) => (
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Button
-            variant="outlined"
-            size="small"
+          <IconButton
+            color="primary"
             onClick={() => handleEdit(row.original)}
-          >
-            Редактировать
-          </Button>
-          <Button
-            variant="outlined"
             size="small"
+          >
+            <Edit />
+          </IconButton>
+          <IconButton
             color="error"
             onClick={() => handleDelete(row.original.id)}
+            size="small"
           >
-            Удалить
-          </Button>
+            <Delete />
+          </IconButton>
         </Box>
       ),
     },
@@ -159,7 +158,7 @@ export default function ItemsList() {
           <Select
             value={sortField}
             label="Поле сортировки"
-            onChange={(e) => setSortField(e.target.value as any)}
+            onChange={(e) => setSortField(e.target.value as "id" | "type" | "category" | "date" | "amount")}
           >
             <MenuItem value="id">ID</MenuItem>
             <MenuItem value="type">Тип</MenuItem>
@@ -196,7 +195,13 @@ export default function ItemsList() {
         }}
         muiTableContainerProps={{
           sx: {
+            width: "100%",
             minHeight: "400px",
+          },
+        }}
+        muiTableProps={{
+          sx: {
+            width: "100%",
           },
         }}
       />

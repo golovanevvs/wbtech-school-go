@@ -1,8 +1,8 @@
 "use client"
 
-import { Box } from "@mui/material"
+import { Box, Button } from "@mui/material"
 import { useRouter } from "next/navigation"
-import Button from "../ui/Button"
+import ItemsList from "../ui/items/ItemsList"
 
 export default function Home() {
   const router = useRouter()
@@ -11,48 +11,43 @@ export default function Home() {
     router.push(path)
   }
 
-  const menuItems = [
-    {
-      title: "Добавить запись",
-      path: "/add-item",
-      color: "primary" as const,
-    },
-    {
-      title: "Посмотреть все записи",
-      path: "/items",
-      color: "secondary" as const,
-    },
-    {
-      title: "Получить аналитику",
-      path: "/analytics",
-      color: "success" as const,
-    },
-  ]
-
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      gap: 3
-    }}>
-      {menuItems.map((item, index) => (
+    <Box sx={{ width: "100%" }}>
+      {/* Header with action buttons */}
+      <Box sx={{ 
+        display: "flex", 
+        gap: 2, 
+        mb: 3, 
+        justifyContent: "center",
+        flexWrap: "wrap"
+      }}>
         <Button
-          key={index}
           variant="contained"
-          color={item.color}
-          onClick={() => handleNavigate(item.path)}
+          color="primary"
+          onClick={() => handleNavigate("/add-item")}
           sx={{ 
-            width: '100%',
-            maxWidth: '300px',
-            minHeight: '56px',
-            fontSize: '1.1rem'
+            minWidth: "150px",
+            fontSize: "1rem"
           }}
         >
-          {item.title}
+          Добавить запись
         </Button>
-      ))}
+        
+        <Button
+          variant="outlined"
+          color="success"
+          onClick={() => handleNavigate("/analytics")}
+          sx={{ 
+            minWidth: "150px",
+            fontSize: "1rem"
+          }}
+        >
+          Аналитика
+        </Button>
+      </Box>
+
+      {/* Main content - Items List */}
+      <ItemsList />
     </Box>
   )
 }
