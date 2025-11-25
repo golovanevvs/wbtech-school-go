@@ -2,11 +2,18 @@
 
 import { useState } from "react"
 import { Box, Typography, Alert, MenuItem } from "@mui/material"
+import { DatePicker } from "@mui/x-date-pickers/DatePicker"
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"
+import dayjs, { Dayjs } from "dayjs"
+import "dayjs/locale/ru"
 import Card from "../Card"
 import Button from "../Button"
 import Input from "../Input"
 import { SalesRecordFormData } from "../../libs/types"
 import { createSalesRecord } from "../../libs/api/sales"
+
+dayjs.locale("ru")
 
 interface AddItemFormProps {
   onSuccess?: () => void
@@ -16,25 +23,16 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
   const [formData, setFormData] = useState<SalesRecordFormData>({
     type: "income",
     category: "",
-    date: new Date().toISOString().slice(0, 16), // ISO format for datetime-local input
+    date: "", // Строка для API
     amount: 0,
   })
+  
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null) // Dayjs для DatePicker
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  const categories = [
-    "Продажи",
-    "Услуги",
-    "Инвестиции",
-    "Еда",
-    "Транспорт",
-    "Жилье",
-    "Развлечения",
-    "Здоровье",
-    "Образование",
-    "Другое",
-  ]
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,13 +48,25 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
         return
       }
 
+      if (!selectedDate) {
+        setError("Дата обязательна для заполнения")
+        setLoading(false)
+        return
+      }
+
       if (formData.amount <= 0) {
         setError("Сумма должна быть положительным числом")
         setLoading(false)
         return
       }
 
-      await createSalesRecord(formData)
+      // Конвертируем Dayjs в строку для API
+      const apiData = {
+        ...formData,
+        date: selectedDate.format("YYYY-MM-DD")
+      }
+
+      await createSalesRecord(apiData)
       
       setSuccess(true)
       
@@ -64,9 +74,10 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
       setFormData({
         type: "income",
         category: "",
-        date: new Date().toISOString().slice(0, 16),
+        date: "",
         amount: 0,
       })
+      setSelectedDate(null)
 
       if (onSuccess) {
         onSuccess()
@@ -86,76 +97,74 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
   }
 
   return (
-    <Card>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Добавить запись
-      </Typography>
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
+      <Card>
+        <Typography variant="h5" component="h1" gutterBottom>
+          Добавить запись
+        </Typography>
 
-      <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
-        <Input
-          select
-          label="Тип"
-          value={formData.type}
-          onChange={handleChange("type")}
-          required
-        >
-          <MenuItem value="income">Доход</MenuItem>
-          <MenuItem value="expense">Расход</MenuItem>
-        </Input>
+        <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
+          <Input
+            select
+            label="Тип"
+            value={formData.type}
+            onChange={handleChange("type")}
+            required
+          >
+            <MenuItem value="income">Доход</MenuItem>
+            <MenuItem value="expense">Расход</MenuItem>
+          </Input>
 
-        <Input
-          select
-          label="Категория"
-          value={formData.category}
-          onChange={handleChange("category")}
-          required
-        >
-          {categories.map((category) => (
-            <MenuItem key={category} value={category}>
-              {category}
-            </MenuItem>
-          ))}
-        </Input>
+          <Input
+            label="Категория"
+            value={formData.category}
+            onChange={handleChange("category")}
+            required
+            placeholder="Введите категорию"
+          />
 
-        <Input
-          label="Дата"
-          type="datetime-local"
-          value={formData.date}
-          onChange={handleChange("date")}
-          required
-          InputLabelProps={{
-            shrink: true,
-          }}
-        />
+          <DatePicker
+            label="Дата"
+            value={selectedDate}
+            onChange={setSelectedDate}
+            slotProps={{
+              textField: {
+                fullWidth: true,
+                required: true,
+                margin: "normal"
+              },
+            }}
+          />
 
-        <Input
-          label="Сумма"
-          type="number"
-          value={formData.amount || ""}
-          onChange={handleChange("amount")}
-          required
-          inputProps={{
-            step: "0.01",
-            min: "0",
-          }}
-        />
+          <Input
+            label="Сумма"
+            type="number"
+            value={formData.amount || ""}
+            onChange={handleChange("amount")}
+            required
+            inputProps={{
+              step: "1.00",
+              min: "0",
+            }}
+          />
 
-        {error && (
-          <Alert severity="error" sx={{ mt: 2, width: "100%" }}>
-            {error}
-          </Alert>
-        )}
+          {error && (
+            <Alert severity="error" sx={{ mt: 2, width: "100%" }}>
+              {error}
+            </Alert>
+          )}
 
-        {success && (
-          <Alert severity="success" sx={{ mt: 2, width: "100%" }}>
-            Запись успешно добавлена!
-          </Alert>
-        )}
+          {success && (
+            <Alert severity="success" sx={{ mt: 2, width: "100%" }}>
+              Запись успешно добавлена!
+            </Alert>
+          )}
 
-        <Button type="submit" disabled={loading} sx={{ mt: 2 }}>
-          {loading ? "Добавление..." : "Добавить запись"}
-        </Button>
-      </Box>
-    </Card>
+          <Button type="submit" disabled={loading} sx={{ mt: 2 }}>
+            {loading ? "Добавление..." : "Добавить запись"}
+          </Button>
+        </Box>
+      </Card>
+    </LocalizationProvider>
   )
 }

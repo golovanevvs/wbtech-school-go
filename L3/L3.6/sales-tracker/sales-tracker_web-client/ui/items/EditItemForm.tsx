@@ -2,9 +2,16 @@
 
 import { useState, useEffect } from "react"
 import { Box, Typography, Alert, Dialog, DialogTitle, DialogContent, DialogActions, MenuItem } from "@mui/material"
+import { DatePicker } from "@mui/x-date-pickers/DatePicker"
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"
+import dayjs, { Dayjs } from "dayjs"
+import "dayjs/locale/ru"
 import Button from "../Button"
 import Input from "../Input"
 import { SalesRecord, SalesRecordFormData } from "../../libs/types"
+
+dayjs.locale("ru")
 
 interface EditItemFormProps {
   record: SalesRecord
@@ -16,9 +23,11 @@ export default function EditItemForm({ record, onSave, onCancel }: EditItemFormP
   const [formData, setFormData] = useState<SalesRecordFormData>({
     type: record.type,
     category: record.category,
-    date: new Date(record.date).toISOString().slice(0, 16), // Format for datetime-local input
+    date: record.date, // Строка из API
     amount: record.amount,
   })
+  
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs(record.date)) // Dayjs для DatePicker
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -39,9 +48,10 @@ export default function EditItemForm({ record, onSave, onCancel }: EditItemFormP
     setFormData({
       type: record.type,
       category: record.category,
-      date: new Date(record.date).toISOString().slice(0, 16),
+      date: record.date,
       amount: record.amount,
     })
+    setSelectedDate(dayjs(record.date))
   }, [record])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,13 +67,25 @@ export default function EditItemForm({ record, onSave, onCancel }: EditItemFormP
         return
       }
 
+      if (!selectedDate) {
+        setError("Дата обязательна для заполнения")
+        setLoading(false)
+        return
+      }
+
       if (formData.amount <= 0) {
         setError("Сумма должна быть положительным числом")
         setLoading(false)
         return
       }
 
-      await onSave(record.id, formData)
+      // Конвертируем Dayjs в строку для API
+      const apiData = {
+        ...formData,
+        date: selectedDate.format("YYYY-MM-DD")
+      }
+
+      await onSave(record.id, apiData)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка при обновлении записи")
     } finally {
@@ -80,76 +102,80 @@ export default function EditItemForm({ record, onSave, onCancel }: EditItemFormP
 
   return (
     <Dialog open={true} onClose={onCancel} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        Редактировать запись #{record.id}
-      </DialogTitle>
-      
-      <Box component="form" onSubmit={handleSubmit}>
-        <DialogContent>
-          <Input
-            select
-            label="Тип"
-            value={formData.type}
-            onChange={handleChange("type")}
-            required
-          >
-            <MenuItem value="income">Доход</MenuItem>
-            <MenuItem value="expense">Расход</MenuItem>
-          </Input>
+      <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
+        <DialogTitle>
+          Редактировать запись #{record.id}
+        </DialogTitle>
+        
+        <Box component="form" onSubmit={handleSubmit}>
+          <DialogContent>
+            <Input
+              select
+              label="Тип"
+              value={formData.type}
+              onChange={handleChange("type")}
+              required
+            >
+              <MenuItem value="income">Доход</MenuItem>
+              <MenuItem value="expense">Расход</MenuItem>
+            </Input>
 
-          <Input
-            select
-            label="Категория"
-            value={formData.category}
-            onChange={handleChange("category")}
-            required
-          >
-            {categories.map((category) => (
-              <MenuItem key={category} value={category}>
-                {category}
-              </MenuItem>
-            ))}
-          </Input>
+            <Input
+              select
+              label="Категория"
+              value={formData.category}
+              onChange={handleChange("category")}
+              required
+            >
+              {categories.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {category}
+                </MenuItem>
+              ))}
+            </Input>
 
-          <Input
-            label="Дата"
-            type="datetime-local"
-            value={formData.date}
-            onChange={handleChange("date")}
-            required
-            InputLabelProps={{
-              shrink: true,
-            }}
-          />
+            <DatePicker
+              label="Дата"
+              value={selectedDate}
+              onChange={setSelectedDate}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  required: true,
+                  margin: "normal"
+                },
+              }}
+            />
 
-          <Input
-            label="Сумма"
-            type="number"
-            value={formData.amount || ""}
-            onChange={handleChange("amount")}
-            required
-            inputProps={{
-              step: "0.01",
-              min: "0",
-            }}
-          />
+            <Input
+              label="Сумма"
+              type="number"
+              value={formData.amount || ""}
+              onChange={handleChange("amount")}
+              required
+              inputProps={{
+                step: "0.01",
+                min: "0",
+              }}
+            />
 
-          {error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {error}
-            </Alert>
-          )}
-        </DialogContent>
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+          </DialogContent>
 
-        <DialogActions>
-          <Button onClick={onCancel} variant="outlined">
-            Отмена
-          </Button>
-          <Button type="submit" disabled={loading} variant="contained">
-            {loading ? "Сохранение..." : "Сохранить"}
-          </Button>
-        </DialogActions>
-      </Box>
+          <DialogActions>
+            <Button onClick={onCancel} variant="outlined">
+              Отмена
+            </Button>
+            <Button type="submit" disabled={loading} variant="contained">
+              {loading ? "Сохранение..." : "Сохранить"}
+            </Button>
+          </DialogActions>
+        </Box>
+      </LocalizationProvider>
     </Dialog>
   )
 }
