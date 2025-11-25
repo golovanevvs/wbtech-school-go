@@ -28,4 +28,4 @@ COPY --from=builder /app/$APP_NAME .
 
 COPY --from=builder /app/providers ./providers/
 
-ENTRYPOINT ["/root/event-booker_main-server"]
+ENTRYPOINT ["/root/sales-tracker_main-server"]
