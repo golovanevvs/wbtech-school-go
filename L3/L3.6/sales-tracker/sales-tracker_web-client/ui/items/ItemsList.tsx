@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Box, Typography, Alert, FormControl, InputLabel, Select, MenuItem, Button, IconButton } from "@mui/material"
+import { Box, Alert, FormControl, InputLabel, Select, MenuItem, Button, IconButton } from "@mui/material"
 import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table"
 import { Edit, Delete } from "@mui/icons-material"
 import { SalesRecord, SortOptions } from "../../libs/types"
@@ -148,11 +148,33 @@ export default function ItemsList() {
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Список записей
-      </Typography>
-
-      <Box sx={{ mb: 2, display: "flex", gap: 2, alignItems: "center" }}>
+      <Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => window.location.href = "/add-item"}
+          sx={{ 
+            minWidth: "140px",
+            fontSize: "0.9rem"
+          }}
+        >
+          Добавить запись
+        </Button>
+        
+        <Button
+          variant="outlined"
+          color="success"
+          onClick={() => window.location.href = "/analytics"}
+          sx={{ 
+            minWidth: "120px",
+            fontSize: "0.9rem"
+          }}
+        >
+          Аналитика
+        </Button>
+      </Box>
+      
+      <Box sx={{ mb: 2, display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>Поле сортировки</InputLabel>
           <Select
@@ -171,11 +193,9 @@ export default function ItemsList() {
         <Button variant="outlined" onClick={handleSort}>
           {sortDirection === "asc" ? "По возрастанию" : "По убыванию"}
         </Button>
-
-        <Button variant="contained" onClick={fetchRecords}>
-          Обновить
-        </Button>
       </Box>
+
+      
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -195,7 +215,9 @@ export default function ItemsList() {
         }}
         muiTableContainerProps={{
           sx: {
-            width: "100%",
+            width: "100vw",
+            marginLeft: "-16px",
+            marginRight: "-16px",
             minHeight: "400px",
           },
         }}
