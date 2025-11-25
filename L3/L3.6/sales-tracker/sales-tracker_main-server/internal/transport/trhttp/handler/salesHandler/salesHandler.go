@@ -1,6 +1,7 @@
 package salesHandler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.6/sales-tracker/sales-tracker_main-server/internal/model"
@@ -11,7 +12,7 @@ import (
 
 // IService defines the service interface for SalesRecord operations
 type IService interface {
-	CreateSalesRecord(data model.Data) (int, error)
+	CreateSalesRecord(ctx context.Context, data model.Data) (int, error)
 }
 
 // SalesHandler handles HTTP requests for SalesRecord
@@ -42,7 +43,6 @@ func (h *SalesHandler) CreateSalesRecord(c *ginext.Context) {
 
 	var request CreateSalesRecordRequest
 
-	// Validate input data
 	if err := c.ShouldBindJSON(&request); err != nil {
 		lg.Warn().Err(err).Msgf("%s failed to bind JSON", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -51,7 +51,6 @@ func (h *SalesHandler) CreateSalesRecord(c *ginext.Context) {
 		return
 	}
 
-	// Validate required fields
 	if request.Type == "" {
 		lg.Warn().Msgf("%s Type is required", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -98,9 +97,9 @@ func (h *SalesHandler) CreateSalesRecord(c *ginext.Context) {
 		Amount:   request.Amount,
 	}
 
-	id, err := h.sv.CreateSalesRecord(serviceRequest)
+	id, err := h.sv.CreateSalesRecord(c.Request.Context(), serviceRequest)
 	if err != nil {
-		h.lg.Error().Err(err).Msg("Failed to create sales record")
+		lg.Error().Err(err).Msg("Failed to create sales record")
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error: "Failed to create sales record",
 		})
@@ -110,6 +109,8 @@ func (h *SalesHandler) CreateSalesRecord(c *ginext.Context) {
 	response := CreateSalesRecordResponse{
 		ID: id,
 	}
+
+	lg.Debug().Int("ID", id).Msgf("%s record added successfully", pkgConst.OpSuccess)
 
 	c.JSON(http.StatusCreated, response)
 }

@@ -9,7 +9,7 @@ import (
 
 // CreateSalesRecord creates a new sales record in the database
 func (rp *RpPostgres) CreateSalesRecord(ctx context.Context, data model.Data) (int, error) {
-	amountDB := data.Amount * 100
+	amountDB := int(data.Amount * 100)
 
 	query := `
 	

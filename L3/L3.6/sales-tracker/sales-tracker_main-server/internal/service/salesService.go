@@ -12,6 +12,6 @@ type ISalesRepository interface {
 }
 
 // CreateSalesRecord creates a new sales record
-func (sv *Service) CreateSalesRecord(data model.Data) (int, error) {
-	return sv.CreateSalesRecord(data)
+func (sv *Service) CreateSalesRecord(ctx context.Context, data model.Data) (int, error) {
+	return sv.salesRp.CreateSalesRecord(ctx, data)
 }
