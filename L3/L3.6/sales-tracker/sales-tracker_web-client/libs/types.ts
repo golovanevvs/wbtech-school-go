@@ -17,6 +17,18 @@ export interface CreateSalesRecordResponse {
   id: number
 }
 
+export interface UpdateSalesRecordResponse {
+  id: number
+}
+
+export interface DeleteSalesRecordResponse {
+  id: number
+}
+
+export interface GetSalesRecordsResponse {
+  records: SalesRecord[]
+}
+
 export interface AnalyticsData {
   sum: number
   avg: number
