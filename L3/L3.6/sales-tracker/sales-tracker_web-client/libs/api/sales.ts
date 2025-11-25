@@ -1,8 +1,8 @@
-import { SalesRecord, SalesRecordFormData, AnalyticsData, AnalyticsRequest, SortOptions } from "../types"
+import { SalesRecord, SalesRecordFormData, AnalyticsData, AnalyticsRequest, SortOptions, CreateSalesRecordResponse } from "../types"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
 
-export async function createSalesRecord(data: SalesRecordFormData): Promise<SalesRecord> {
+export async function createSalesRecord(data: SalesRecordFormData): Promise<CreateSalesRecordResponse> {
   const response = await fetch(`${API_BASE_URL}/items`, {
     method: "POST",
     headers: {

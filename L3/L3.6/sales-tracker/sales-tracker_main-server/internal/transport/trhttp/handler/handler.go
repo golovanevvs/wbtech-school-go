@@ -7,6 +7,7 @@ import (
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.6/sales-tracker/sales-tracker_main-server/internal/pkg/pkgPrometheus"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.6/sales-tracker/sales-tracker_main-server/internal/transport/trhttp/handler/healthHandler"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.6/sales-tracker/sales-tracker_main-server/internal/transport/trhttp/handler/mainHandlers"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.6/sales-tracker/sales-tracker_main-server/internal/transport/trhttp/handler/salesHandler"
 
 	"github.com/wb-go/wbf/ginext"
 	"github.com/wb-go/wbf/zlog"
@@ -14,6 +15,7 @@ import (
 
 type IService interface {
 	mainHandlers.IService
+	salesHandler.IService
 }
 
 type Handler struct {
@@ -44,11 +46,14 @@ func New(cfg *Config, parentLg *zlog.Zerolog, sv IService, publicHost string, we
 		Rt: rt,
 	}
 
-	addShortURLHandler := mainHandlers.New(&lg, rt, sv)
-	addShortURLHandler.RegisterRoutes()
+	// addShortURLHandler := mainHandlers.New(&lg, rt, sv)
+	// addShortURLHandler.RegisterRoutes()
 
 	healthHandler := healthHandler.New(&lg, rt)
 	healthHandler.RegisterRoutes()
+
+	salesHandler := salesHandler.New(&lg, rt, sv)
+	salesHandler.RegisterRoutes()
 
 	return hd
 }

@@ -13,6 +13,6 @@ func New(db *pkgPostgres.Postgres) *RpPostgres {
 }
 
 // Close closes the database connection
-func (rp *RpPostgres) Close() error {
+func (rp *RpPostgres) CloseDB() error {
 	return rp.db.Close()
 }

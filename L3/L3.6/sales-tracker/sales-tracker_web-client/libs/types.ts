@@ -4,8 +4,6 @@ export interface SalesRecord {
   category: string
   date: string
   amount: number
-  createdAt?: string
-  updatedAt?: string
 }
 
 export interface SalesRecordFormData {
@@ -13,6 +11,10 @@ export interface SalesRecordFormData {
   category: string
   date: string
   amount: number
+}
+
+export interface CreateSalesRecordResponse {
+  id: number
 }
 
 export interface AnalyticsData {
