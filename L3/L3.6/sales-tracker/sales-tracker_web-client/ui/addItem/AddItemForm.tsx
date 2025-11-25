@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Box, Typography, Alert, MenuItem } from "@mui/material"
+import Link from "next/link"
 import { DatePicker } from "@mui/x-date-pickers/DatePicker"
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"
@@ -160,9 +161,16 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
             </Alert>
           )}
 
-          <Button type="submit" disabled={loading} sx={{ mt: 2 }}>
-            {loading ? "Добавление..." : "Добавить запись"}
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+            <Button type="submit" disabled={loading} sx={{ flex: 1 }}>
+              {loading ? "Добавление..." : "Добавить запись"}
+            </Button>
+            <Link href="/" style={{ textDecoration: 'none', flex: 1 }}>
+              <Button variant="outlined" sx={{ width: '100%' }}>
+                Отмена
+              </Button>
+            </Link>
+          </Box>
         </Box>
       </Card>
     </LocalizationProvider>
