@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import Link from 'next/link'
 import {
   Box,
   Alert,
@@ -10,7 +11,6 @@ import {
   MenuItem,
   Button,
   IconButton,
-  Link,
 } from "@mui/material"
 import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table"
 import { Edit, Delete } from "@mui/icons-material"
