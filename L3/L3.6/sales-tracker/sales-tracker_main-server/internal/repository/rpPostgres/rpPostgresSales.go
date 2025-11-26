@@ -3,6 +3,7 @@ package rpPostgres
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.6/sales-tracker/sales-tracker_main-server/internal/model"
 )
@@ -184,6 +185,82 @@ func (rp *RpPostgres) GetAnalytics(ctx context.Context, from, to string) (model.
 		Median:       median,
 		Percentile90: percentile90,
 	}, nil
+}
+
+// ExportCSV exports sales records to CSV format
+func (rp *RpPostgres) ExportCSV(ctx context.Context, from, to string) ([]byte, error) {
+	// Build query based on date range
+	query := `
+		SELECT id, type, category, date, amount
+		FROM sales_records
+	`
+
+	var args []interface{}
+	var whereClause string
+
+	if from != "" {
+		if whereClause != "" {
+			whereClause += " AND "
+		}
+		whereClause += "date >= $" + fmt.Sprint(len(args)+1)
+		args = append(args, from)
+	}
+
+	if to != "" {
+		if whereClause != "" {
+			whereClause += " AND "
+		}
+		whereClause += "date <= $" + fmt.Sprint(len(args)+1)
+		args = append(args, to)
+	}
+
+	if whereClause != "" {
+		query += " WHERE " + whereClause
+	}
+
+	query += " ORDER BY date DESC"
+
+	rows, err := rp.db.DB.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sales records for CSV export: %w", err)
+	}
+	defer rows.Close()
+
+	// Build CSV content
+	var csvContent strings.Builder
+
+	// Write CSV header
+	csvContent.WriteString("ID,Type,Category,Date,Amount\n")
+
+	for rows.Next() {
+		var record model.Data
+		var amountDB int
+
+		err := rows.Scan(&record.ID, &record.Type, &record.Category, &record.Date, &amountDB)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan sales record for CSV: %w", err)
+		}
+
+		record.Amount = float64(amountDB) / 100
+
+		// Escape CSV fields that might contain commas or quotes
+		escapeCSVField := func(field string) string {
+			if strings.Contains(field, ",") || strings.Contains(field, "\"") || strings.Contains(field, "\n") {
+				return "\"" + strings.ReplaceAll(field, "\"", "\"\"") + "\""
+			}
+			return field
+		}
+
+		csvContent.WriteString(fmt.Sprintf("%d,%s,%s,%s,%.2f\n",
+			record.ID,
+			escapeCSVField(record.Type),
+			escapeCSVField(record.Category),
+			escapeCSVField(record.Date),
+			record.Amount,
+		))
+	}
+
+	return []byte(csvContent.String()), nil
 }
 
 // DeleteSalesRecord deletes a sales record

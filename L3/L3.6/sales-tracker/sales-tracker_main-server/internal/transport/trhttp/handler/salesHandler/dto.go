@@ -70,3 +70,9 @@ type AnalyticsData struct {
 	Median       float64 `json:"median"`
 	Percentile90 float64 `json:"percentile90"`
 }
+
+// ExportCSVRequest represents request for CSV export
+type ExportCSVRequest struct {
+	From string `json:"from,omitempty"`
+	To   string `json:"to,omitempty"`
+}

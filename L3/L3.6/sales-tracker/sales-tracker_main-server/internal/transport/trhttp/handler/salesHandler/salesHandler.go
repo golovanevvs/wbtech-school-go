@@ -18,6 +18,7 @@ type IService interface {
 	UpdateSalesRecord(ctx context.Context, id int, data model.Data) error
 	DeleteSalesRecord(ctx context.Context, id int) error
 	GetAnalytics(ctx context.Context, from, to string) (model.Analytics, error)
+	ExportCSV(ctx context.Context, from, to string) ([]byte, error)
 }
 
 // SalesHandler handles HTTP requests for SalesRecord
@@ -44,6 +45,7 @@ func (h *SalesHandler) RegisterRoutes() {
 	h.rt.PUT("/items/:id", h.UpdateSalesRecord)
 	h.rt.DELETE("/items/:id", h.DeleteSalesRecord)
 	h.rt.GET("/analytics", h.GetAnalytics)
+	h.rt.GET("/items/export", h.ExportCSV)
 }
 
 // CreateSalesRecord handles POST /items for creating a new record
@@ -383,4 +385,31 @@ func (h *SalesHandler) GetAnalytics(c *ginext.Context) {
 		Msgf("%s analytics retrieved successfully", pkgConst.OpSuccess)
 
 	c.JSON(http.StatusOK, response)
+}
+
+// ExportCSV handles GET /items/export for exporting sales records to CSV
+func (h *SalesHandler) ExportCSV(c *ginext.Context) {
+	lg := h.lg.With().Str("method", "ExportCSV").Logger()
+
+	// Get date range parameters from query
+	from := c.DefaultQuery("from", "")
+	to := c.DefaultQuery("to", "")
+
+	// Call service to get CSV data
+	csvData, err := h.sv.ExportCSV(c.Request.Context(), from, to)
+	if err != nil {
+		lg.Error().Err(err).Msg("Failed to export CSV")
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "Failed to export CSV",
+		})
+		return
+	}
+
+	// Set headers for CSV file download
+	c.Header("Content-Type", "text/csv")
+	c.Header("Content-Disposition", "attachment; filename=\"sales_export.csv\"")
+
+	lg.Debug().Int("size", len(csvData)).Msgf("%s CSV exported successfully", pkgConst.OpSuccess)
+
+	c.Data(http.StatusOK, "text/csv", csvData)
 }

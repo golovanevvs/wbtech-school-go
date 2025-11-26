@@ -13,6 +13,7 @@ type ISalesRepository interface {
 	UpdateSalesRecord(ctx context.Context, id int, data model.Data) error
 	DeleteSalesRecord(ctx context.Context, id int) error
 	GetAnalytics(ctx context.Context, from, to string) (model.Analytics, error)
+	ExportCSV(ctx context.Context, from, to string) ([]byte, error)
 }
 
 // CreateSalesRecord creates a new sales record
@@ -38,4 +39,9 @@ func (sv *Service) DeleteSalesRecord(ctx context.Context, id int) error {
 // GetAnalytics retrieves analytics data for a given period
 func (sv *Service) GetAnalytics(ctx context.Context, from, to string) (model.Analytics, error) {
 	return sv.salesRp.GetAnalytics(ctx, from, to)
+}
+
+// ExportCSV exports sales records to CSV format
+func (sv *Service) ExportCSV(ctx context.Context, from, to string) ([]byte, error) {
+	return sv.salesRp.ExportCSV(ctx, from, to)
 }
