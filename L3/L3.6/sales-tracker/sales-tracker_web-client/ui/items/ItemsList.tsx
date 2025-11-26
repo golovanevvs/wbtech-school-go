@@ -1,11 +1,25 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Box, Alert, FormControl, InputLabel, Select, MenuItem, Button, IconButton } from "@mui/material"
+import {
+  Box,
+  Alert,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Button,
+  IconButton,
+  Link,
+} from "@mui/material"
 import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table"
 import { Edit, Delete } from "@mui/icons-material"
 import { SalesRecord, SortOptions } from "../../libs/types"
-import { getSalesRecords, updateSalesRecord, deleteSalesRecord } from "../../libs/api/sales"
+import {
+  getSalesRecords,
+  updateSalesRecord,
+  deleteSalesRecord,
+} from "../../libs/api/sales"
 import EditItemForm from "./EditItemForm"
 
 export default function ItemsList() {
@@ -13,7 +27,9 @@ export default function ItemsList() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [editingRecord, setEditingRecord] = useState<SalesRecord | null>(null)
-  const [sortField, setSortField] = useState<"id" | "type" | "category" | "date" | "amount">("id")
+  const [sortField, setSortField] = useState<
+    "id" | "type" | "category" | "date" | "amount"
+  >("id")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
 
   const fetchRecords = useCallback(async () => {
@@ -27,7 +43,9 @@ export default function ItemsList() {
       setRecords(data)
       setError("")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка при загрузке записей")
+      setError(
+        err instanceof Error ? err.message : "Ошибка при загрузке записей"
+      )
     } finally {
       setLoading(false)
     }
@@ -52,7 +70,9 @@ export default function ItemsList() {
         await deleteSalesRecord(id)
         await fetchRecords()
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Ошибка при удалении записи")
+        setError(
+          err instanceof Error ? err.message : "Ошибка при удалении записи"
+        )
       }
     }
   }
@@ -63,7 +83,9 @@ export default function ItemsList() {
       setEditingRecord(null)
       await fetchRecords()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка при обновлении записи")
+      setError(
+        err instanceof Error ? err.message : "Ошибка при обновлении записи"
+      )
     }
   }
 
@@ -90,7 +112,8 @@ export default function ItemsList() {
             borderRadius: 1,
             fontSize: "0.75rem",
             fontWeight: "bold",
-            bgcolor: cell.getValue<string>() === "income" ? "#4caf50" : "#f44336",
+            bgcolor:
+              cell.getValue<string>() === "income" ? "#4caf50" : "#f44336",
             color: "white",
           }}
         >
@@ -118,7 +141,9 @@ export default function ItemsList() {
       size: 120,
       Cell: ({ cell }) => {
         const amount = cell.getValue<number>()
-        return `${amount.toLocaleString("ru-RU", { minimumFractionDigits: 2 })} ₽`
+        return `${amount.toLocaleString("ru-RU", {
+          minimumFractionDigits: 2,
+        })} ₽`
       },
     },
     {
@@ -149,38 +174,52 @@ export default function ItemsList() {
   return (
     <Box sx={{ width: "100%" }}>
       <Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => window.location.href = "/add-item"}
-          sx={{ 
-            minWidth: "140px",
-            fontSize: "0.9rem"
-          }}
-        >
-          Добавить запись
-        </Button>
-        
+        <Link href="/add-item">
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => (window.location.href = "/add-item")}
+            sx={{
+              minWidth: "140px",
+              fontSize: "0.9rem",
+            }}
+          >
+            Добавить запись
+          </Button>
+        </Link>
+
         <Button
           variant="outlined"
           color="success"
-          onClick={() => window.location.href = "/analytics"}
-          sx={{ 
+          onClick={() => (window.location.href = "/analytics")}
+          sx={{
             minWidth: "120px",
-            fontSize: "0.9rem"
+            fontSize: "0.9rem",
           }}
         >
           Аналитика
         </Button>
       </Box>
-      
-      <Box sx={{ mb: 2, display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+
+      <Box
+        sx={{
+          mb: 2,
+          display: "flex",
+          gap: 2,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>Поле сортировки</InputLabel>
           <Select
             value={sortField}
             label="Поле сортировки"
-            onChange={(e) => setSortField(e.target.value as "id" | "type" | "category" | "date" | "amount")}
+            onChange={(e) =>
+              setSortField(
+                e.target.value as "id" | "type" | "category" | "date" | "amount"
+              )
+            }
           >
             <MenuItem value="id">ID</MenuItem>
             <MenuItem value="type">Тип</MenuItem>
@@ -194,8 +233,6 @@ export default function ItemsList() {
           {sortDirection === "asc" ? "По возрастанию" : "По убыванию"}
         </Button>
       </Box>
-
-      
 
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
