@@ -4,6 +4,7 @@ import "./globals.css";
 import ThemeProvider from "../ui/ThemeProvider";
 import Header from "../ui/Header";
 import Footer from "../ui/Footer";
+import EmotionCacheProvider from "../libs/EmotionCache";
 import { Box, Container } from "@mui/material";
 
 const geist = Geist({
@@ -24,15 +25,17 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className={`${geist.variable}`}>
-        <ThemeProvider>
-          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            <Header />
-            <Container maxWidth="lg" sx={{ flex: 1, py: 2 }}>
-              {children}
-            </Container>
-            <Footer />
-          </Box>
-        </ThemeProvider>
+        <EmotionCacheProvider>
+          <ThemeProvider>
+            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <Header />
+              <Container maxWidth="lg" sx={{ flex: 1, py: 2 }}>
+                {children}
+              </Container>
+              <Footer />
+            </Box>
+          </ThemeProvider>
+        </EmotionCacheProvider>
       </body>
     </html>
   );

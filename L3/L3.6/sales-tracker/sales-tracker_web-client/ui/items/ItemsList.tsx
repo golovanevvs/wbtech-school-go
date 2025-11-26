@@ -131,7 +131,10 @@ export default function ItemsList() {
       header: "Дата",
       size: 180,
       Cell: ({ cell }) => {
-        const date = new Date(cell.getValue<string>())
+        const dateValue = cell.getValue<string>()
+        if (!dateValue) return "-"
+        const date = new Date(dateValue)
+        if (isNaN(date.getTime())) return "-"
         return date.toLocaleDateString("ru-RU")
       },
     },
@@ -141,6 +144,7 @@ export default function ItemsList() {
       size: 120,
       Cell: ({ cell }) => {
         const amount = cell.getValue<number>()
+        if (amount === null || amount === undefined || isNaN(amount)) return "-"
         return `${amount.toLocaleString("ru-RU", {
           minimumFractionDigits: 2,
         })} ₽`
