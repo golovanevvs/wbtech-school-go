@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import Link from 'next/link'
+import Link from "next/link"
 import {
   Box,
   Alert,
@@ -178,7 +178,6 @@ export default function ItemsList() {
           <Button
             variant="contained"
             color="primary"
-            // onClick={() => (window.location.href = "/add-item")}
             sx={{
               minWidth: "140px",
               fontSize: "0.9rem",
@@ -188,17 +187,18 @@ export default function ItemsList() {
           </Button>
         </Link>
 
-        <Button
-          variant="outlined"
-          color="success"
-          onClick={() => (window.location.href = "/analytics")}
-          sx={{
-            minWidth: "120px",
-            fontSize: "0.9rem",
-          }}
-        >
-          Аналитика
-        </Button>
+        <Link href="/analytics">
+          <Button
+            variant="outlined"
+            color="success"
+            sx={{
+              minWidth: "120px",
+              fontSize: "0.9rem",
+            }}
+          >
+            Аналитика
+          </Button>
+        </Link>
       </Box>
 
       <Box
