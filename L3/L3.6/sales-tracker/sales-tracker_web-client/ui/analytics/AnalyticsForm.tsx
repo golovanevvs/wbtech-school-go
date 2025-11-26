@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Box, Typography, Alert, Paper } from "@mui/material"
 import { DatePicker } from "@mui/x-date-pickers/DatePicker"
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider"
@@ -15,7 +16,9 @@ import { getAnalytics } from "../../libs/api/sales"
 dayjs.locale("ru")
 
 export default function AnalyticsForm() {
-  const [fromDate, setFromDate] = useState<Dayjs | null>(dayjs().subtract(30, "day"))
+  const [fromDate, setFromDate] = useState<Dayjs | null>(
+    dayjs().subtract(30, "day")
+  )
   const [toDate, setToDate] = useState<Dayjs | null>(dayjs())
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -44,7 +47,9 @@ export default function AnalyticsForm() {
       const data = await getAnalytics(request)
       setAnalytics(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка при получении аналитики")
+      setError(
+        err instanceof Error ? err.message : "Ошибка при получении аналитики"
+      )
       setAnalytics(null)
     } finally {
       setLoading(false)
@@ -52,9 +57,9 @@ export default function AnalyticsForm() {
   }
 
   const formatNumber = (num: number) => {
-    return num.toLocaleString("ru-RU", { 
-      minimumFractionDigits: 2, 
-      maximumFractionDigits: 2 
+    return num.toLocaleString("ru-RU", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     })
   }
 
@@ -100,13 +105,20 @@ export default function AnalyticsForm() {
             />
           </Box>
 
-          <Button 
-            onClick={handleGetAnalytics} 
-            disabled={loading || !fromDate || !toDate}
-            sx={{ mb: 3 }}
-          >
-            {loading ? "Загрузка..." : "Получить аналитику"}
-          </Button>
+          <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+            <Button
+              onClick={handleGetAnalytics}
+              disabled={loading || !fromDate || !toDate}
+              sx={{ mb: 3 }}
+            >
+              {loading ? "Загрузка..." : "Получить аналитику"}
+            </Button>
+            <Link href="/" style={{ textDecoration: "none", flex: 1 }}>
+              <Button variant="outlined" sx={{ width: "100%" }}>
+                Отмена
+              </Button>
+            </Link>
+          </Box>
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
@@ -119,10 +131,17 @@ export default function AnalyticsForm() {
               <Typography variant="h6" component="h3" gutterBottom>
                 Результаты анализа за период:
                 <br />
-                {fromDate?.format("DD.MM.YYYY")} - {toDate?.format("DD.MM.YYYY")}
+                {fromDate?.format("DD.MM.YYYY")} -{" "}
+                {toDate?.format("DD.MM.YYYY")}
               </Typography>
 
-              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 2 }}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                  gap: 2,
+                }}
+              >
                 <Paper sx={{ p: 2, textAlign: "center" }}>
                   <Typography variant="h4" color="primary" gutterBottom>
                     {formatCurrency(analytics.sum)}
