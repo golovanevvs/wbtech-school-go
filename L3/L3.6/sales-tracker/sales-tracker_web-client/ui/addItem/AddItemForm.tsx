@@ -24,11 +24,11 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
   const [formData, setFormData] = useState<SalesRecordFormData>({
     type: "income",
     category: "",
-    date: "", // Строка для API
+    date: "",
     amount: 0,
   })
 
-  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null) // Dayjs для DatePicker
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -40,7 +40,6 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
     setLoading(true)
 
     try {
-      // Validate form data
       if (!formData.category.trim()) {
         setError("Категория обязательна для заполнения")
         setLoading(false)
@@ -59,7 +58,6 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
         return
       }
 
-      // Конвертируем Dayjs в строку для API
       const apiData = {
         ...formData,
         date: selectedDate.format("YYYY-MM-DD"),
@@ -69,7 +67,6 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
 
       setSuccess(true)
 
-      // Reset form
       setFormData({
         type: "income",
         category: "",

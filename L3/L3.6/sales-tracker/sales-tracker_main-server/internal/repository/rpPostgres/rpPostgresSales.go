@@ -60,9 +60,12 @@ func (rp *RpPostgres) GetSalesRecords(ctx context.Context, sortOptions model.Sor
 	}
 
 	query := fmt.Sprintf(`
-		SELECT id, type, category, date, amount
-		FROM sales_records
-		ORDER BY %s %s
+		SELECT
+			id, type, category, date, amount
+		FROM
+			sales_records
+		ORDER BY
+			%s %s
 	`, orderBy, direction)
 
 	rows, err := rp.db.DB.QueryContext(ctx, query)
@@ -91,9 +94,12 @@ func (rp *RpPostgres) UpdateSalesRecord(ctx context.Context, id int, data model.
 	amountDB := int(data.Amount * 100)
 
 	query := `
-		UPDATE sales_records
-		SET type = $1, category = $2, date = $3, amount = $4
-		WHERE id = $5
+		UPDATE
+			sales_records
+		SET
+			type = $1, category = $2, date = $3, amount = $4
+		WHERE
+			id = $5
 	`
 
 	result, err := rp.db.DB.ExecContext(ctx, query, data.Type, data.Category, data.Date, amountDB, id)
@@ -122,8 +128,10 @@ func (rp *RpPostgres) GetAnalytics(ctx context.Context, from, to string) (model.
 			COUNT(*) as record_count,
 			PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY amount) as median_amount,
 			PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY amount) as percentile_90_amount
-		FROM sales_records
-		WHERE date >= $1 AND date <= $2
+		FROM
+			sales_records
+		WHERE
+			date >= $1 AND date <= $2
 	`
 
 	rows, err := rp.db.DB.QueryContext(ctx, query, from, to)
@@ -182,8 +190,10 @@ func (rp *RpPostgres) GetAnalytics(ctx context.Context, from, to string) (model.
 // ExportCSV exports sales records to CSV format
 func (rp *RpPostgres) ExportCSV(ctx context.Context, from, to string) ([]byte, error) {
 	query := `
-		SELECT id, type, category, date, amount
-		FROM sales_records
+		SELECT
+			id, type, category, date, amount
+		FROM
+			sales_records
 	`
 
 	var args []interface{}
@@ -254,8 +264,10 @@ func (rp *RpPostgres) ExportCSV(ctx context.Context, from, to string) ([]byte, e
 // DeleteSalesRecord deletes a sales record
 func (rp *RpPostgres) DeleteSalesRecord(ctx context.Context, id int) error {
 	query := `
-		DELETE FROM sales_records
-		WHERE id = $1
+		DELETE FROM
+			sales_records
+		WHERE
+			id = $1
 	`
 
 	result, err := rp.db.DB.ExecContext(ctx, query, id)

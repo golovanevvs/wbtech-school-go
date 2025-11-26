@@ -63,7 +63,7 @@ func (h *SalesHandler) CreateSalesRecord(c *ginext.Context) {
 	}
 
 	if request.Type == "" {
-		lg.Warn().Msgf("%s Type is required", pkgConst.Warn)
+		lg.Warn().Msgf("%s type is required", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Type is required",
 		})
@@ -71,7 +71,7 @@ func (h *SalesHandler) CreateSalesRecord(c *ginext.Context) {
 	}
 
 	if request.Category == "" {
-		lg.Warn().Msgf("%s Category is required", pkgConst.Warn)
+		lg.Warn().Msgf("%s category is required", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Category is required",
 		})
@@ -79,7 +79,7 @@ func (h *SalesHandler) CreateSalesRecord(c *ginext.Context) {
 	}
 
 	if request.Date == "" {
-		lg.Warn().Msgf("%s Date is required", pkgConst.Warn)
+		lg.Warn().Msgf("%s date is required", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Date is required",
 		})
@@ -87,7 +87,7 @@ func (h *SalesHandler) CreateSalesRecord(c *ginext.Context) {
 	}
 
 	if request.Amount <= 0 {
-		lg.Warn().Float64("amount", request.Amount).Msgf("%s Amount must be positive", pkgConst.Warn)
+		lg.Warn().Float64("amount", request.Amount).Msgf("%s amount must be positive", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Amount must be positive",
 		})
@@ -95,6 +95,7 @@ func (h *SalesHandler) CreateSalesRecord(c *ginext.Context) {
 	}
 
 	if request.Type != "income" && request.Type != "expense" {
+		lg.Warn().Msgf("%s type must be 'income' or 'expense'", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Type must be 'income' or 'expense'",
 		})
@@ -110,7 +111,7 @@ func (h *SalesHandler) CreateSalesRecord(c *ginext.Context) {
 
 	id, err := h.sv.CreateSalesRecord(c.Request.Context(), serviceRequest)
 	if err != nil {
-		lg.Error().Err(err).Msg("Failed to create sales record")
+		lg.Error().Err(err).Msgf("%s failed to create sales record", pkgConst.Error)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error: "Failed to create sales record",
 		})
@@ -130,11 +131,9 @@ func (h *SalesHandler) CreateSalesRecord(c *ginext.Context) {
 func (h *SalesHandler) GetSalesRecords(c *ginext.Context) {
 	lg := h.lg.With().Str("method", "GetSalesRecords").Logger()
 
-	// Get sorting parameters from query
 	field := c.DefaultQuery("field", "id")
 	direction := c.DefaultQuery("direction", "asc")
 
-	// Validate sort options
 	validFields := map[string]bool{
 		"id":       true,
 		"type":     true,
@@ -144,7 +143,7 @@ func (h *SalesHandler) GetSalesRecords(c *ginext.Context) {
 	}
 
 	if !validFields[field] {
-		lg.Warn().Str("field", field).Msgf("%s Invalid sort field", pkgConst.Warn)
+		lg.Warn().Str("field", field).Msgf("%s invalid sort field", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Invalid sort field. Must be one of: id, type, category, date, amount",
 		})
@@ -152,7 +151,7 @@ func (h *SalesHandler) GetSalesRecords(c *ginext.Context) {
 	}
 
 	if direction != "asc" && direction != "desc" {
-		lg.Warn().Str("direction", direction).Msgf("%s Invalid sort direction", pkgConst.Warn)
+		lg.Warn().Str("direction", direction).Msgf("%s invalid sort direction", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Invalid sort direction. Must be 'asc' or 'desc'",
 		})
@@ -166,14 +165,13 @@ func (h *SalesHandler) GetSalesRecords(c *ginext.Context) {
 
 	records, err := h.sv.GetSalesRecords(c.Request.Context(), sortOptions)
 	if err != nil {
-		lg.Error().Err(err).Msg("Failed to get sales records")
+		lg.Error().Err(err).Msgf("%s failed to get sales records", pkgConst.Error)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error: "Failed to get sales records",
 		})
 		return
 	}
 
-	// Convert model.Data to SalesRecord DTO
 	var responseRecords []SalesRecord
 	for _, record := range records {
 		responseRecords = append(responseRecords, SalesRecord{
@@ -201,7 +199,7 @@ func (h *SalesHandler) UpdateSalesRecord(c *ginext.Context) {
 	idParam := c.Param("id")
 	id, err := parseID(idParam)
 	if err != nil {
-		lg.Warn().Str("id", idParam).Msgf("%s Invalid ID format", pkgConst.Warn)
+		lg.Warn().Str("id", idParam).Msgf("%s invalid ID format", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Invalid ID format",
 		})
@@ -220,7 +218,7 @@ func (h *SalesHandler) UpdateSalesRecord(c *ginext.Context) {
 
 	// Validate request fields
 	if request.Type == "" {
-		lg.Warn().Msgf("%s Type is required", pkgConst.Warn)
+		lg.Warn().Msgf("%s type is required", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Type is required",
 		})
@@ -228,7 +226,7 @@ func (h *SalesHandler) UpdateSalesRecord(c *ginext.Context) {
 	}
 
 	if request.Category == "" {
-		lg.Warn().Msgf("%s Category is required", pkgConst.Warn)
+		lg.Warn().Msgf("%s category is required", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Category is required",
 		})
@@ -236,7 +234,7 @@ func (h *SalesHandler) UpdateSalesRecord(c *ginext.Context) {
 	}
 
 	if request.Date == "" {
-		lg.Warn().Msgf("%s Date is required", pkgConst.Warn)
+		lg.Warn().Msgf("%s date is required", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Date is required",
 		})
@@ -244,7 +242,7 @@ func (h *SalesHandler) UpdateSalesRecord(c *ginext.Context) {
 	}
 
 	if request.Amount <= 0 {
-		lg.Warn().Float64("amount", request.Amount).Msgf("%s Amount must be positive", pkgConst.Warn)
+		lg.Warn().Float64("amount", request.Amount).Msgf("%s amount must be positive", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Amount must be positive",
 		})
@@ -252,6 +250,7 @@ func (h *SalesHandler) UpdateSalesRecord(c *ginext.Context) {
 	}
 
 	if request.Type != "income" && request.Type != "expense" {
+		lg.Warn().Msgf("%s type must be 'income' or 'expense'", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Type must be 'income' or 'expense'",
 		})
@@ -267,7 +266,7 @@ func (h *SalesHandler) UpdateSalesRecord(c *ginext.Context) {
 
 	err = h.sv.UpdateSalesRecord(c.Request.Context(), id, serviceRequest)
 	if err != nil {
-		lg.Error().Err(err).Int("ID", id).Msg("Failed to update sales record")
+		lg.Error().Err(err).Int("ID", id).Msgf("%s dailed to update sales record", pkgConst.Error)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error: "Failed to update sales record",
 		})
@@ -290,7 +289,7 @@ func (h *SalesHandler) DeleteSalesRecord(c *ginext.Context) {
 	idParam := c.Param("id")
 	id, err := parseID(idParam)
 	if err != nil {
-		lg.Warn().Str("id", idParam).Msgf("%s Invalid ID format", pkgConst.Warn)
+		lg.Warn().Str("id", idParam).Msgf("%s invalid ID format", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "Invalid ID format",
 		})
@@ -299,7 +298,7 @@ func (h *SalesHandler) DeleteSalesRecord(c *ginext.Context) {
 
 	err = h.sv.DeleteSalesRecord(c.Request.Context(), id)
 	if err != nil {
-		lg.Error().Err(err).Int("ID", id).Msg("Failed to delete sales record")
+		lg.Error().Err(err).Int("ID", id).Msgf("%s failed to delete sales record", pkgConst.Error)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error: "Failed to delete sales record",
 		})
@@ -337,11 +336,9 @@ func parseID(idParam string) (int, error) {
 func (h *SalesHandler) GetAnalytics(c *ginext.Context) {
 	lg := h.lg.With().Str("method", "GetAnalytics").Logger()
 
-	// Get date range parameters from query
 	from := c.DefaultQuery("from", "")
 	to := c.DefaultQuery("to", "")
 
-	// Validate date parameters
 	if from == "" {
 		lg.Warn().Msgf("%s 'from' date parameter is required", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -361,7 +358,7 @@ func (h *SalesHandler) GetAnalytics(c *ginext.Context) {
 	// Call service to get analytics data
 	analytics, err := h.sv.GetAnalytics(c.Request.Context(), from, to)
 	if err != nil {
-		lg.Error().Err(err).Msg("Failed to get analytics data")
+		lg.Error().Err(err).Msgf("%s failed to get analytics data", pkgConst.Error)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error: "Failed to get analytics data",
 		})
@@ -391,21 +388,18 @@ func (h *SalesHandler) GetAnalytics(c *ginext.Context) {
 func (h *SalesHandler) ExportCSV(c *ginext.Context) {
 	lg := h.lg.With().Str("method", "ExportCSV").Logger()
 
-	// Get date range parameters from query
 	from := c.DefaultQuery("from", "")
 	to := c.DefaultQuery("to", "")
 
-	// Call service to get CSV data
 	csvData, err := h.sv.ExportCSV(c.Request.Context(), from, to)
 	if err != nil {
-		lg.Error().Err(err).Msg("Failed to export CSV")
+		lg.Error().Err(err).Msgf("%s failed to export CSV", pkgConst.Error)
 		c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error: "Failed to export CSV",
 		})
 		return
 	}
 
-	// Set headers for CSV file download
 	c.Header("Content-Type", "text/csv")
 	c.Header("Content-Disposition", "attachment; filename=\"sales_export.csv\"")
 
