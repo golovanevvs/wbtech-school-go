@@ -12,6 +12,7 @@ type ISalesRepository interface {
 	GetSalesRecords(ctx context.Context, sortOptions model.SortOptions) ([]model.Data, error)
 	UpdateSalesRecord(ctx context.Context, id int, data model.Data) error
 	DeleteSalesRecord(ctx context.Context, id int) error
+	GetAnalytics(ctx context.Context, from, to string) (model.Analytics, error)
 }
 
 // CreateSalesRecord creates a new sales record
@@ -32,4 +33,9 @@ func (sv *Service) UpdateSalesRecord(ctx context.Context, id int, data model.Dat
 // DeleteSalesRecord deletes a sales record
 func (sv *Service) DeleteSalesRecord(ctx context.Context, id int) error {
 	return sv.salesRp.DeleteSalesRecord(ctx, id)
+}
+
+// GetAnalytics retrieves analytics data for a given period
+func (sv *Service) GetAnalytics(ctx context.Context, from, to string) (model.Analytics, error) {
+	return sv.salesRp.GetAnalytics(ctx, from, to)
 }

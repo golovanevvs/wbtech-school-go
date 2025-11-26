@@ -112,6 +112,80 @@ func (rp *RpPostgres) UpdateSalesRecord(ctx context.Context, id int, data model.
 	return nil
 }
 
+// GetAnalytics retrieves analytics data for a given period
+func (rp *RpPostgres) GetAnalytics(ctx context.Context, from, to string) (model.Analytics, error) {
+	// First, get all records within the date range
+	query := `
+		SELECT amount
+		FROM sales_records
+		WHERE date >= $1 AND date <= $2
+		ORDER BY amount
+	`
+
+	rows, err := rp.db.DB.QueryContext(ctx, query, from, to)
+	if err != nil {
+		return model.Analytics{}, fmt.Errorf("failed to get sales records for analytics: %w", err)
+	}
+	defer rows.Close()
+
+	var amounts []float64
+	for rows.Next() {
+		var amountDB int
+		err := rows.Scan(&amountDB)
+		if err != nil {
+			return model.Analytics{}, fmt.Errorf("failed to scan amount: %w", err)
+		}
+		amounts = append(amounts, float64(amountDB)/100)
+	}
+
+	// If no records found, return empty analytics
+	if len(amounts) == 0 {
+		return model.Analytics{
+			Sum:          0,
+			Avg:          0,
+			Count:        0,
+			Median:       0,
+			Percentile90: 0,
+		}, nil
+	}
+
+	// Calculate basic metrics
+	var sum float64
+	for _, amount := range amounts {
+		sum += amount
+	}
+	count := len(amounts)
+	avg := sum / float64(count)
+
+	// Calculate median
+	var median float64
+	if count%2 == 0 {
+		// Even number of elements
+		median = (amounts[count/2-1] + amounts[count/2]) / 2
+	} else {
+		// Odd number of elements
+		median = amounts[count/2]
+	}
+
+	// Calculate 90th percentile
+	percentile90Index := int(float64(count) * 0.9)
+	if percentile90Index >= count {
+		percentile90Index = count - 1
+	}
+	if percentile90Index < 0 {
+		percentile90Index = 0
+	}
+	percentile90 := amounts[percentile90Index]
+
+	return model.Analytics{
+		Sum:          sum,
+		Avg:          avg,
+		Count:        count,
+		Median:       median,
+		Percentile90: percentile90,
+	}, nil
+}
+
 // DeleteSalesRecord deletes a sales record
 func (rp *RpPostgres) DeleteSalesRecord(ctx context.Context, id int) error {
 	query := `

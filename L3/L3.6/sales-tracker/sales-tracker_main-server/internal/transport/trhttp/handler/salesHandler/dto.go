@@ -55,3 +55,18 @@ type UpdateSalesRecordResponse struct {
 type DeleteSalesRecordResponse struct {
 	ID int `json:"id"`
 }
+
+// AnalyticsRequest represents request for getting analytics
+type AnalyticsRequest struct {
+	From string `json:"from"`
+	To   string `json:"to"`
+}
+
+// AnalyticsData represents analytics metrics response
+type AnalyticsData struct {
+	Sum          float64 `json:"sum"`
+	Avg          float64 `json:"avg"`
+	Count        int     `json:"count"`
+	Median       float64 `json:"median"`
+	Percentile90 float64 `json:"percentile90"`
+}

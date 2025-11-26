@@ -17,6 +17,7 @@ type IService interface {
 	GetSalesRecords(ctx context.Context, sortOptions model.SortOptions) ([]model.Data, error)
 	UpdateSalesRecord(ctx context.Context, id int, data model.Data) error
 	DeleteSalesRecord(ctx context.Context, id int) error
+	GetAnalytics(ctx context.Context, from, to string) (model.Analytics, error)
 }
 
 // SalesHandler handles HTTP requests for SalesRecord
@@ -42,6 +43,7 @@ func (h *SalesHandler) RegisterRoutes() {
 	h.rt.GET("/items", h.GetSalesRecords)
 	h.rt.PUT("/items/:id", h.UpdateSalesRecord)
 	h.rt.DELETE("/items/:id", h.DeleteSalesRecord)
+	h.rt.GET("/analytics", h.GetAnalytics)
 }
 
 // CreateSalesRecord handles POST /items for creating a new record
@@ -327,4 +329,58 @@ func parseID(idParam string) (int, error) {
 	}
 
 	return id, nil
+}
+
+// GetAnalytics handles GET /analytics for retrieving analytics data
+func (h *SalesHandler) GetAnalytics(c *ginext.Context) {
+	lg := h.lg.With().Str("method", "GetAnalytics").Logger()
+
+	// Get date range parameters from query
+	from := c.DefaultQuery("from", "")
+	to := c.DefaultQuery("to", "")
+
+	// Validate date parameters
+	if from == "" {
+		lg.Warn().Msgf("%s 'from' date parameter is required", pkgConst.Warn)
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "Parameter 'from' is required",
+		})
+		return
+	}
+
+	if to == "" {
+		lg.Warn().Msgf("%s 'to' date parameter is required", pkgConst.Warn)
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "Parameter 'to' is required",
+		})
+		return
+	}
+
+	// Call service to get analytics data
+	analytics, err := h.sv.GetAnalytics(c.Request.Context(), from, to)
+	if err != nil {
+		lg.Error().Err(err).Msg("Failed to get analytics data")
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error: "Failed to get analytics data",
+		})
+		return
+	}
+
+	response := AnalyticsData{
+		Sum:          analytics.Sum,
+		Avg:          analytics.Avg,
+		Count:        analytics.Count,
+		Median:       analytics.Median,
+		Percentile90: analytics.Percentile90,
+	}
+
+	lg.Debug().
+		Float64("sum", analytics.Sum).
+		Float64("avg", analytics.Avg).
+		Int("count", analytics.Count).
+		Float64("median", analytics.Median).
+		Float64("percentile90", analytics.Percentile90).
+		Msgf("%s analytics retrieved successfully", pkgConst.OpSuccess)
+
+	c.JSON(http.StatusOK, response)
 }
