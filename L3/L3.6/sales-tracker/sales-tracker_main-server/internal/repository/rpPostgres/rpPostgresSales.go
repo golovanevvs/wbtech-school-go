@@ -2,6 +2,7 @@ package rpPostgres
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strings"
 
@@ -33,8 +34,7 @@ func (rp *RpPostgres) CreateSalesRecord(ctx context.Context, data model.Data) (i
 
 // GetSalesRecords retrieves sales records with sorting
 func (rp *RpPostgres) GetSalesRecords(ctx context.Context, sortOptions model.SortOptions) ([]model.Data, error) {
-	// Build the ORDER BY clause based on sort options
-	orderBy := "id" // default sorting by ID
+	orderBy := "id"
 	if sortOptions.Field != "" {
 		switch sortOptions.Field {
 		case "id":
@@ -115,32 +115,24 @@ func (rp *RpPostgres) UpdateSalesRecord(ctx context.Context, id int, data model.
 
 // GetAnalytics retrieves analytics data for a given period
 func (rp *RpPostgres) GetAnalytics(ctx context.Context, from, to string) (model.Analytics, error) {
-	// First, get all records within the date range
 	query := `
-		SELECT amount
+		SELECT 
+			SUM(amount) as total_sum,
+			AVG(amount) as avg_amount,
+			COUNT(*) as record_count,
+			PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY amount) as median_amount,
+			PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY amount) as percentile_90_amount
 		FROM sales_records
 		WHERE date >= $1 AND date <= $2
-		ORDER BY amount
 	`
 
 	rows, err := rp.db.DB.QueryContext(ctx, query, from, to)
 	if err != nil {
-		return model.Analytics{}, fmt.Errorf("failed to get sales records for analytics: %w", err)
+		return model.Analytics{}, fmt.Errorf("failed to get analytics from Postgres: %w", err)
 	}
 	defer rows.Close()
 
-	var amounts []float64
-	for rows.Next() {
-		var amountDB int
-		err := rows.Scan(&amountDB)
-		if err != nil {
-			return model.Analytics{}, fmt.Errorf("failed to scan amount: %w", err)
-		}
-		amounts = append(amounts, float64(amountDB)/100)
-	}
-
-	// If no records found, return empty analytics
-	if len(amounts) == 0 {
+	if !rows.Next() {
 		return model.Analytics{
 			Sum:          0,
 			Avg:          0,
@@ -150,38 +142,38 @@ func (rp *RpPostgres) GetAnalytics(ctx context.Context, from, to string) (model.
 		}, nil
 	}
 
-	// Calculate basic metrics
-	var sum float64
-	for _, amount := range amounts {
-		sum += amount
-	}
-	count := len(amounts)
-	avg := sum / float64(count)
+	var totalSum, avgAmount, medianAmount, percentile90Amount sql.NullFloat64
+	var recordCount int
 
-	// Calculate median
-	var median float64
-	if count%2 == 0 {
-		// Even number of elements
-		median = (amounts[count/2-1] + amounts[count/2]) / 2
-	} else {
-		// Odd number of elements
-		median = amounts[count/2]
+	err = rows.Scan(&totalSum, &avgAmount, &recordCount, &medianAmount, &percentile90Amount)
+	if err != nil {
+		return model.Analytics{}, fmt.Errorf("failed to scan analytics data: %w", err)
 	}
 
-	// Calculate 90th percentile
-	percentile90Index := int(float64(count) * 0.9)
-	if percentile90Index >= count {
-		percentile90Index = count - 1
+	sum := 0.0
+	if totalSum.Valid {
+		sum = totalSum.Float64 / 100
 	}
-	if percentile90Index < 0 {
-		percentile90Index = 0
+
+	avg := 0.0
+	if avgAmount.Valid {
+		avg = avgAmount.Float64 / 100
 	}
-	percentile90 := amounts[percentile90Index]
+
+	median := 0.0
+	if medianAmount.Valid {
+		median = medianAmount.Float64 / 100
+	}
+
+	percentile90 := 0.0
+	if percentile90Amount.Valid {
+		percentile90 = percentile90Amount.Float64 / 100
+	}
 
 	return model.Analytics{
 		Sum:          sum,
 		Avg:          avg,
-		Count:        count,
+		Count:        recordCount,
 		Median:       median,
 		Percentile90: percentile90,
 	}, nil
@@ -189,7 +181,6 @@ func (rp *RpPostgres) GetAnalytics(ctx context.Context, from, to string) (model.
 
 // ExportCSV exports sales records to CSV format
 func (rp *RpPostgres) ExportCSV(ctx context.Context, from, to string) ([]byte, error) {
-	// Build query based on date range
 	query := `
 		SELECT id, type, category, date, amount
 		FROM sales_records
@@ -226,10 +217,8 @@ func (rp *RpPostgres) ExportCSV(ctx context.Context, from, to string) ([]byte, e
 	}
 	defer rows.Close()
 
-	// Build CSV content
 	var csvContent strings.Builder
 
-	// Write CSV header
 	csvContent.WriteString("ID,Type,Category,Date,Amount\n")
 
 	for rows.Next() {
@@ -243,7 +232,6 @@ func (rp *RpPostgres) ExportCSV(ctx context.Context, from, to string) ([]byte, e
 
 		record.Amount = float64(amountDB) / 100
 
-		// Escape CSV fields that might contain commas or quotes
 		escapeCSVField := func(field string) string {
 			if strings.Contains(field, ",") || strings.Contains(field, "\"") || strings.Contains(field, "\n") {
 				return "\"" + strings.ReplaceAll(field, "\"", "\"\"") + "\""
