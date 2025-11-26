@@ -178,7 +178,7 @@ export default function ItemsList() {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => (window.location.href = "/add-item")}
+            // onClick={() => (window.location.href = "/add-item")}
             sx={{
               minWidth: "140px",
               fontSize: "0.9rem",
