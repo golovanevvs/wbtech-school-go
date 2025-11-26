@@ -176,7 +176,7 @@ export default function ItemsList() {
   ]
 
   return (
-    <Box sx={{ width: "100%",maxWidth: 1000, mx: "auto" }}>
+    <Box sx={{ width: "100%", maxWidth: "100vw", mx: "auto", px: 2, }}>
       <Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
         <Link href="/add-item">
           <Button
@@ -247,6 +247,8 @@ export default function ItemsList() {
       <MaterialReactTable
         columns={columns}
         data={records}
+        enableColumnVirtualization
+        enableRowVirtualization
         state={{ isLoading: loading }}
         initialState={{
           pagination: {
@@ -257,14 +259,19 @@ export default function ItemsList() {
         muiTableContainerProps={{
           sx: {
             width: "100%",
-            marginLeft: "0px",
-            marginRight: "0px",
-            minHeight: "400px",
+            maxWidth: "100vw",
+            overflow: "auto",
+            "&::-webkit-scrollbar": {
+              height: "6px",
+            },
           },
         }}
         muiTableProps={{
           sx: {
             width: "100%",
+            minWidth: "100%",
+            tableLayout: "auto",
+            overflow: "auto",
           },
         }}
       />
