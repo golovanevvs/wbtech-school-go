@@ -7,7 +7,7 @@ export default function Home() {
  
 
    return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ p: 3 }}>
       {/* Main content - Items List */}
       <ItemsList />
     </Box>

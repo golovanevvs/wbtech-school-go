@@ -176,7 +176,7 @@ export default function ItemsList() {
   ]
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ width: "100%",maxWidth: 1000, mx: "auto" }}>
       <Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
         <Link href="/add-item">
           <Button
@@ -214,7 +214,7 @@ export default function ItemsList() {
           flexWrap: "wrap",
         }}
       >
-        <FormControl sx={{ minWidth: 120 }}>
+        <FormControl sx={{ minWidth: 200 }}>
           <InputLabel>Поле сортировки</InputLabel>
           <Select
             value={sortField}
@@ -256,9 +256,9 @@ export default function ItemsList() {
         }}
         muiTableContainerProps={{
           sx: {
-            width: "100vw",
-            marginLeft: "-16px",
-            marginRight: "-16px",
+            width: "100%",
+            marginLeft: "0px",
+            marginRight: "0px",
             minHeight: "400px",
           },
         }}

@@ -27,13 +27,11 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
     date: "", // Строка для API
     amount: 0,
   })
-  
+
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null) // Dayjs для DatePicker
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-
-  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,13 +62,13 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
       // Конвертируем Dayjs в строку для API
       const apiData = {
         ...formData,
-        date: selectedDate.format("YYYY-MM-DD")
+        date: selectedDate.format("YYYY-MM-DD"),
       }
 
       await createSalesRecord(apiData)
-      
+
       setSuccess(true)
-      
+
       // Reset form
       setFormData({
         type: "income",
@@ -84,18 +82,21 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
         onSuccess()
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка при добавлении записи")
+      setError(
+        err instanceof Error ? err.message : "Ошибка при добавлении записи"
+      )
     } finally {
       setLoading(false)
     }
   }
 
-  const handleChange = (field: keyof SalesRecordFormData) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const value = field === "amount" ? parseFloat(e.target.value) || 0 : e.target.value
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }
+  const handleChange =
+    (field: keyof SalesRecordFormData) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const value =
+        field === "amount" ? parseFloat(e.target.value) || 0 : e.target.value
+      setFormData((prev) => ({ ...prev, [field]: value }))
+    }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
@@ -132,7 +133,7 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
               textField: {
                 fullWidth: true,
                 required: true,
-                margin: "normal"
+                margin: "normal",
               },
             }}
           />
@@ -143,10 +144,6 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
             value={formData.amount || ""}
             onChange={handleChange("amount")}
             required
-            inputProps={{
-              step: "1.00",
-              min: "0",
-            }}
           />
 
           {error && (
@@ -161,12 +158,12 @@ export default function AddItemForm({ onSuccess }: AddItemFormProps) {
             </Alert>
           )}
 
-          <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+          <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
             <Button type="submit" disabled={loading} sx={{ flex: 1 }}>
               {loading ? "Добавление..." : "Добавить запись"}
             </Button>
-            <Link href="/" style={{ textDecoration: 'none', flex: 1 }}>
-              <Button variant="outlined" sx={{ width: '100%' }}>
+            <Link href="/" style={{ textDecoration: "none", flex: 1 }}>
+              <Button variant="outlined" sx={{ width: "100%" }}>
                 Отмена
               </Button>
             </Link>
