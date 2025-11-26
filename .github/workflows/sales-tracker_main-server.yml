@@ -62,7 +62,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.25.2"
+          go-version: "1.25.4"
           cache-dependency-path: L3/L3.6/sales-tracker/sales-tracker_main-server/go.sum
 
       - name: Build Go binary
