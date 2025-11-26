@@ -19,4 +19,5 @@ web-client-deps-init:
 	pnpm add @mui/material @emotion/react @emotion/styled && \
 	pnpm add @fontsource/roboto && \
 	pnpm add @mui/icons-material && \
+	pnpm add @mui/material-nextjs \
 	pnpm add material-react-table @mui/x-date-pickers
