@@ -1,10 +1,16 @@
 "use client"
 
 import { createTheme } from "@mui/material/styles"
+import { Geist } from "next/font/google"
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+})
 
 export const baseTheme = createTheme({
   typography: {
-    fontFamily: "var(--font-geist), sans-serif",
+    fontFamily: geist.style.fontFamily,
   },
   components: {
     MuiTypography: {
