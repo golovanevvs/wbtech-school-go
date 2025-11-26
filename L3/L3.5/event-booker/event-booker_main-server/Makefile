@@ -90,8 +90,10 @@ kafka-create-topic:
 
 TELEGRAM = providers/telegram
 
-.PHONY: telegram-install telegram-check telegram-delete telegram-test telegram-help
+.PHONY: telegram-install-deploy telegram-install telegram-check telegram-delete telegram-test
 
+telegram-install-deploy:
+	$(MAKE_CMD) -C $(TELEGRAM) install-deploy
 telegram-install:
 	$(MAKE_CMD) -C $(TELEGRAM) install
 telegram-check:
@@ -100,7 +102,3 @@ telegram-delete:
 	$(MAKE_CMD) -C $(TELEGRAM) delete
 telegram-test:
 	$(MAKE_CMD) -C $(TELEGRAM) test
-telegram-install-detailed:
-	$(MAKE_CMD) -C $(TELEGRAM) install-detailed
-telegram-help:
-	$(MAKE_CMD) -C $(TELEGRAM) help
