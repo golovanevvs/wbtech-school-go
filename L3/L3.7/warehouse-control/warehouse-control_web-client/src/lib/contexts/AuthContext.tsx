@@ -16,12 +16,15 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
+  error: string | null
 
   // Функции
   login: (username: string, password: string) => Promise<boolean>
+  register: (username: string, password: string, name: string, role: string) => Promise<boolean>
   logout: () => void
   checkAuth: () => Promise<void>
   hasRole: (roles: UserRole[]) => boolean
+  clearError: () => void
 }
 
 // Контекст
@@ -45,6 +48,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Состояние
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Авторизован?
   const isAuthenticated = user !== null
@@ -53,11 +57,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkAuth = async () => {
     try {
       setIsLoading(true)
+      setError(null)
       const currentUser = await authAPI.getCurrentUser()
       setUser(currentUser)
     } catch (error) {
       console.error("Check auth failed:", error)
       setUser(null)
+      if (error instanceof Error) {
+        setError(error.message)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -70,6 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ): Promise<boolean> => {
     try {
       setIsLoading(true)
+      setError(null)
       
       await authAPI.login(username, password)
 
@@ -80,6 +89,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return true
     } catch (error) {
       console.error("Login failed:", error)
+      if (error instanceof Error) {
+        setError(error.message)
+      }
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Функция регистрации нового пользователя
+  const register = async (
+    username: string,
+    password: string,
+    name: string,
+    role: string
+  ): Promise<boolean> => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      await authAPI.register(username, password, name, role)
+
+      // Получение данных пользователя после регистрации
+      const currentUser = await authAPI.getCurrentUser()
+      setUser(currentUser)
+
+      return true
+    } catch (error) {
+      console.error("Registration failed:", error)
+      if (error instanceof Error) {
+        setError(error.message)
+      }
       return false
     } finally {
       setIsLoading(false)
@@ -100,7 +141,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Функция проверки ролей
   const hasRole = (roles: UserRole[]): boolean => {
     if (!user) return false
-    return roles.includes(user.role)
+    return roles.includes(user.user_role)
+  }
+
+  // Функция очистки ошибки
+  const clearError = () => {
+    setError(null)
   }
 
   // Проверка авторизации при монтировании компонента
@@ -113,10 +159,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isLoading,
     isAuthenticated,
+    error,
     login,
+    register,
     logout,
     checkAuth,
     hasRole,
+    clearError,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

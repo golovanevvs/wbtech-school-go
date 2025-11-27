@@ -2,10 +2,11 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter"
 import { Box, Stack } from "@mui/material"
-import ThemeProvider from "@/ui/ThemeProvider"
+import ThemeProvider from "@/lib/components/ThemeProvider"
 import Header from "@/ui/Header"
 import Footer from "@/ui/Footer"
 import "./globals.css"
+import { AuthProvider } from "@/lib/contexts/AuthContext"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,33 +33,36 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AppRouterCacheProvider>
           <ThemeProvider>
-            <Box
-              sx={{
-                width: "100%",
-                minHeight: "100vh",
-                px: { xs: 0, sm: 2 },
-                py: 2,
-                bgcolor: "background.default",
-                maxWidth: "100vw",
-                mx: "auto",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <Stack spacing={4} alignItems="center"
-                sx=
-                {{
-                  flex: 1,
+            <AuthProvider>
+              <Box
+                sx={{
                   width: "100%",
+                  minHeight: "100vh",
+                  px: { xs: 0, sm: 2 },
+                  py: 2,
+                  bgcolor: "background.default",
+                  maxWidth: "100vw",
+                  mx: "auto",
                   display: "flex",
                   flexDirection: "column",
                 }}
+              >
+                <Stack
+                  spacing={4}
+                  alignItems="center"
+                  sx={{
+                    flex: 1,
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                  }}
                 >
-                <Header />
-                <main style={{ flex: 1, width: "100%" }}>{children}</main>
-                <Footer />
-              </Stack>
-            </Box>
+                  <Header />
+                  <main style={{ flex: 1, width: "100%" }}>{children}</main>
+                  <Footer />
+                </Stack>
+              </Box>
+            </AuthProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

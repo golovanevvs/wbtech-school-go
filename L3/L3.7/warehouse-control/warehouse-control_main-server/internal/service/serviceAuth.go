@@ -13,12 +13,11 @@ import (
 
 // IUserRpForAuth interface for user repository (needed for authentication)
 type IUserRpForAuth interface {
-	GetByEmail(email string) (*model.User, error)
+	GetByUsername(username string) (*model.User, error)
 	Create(user *model.User) (*model.User, error)
 	GetByID(id int) (*model.User, error)
 	Update(user *model.User) error
 	Delete(id int) error
-	SaveTelegramChatID(ctx context.Context, userID int, chatID *int64) error
 }
 
 // IRefreshTokenRp interface for refresh token repository
@@ -39,8 +38,8 @@ type AuthService struct {
 
 // Claims represents JWT claims
 type Claims struct {
-	UserID int    `json:"user_id"`
-	Email  string `json:"email"`
+	UserID   int    `json:"user_id"`
+	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
 
@@ -50,10 +49,10 @@ func NewAuthService(cfg *Config, ur IUserRpForAuth, rtr IRefreshTokenRp) *AuthSe
 }
 
 // Register registers a new user
-func (sv *AuthService) Register(ctx context.Context, email, password, name string) (*model.User, error) {
-	existingUser, err := sv.userRp.GetByEmail(email)
+func (sv *AuthService) Register(ctx context.Context, username, password, name, role string) (*model.User, error) {
+	existingUser, err := sv.userRp.GetByUsername(username)
 	if err == nil && existingUser != nil {
-		return nil, errors.New("user with this email already exists")
+		return nil, errors.New("user with this username already exists")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -62,13 +61,12 @@ func (sv *AuthService) Register(ctx context.Context, email, password, name strin
 	}
 
 	user := &model.User{
-		Email:                 email,
-		Name:                  name,
-		PasswordHash:          string(hashedPassword),
-		TelegramNotifications: false,
-		EmailNotifications:    true,
-		CreatedAt:             time.Now(),
-		UpdatedAt:             time.Now(),
+		UserName:     username,
+		Name:         name,
+		PasswordHash: string(hashedPassword),
+		UserRole:     role,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
 
 	createdUser, err := sv.userRp.Create(user)
@@ -94,21 +92,16 @@ func (sv *AuthService) DeleteUser(ctx context.Context, id int) error {
 	return sv.userRp.Delete(id)
 }
 
-// UpdateTelegramChatID updates the Telegram chat ID for a user
-func (sv *AuthService) UpdateTelegramChatID(ctx context.Context, userID int, chatID *int64) error {
-	return sv.userRp.SaveTelegramChatID(ctx, userID, chatID)
-}
-
 // Login authenticates user and returns access and refresh tokens
-func (sv *AuthService) Login(ctx context.Context, email, password string) (string, string, error) {
-	user, err := sv.userRp.GetByEmail(email)
+func (sv *AuthService) Login(ctx context.Context, username, password string) (string, string, error) {
+	user, err := sv.userRp.GetByUsername(username)
 	if err != nil {
-		return "", "", fmt.Errorf("invalid email or password")
+		return "", "", fmt.Errorf("invalid username or password")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return "", "", fmt.Errorf("invalid email or password")
+		return "", "", fmt.Errorf("invalid username or password")
 	}
 
 	accessToken, err := sv.generateAccessToken(user)
@@ -127,8 +120,8 @@ func (sv *AuthService) Login(ctx context.Context, email, password string) (strin
 // generateAccessToken generates a new access token
 func (sv *AuthService) generateAccessToken(user *model.User) (string, error) {
 	claims := &Claims{
-		UserID: user.ID,
-		Email:  user.Email,
+		UserID:   user.ID,
+		Username: user.UserName,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(sv.cfg.AccessTokenExpiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -209,5 +202,5 @@ func (sv *AuthService) ValidateToken(ctx context.Context, tokenString string) (i
 		return 0, "", errors.New("invalid token")
 	}
 
-	return claims.UserID, claims.Email, nil
+	return claims.UserID, claims.Username, nil
 }

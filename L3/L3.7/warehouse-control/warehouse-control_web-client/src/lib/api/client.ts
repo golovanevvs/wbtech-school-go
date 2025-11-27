@@ -60,6 +60,10 @@ class ApiClient {
 
       return {} as T
     } catch (error) {
+      if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
+        throw new Error("Сервер недоступен. Проверьте подключение к интернету или обратитесь к администратору.")
+      }
+      
       if (error instanceof Error) {
         if (
           error.message.includes("401") ||

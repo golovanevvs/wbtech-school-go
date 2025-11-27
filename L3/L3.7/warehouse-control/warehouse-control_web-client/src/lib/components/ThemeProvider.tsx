@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useMemo } from "react"
 import { ThemeProvider as MuiThemeProvider } from "@mui/material/styles"
 import CssBaseline from "@mui/material/CssBaseline"
 import { PaletteMode } from "@mui/material"
-import { lightTheme, darkTheme } from "../lib/theme"
+import { lightTheme, darkTheme } from "../../lib/theme"
 
 type ThemeContextType = {
   mode: PaletteMode

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/model"
@@ -15,14 +16,13 @@ import (
 
 // ISvForAuthHandler interface for auth handler service
 type ISvForAuthHandler interface {
-	Register(ctx context.Context, email, password, name string) (*model.User, error)
-	Login(ctx context.Context, email, password string) (string, string, error)
+	Register(ctx context.Context, username, password, name, role string) (*model.User, error)
+	Login(ctx context.Context, username, password string) (string, string, error)
 	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 	ValidateToken(ctx context.Context, tokenString string) (int, string, error)
 	GetUserByID(ctx context.Context, id int) (*model.User, error)
 	UpdateUser(ctx context.Context, user *model.User) error
 	DeleteUser(ctx context.Context, id int) error
-	UpdateTelegramChatID(ctx context.Context, userID int, chatID *int64) error
 }
 
 // AuthHandler handles authentication requests
@@ -74,9 +74,10 @@ func (hd *AuthHandler) Register(c *gin.Context) {
 	}
 
 	var req struct {
-		Email    string `json:"email" binding:"required,email"`
+		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required,min=6"`
 		Name     string `json:"name" binding:"required"`
+		Role     string `json:"role" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -85,21 +86,21 @@ func (hd *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := hd.sv.Register(c.Request.Context(), req.Email, req.Password, req.Name)
+	user, err := hd.sv.Register(c.Request.Context(), req.Username, req.Password, req.Name, req.Role)
 	if err != nil {
-		lg.Warn().Err(err).Str("email", req.Email).Msgf("%s failed to register user", pkgConst.Warn)
+		lg.Warn().Err(err).Str("username", req.Username).Msgf("%s failed to register user", pkgConst.Warn)
 		c.JSON(http.StatusInternalServerError, ginext.H{"error": err.Error()})
 		return
 	}
 
-	accessToken, refreshToken, err := hd.sv.Login(c.Request.Context(), req.Email, req.Password)
+	accessToken, refreshToken, err := hd.sv.Login(c.Request.Context(), req.Username, req.Password)
 	if err != nil {
-		lg.Warn().Err(err).Str("email", req.Email).Msgf("%s failed to generate tokens after registration", pkgConst.Warn)
+		lg.Warn().Err(err).Str("username", req.Username).Msgf("%s failed to generate tokens after registration", pkgConst.Warn)
 		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Failed to generate tokens"})
 		return
 	}
 
-	lg.Debug().Int("user_id", user.ID).Str("email", user.Email).Msgf("%s user registered successfully", pkgConst.OpSuccess)
+	lg.Debug().Int("user_id", user.ID).Str("username", user.UserName).Msgf("%s user registered successfully", pkgConst.OpSuccess)
 
 	c.SetCookie("access_token", accessToken, 3600, "/", hd.webHost, false, true)
 	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", hd.webHost, false, true)
@@ -121,7 +122,7 @@ func (hd *AuthHandler) Login(c *gin.Context) {
 	}
 
 	var req struct {
-		Email    string `json:"email" binding:"required,email"`
+		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
 	}
 
@@ -131,14 +132,14 @@ func (hd *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := hd.sv.Login(c.Request.Context(), req.Email, req.Password)
+	accessToken, refreshToken, err := hd.sv.Login(c.Request.Context(), req.Username, req.Password)
 	if err != nil {
-		lg.Warn().Err(err).Str("email", req.Email).Msgf("%s failed to login user", pkgConst.Warn)
+		lg.Warn().Err(err).Str("username", req.Username).Msgf("%s failed to login user", pkgConst.Warn)
 		c.JSON(http.StatusUnauthorized, ginext.H{"error": err.Error()})
 		return
 	}
 
-	lg.Debug().Str("email", req.Email).Msgf("%s user logged in successfully", pkgConst.OpSuccess)
+	lg.Debug().Str("username", req.Username).Msgf("%s user logged in successfully", pkgConst.OpSuccess)
 
 	c.SetCookie("access_token", accessToken, 3600, "/", hd.webHost, false, true)
 	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", hd.webHost, false, true)
@@ -248,11 +249,8 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 	}
 
 	var req struct {
-		Name                  string  `json:"name"`
-		TelegramUsername      *string `json:"telegramUsername"`
-		TelegramNotifications *bool   `json:"telegramNotifications"`
-		EmailNotifications    *bool   `json:"emailNotifications"`
-		ResetTelegramChatID   *bool   `json:"resetTelegramChatID"`
+		Name     string `json:"name"`
+		UserRole string `json:"user_role"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -262,16 +260,10 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 	}
 
 	user := &model.User{
-		ID:               userIDInt,
-		Name:             req.Name,
-		TelegramUsername: req.TelegramUsername,
-	}
-
-	if req.TelegramNotifications != nil {
-		user.TelegramNotifications = *req.TelegramNotifications
-	}
-	if req.EmailNotifications != nil {
-		user.EmailNotifications = *req.EmailNotifications
+		ID:        userIDInt,
+		Name:      req.Name,
+		UserRole:  req.UserRole,
+		UpdatedAt: time.Now(),
 	}
 
 	err = hd.sv.UpdateUser(c.Request.Context(), user)
@@ -279,16 +271,6 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to update user", pkgConst.Warn)
 		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Failed to update user"})
 		return
-	}
-
-	if req.ResetTelegramChatID != nil && *req.ResetTelegramChatID {
-		lg.Debug().Int("user_id", userIDInt).Msg("Resetting Telegram chat ID")
-
-		var nilChatID *int64 = nil
-		err = hd.sv.UpdateTelegramChatID(c.Request.Context(), userIDInt, nilChatID)
-		if err != nil {
-			lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s failed to reset Telegram chat ID", pkgConst.Warn)
-		}
 	}
 
 	updatedUser, err := hd.sv.GetUserByID(c.Request.Context(), userIDInt)

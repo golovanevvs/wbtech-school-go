@@ -1,9 +1,9 @@
-import { User } from "../types/auth";
+import { User, RegisterResponse } from "../types/auth";
 import apiClient from "./client";
 
 // Интерфейсы для API ответов
 interface LoginResponse {
-  user: User
+  message: string
 }
 
 interface GetUserResponse {
@@ -39,6 +39,31 @@ export const authAPI = {
     } catch (error) {
       console.error('Login failed:', error)
       throw new Error('Не удалось выполнить вход. Проверьте логин и пароль.')
+    }
+  },
+
+  /**
+   * Регистрация нового пользователя
+   * @param username Имя пользователя
+   * @param password Пароль
+   * @param name Отображаемое имя
+   * @param role Роль пользователя
+   * @returns Данные пользователя
+   */
+  async register(username: string, password: string, name: string, role: string): Promise<RegisterResponse> {
+    try {
+      const response = await apiClient.post<RegisterResponse>('/auth/register', {
+        username,
+        password,
+        name,
+        role,
+      })
+      
+      // Сервер уже установил cookie с токенами
+      return response
+    } catch (error) {
+      console.error('Registration failed:', error)
+      throw new Error('Не удалось зарегистрироваться. Проверьте введенные данные.')
     }
   },
 
