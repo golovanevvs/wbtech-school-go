@@ -26,6 +26,11 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
   const router = useRouter()
   const { login, register, error: authError, clearError } = useAuth()
 
+  // Логирование для отладки
+  console.log("AuthForm render - authError:", authError)
+  console.log("AuthForm render - mode:", mode)
+  console.log("AuthForm render - isLoading:", isLoading)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -173,6 +178,13 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
             {error || authError}
           </Alert>
         )}
+
+        {/* Логирование условия для Alert */}
+        {(() => {
+          const showAlert = error || authError
+          console.log("Alert condition check - error:", error, "authError:", authError, "showAlert:", showAlert)
+          return null
+        })()}
 
         <Button 
           type="submit" 

@@ -90,6 +90,10 @@ export const authAPI = {
       return response.user
     } catch (error) {
       console.error('Get current user failed:', error)
+      // Пробрасываем оригинальную ошибку, чтобы пользователь видел правильное сообщение
+      if (error instanceof Error) {
+        throw error
+      }
       throw new Error('Не удалось получить данные пользователя')
     }
   },

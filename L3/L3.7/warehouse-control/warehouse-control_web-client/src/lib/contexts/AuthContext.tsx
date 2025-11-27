@@ -50,6 +50,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Логирование изменений error
+  console.log("AuthProvider render - error:", error)
+
   // Авторизован?
   const isAuthenticated = user !== null
 
@@ -58,12 +61,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true)
       setError(null)
+      console.log("checkAuth: starting...")
       const currentUser = await authAPI.getCurrentUser()
       setUser(currentUser)
+      console.log("checkAuth: success, user:", currentUser)
     } catch (error) {
       console.error("Check auth failed:", error)
       setUser(null)
       if (error instanceof Error) {
+        console.log("checkAuth: setting error:", error.message)
         setError(error.message)
       }
     } finally {
@@ -146,6 +152,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Функция очистки ошибки
   const clearError = () => {
+    console.log("clearError called")
     setError(null)
   }
 
