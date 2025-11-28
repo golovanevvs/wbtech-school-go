@@ -3,7 +3,7 @@
 ## План реализация
 
 - warehouse-control_main-server - api-сервер на Go;
-- warehouse-control_web-client - web-клиент на next.js.
+- warehouse-control_web-client - web-клиент на next.js (для запуска команд вместо npm использовать pnpm).
 
 ### web-клиент (next.js)
 

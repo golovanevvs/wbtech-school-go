@@ -153,23 +153,31 @@ func (hd *AuthHandler) Login(c *gin.Context) {
 func (hd *AuthHandler) Refresh(c *gin.Context) {
 	lg := hd.lg.With().Str("handler", "Refresh").Logger()
 
-	if !strings.Contains(c.ContentType(), "application/json") {
-		lg.Warn().Str("content-type", c.ContentType()).Int("status", http.StatusBadRequest).Msgf("%s invalid content-type", pkgConst.Warn)
-		c.JSON(http.StatusBadRequest, ginext.H{"error": pkgErrors.ErrContentTypeAJ.Error()})
-		return
+	var refreshToken string
+
+	// Try to get refresh token from cookie first
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil || refreshToken == "" {
+		// If not found in cookie, try to get from request body
+		if strings.Contains(c.ContentType(), "application/json") {
+			var req struct {
+				RefreshToken string `json:"refreshToken" binding:"required"`
+			}
+
+			if err := c.ShouldBindJSON(&req); err != nil {
+				lg.Warn().Err(err).Msgf("%s error bind json", pkgConst.Warn)
+				c.JSON(http.StatusBadRequest, ginext.H{"error": err.Error()})
+				return
+			}
+			refreshToken = req.RefreshToken
+		} else {
+			lg.Warn().Str("content-type", c.ContentType()).Msg("No refresh token found in cookie or request body")
+			c.JSON(http.StatusBadRequest, ginext.H{"error": "Refresh token is required"})
+			return
+		}
 	}
 
-	var req struct {
-		RefreshToken string `json:"refreshToken" binding:"required"`
-	}
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		lg.Warn().Err(err).Msgf("%s error bind json", pkgConst.Warn)
-		c.JSON(http.StatusBadRequest, ginext.H{"error": err.Error()})
-		return
-	}
-
-	newAccessToken, newRefreshToken, err := hd.sv.RefreshTokens(c.Request.Context(), req.RefreshToken)
+	newAccessToken, newRefreshToken, err := hd.sv.RefreshTokens(c.Request.Context(), refreshToken)
 	if err != nil {
 		lg.Warn().Err(err).Msgf("%s failed to refresh tokens", pkgConst.Warn)
 		c.JSON(http.StatusUnauthorized, ginext.H{"error": err.Error()})
