@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useCallback,
 } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { User, UserRole } from "../types/auth"
@@ -60,31 +61,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const pathname = usePathname()
   const router = useRouter()
 
-  // Функция проверки авторизации при загрузке
-  const checkAuth = async () => {
-    try {
-      setIsChecking(true)
-      setIsLoading(true)
-      setError(null)
-      console.log("checkAuth: starting...")
-      const currentUser = await authAPI.getCurrentUser()
-      setUser(currentUser)
-      console.log("checkAuth: success, user:", currentUser)
-    } catch (error) {
-      console.error("Check auth failed:", error)
-      setUser(null)
-      if (error instanceof Error) {
-        console.log("checkAuth: setting error:", error.message)
-        setError(error.message)
-      }
-    } finally {
-      setIsLoading(false)
-      setIsChecking(false)
-    }
-  }
-
-  // Логирование изменений error
-  console.log("AuthProvider render - error:", error)
+  // Логирование изменений error (упрощенное)
+  // console.log("AuthProvider render - error:", error)
 
   // Авторизован?
   const isAuthenticated = user !== null
@@ -181,6 +159,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     authAPI.logout().catch(console.error)
   }
 
+  // Функция проверки авторизации при загрузке
+  const checkAuth = useCallback(async () => {
+    console.log("checkAuth: starting...")
+    try {
+      setIsChecking(true)
+      setIsLoading(true)
+      setError(null)
+      console.log("checkAuth: making request to get current user")
+      const currentUser = await authAPI.getCurrentUser()
+      console.log("checkAuth: success, user:", currentUser)
+      setUser(currentUser)
+    } catch (error) {
+      console.error("Check auth failed:", error)
+      setUser(null)
+      if (error instanceof Error) {
+        console.log("checkAuth: setting error:", error.message)
+        setError(error.message)
+      }
+    } finally {
+      setIsLoading(false)
+      setIsChecking(false)
+      console.log("checkAuth: finished")
+    }
+  }, [])
+
   // Функция проверки ролей
   const hasRole = (roles: UserRole[]): boolean => {
     if (!user) return false
@@ -195,11 +198,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Проверка авторизации при монтировании компонента
   useEffect(() => {
+    console.log("AuthContext useEffect triggered, pathname:", pathname)
     // Не проверяем авторизацию на странице входа
     if (pathname !== "/auth") {
+      console.log("AuthContext: starting checkAuth for pathname:", pathname)
       checkAuth()
+    } else {
+      console.log("AuthContext: skipping checkAuth for /auth page")
     }
-  }, [pathname])
+  }, [pathname, checkAuth])
 
   // Значение контекста
   const value: AuthContextType = {

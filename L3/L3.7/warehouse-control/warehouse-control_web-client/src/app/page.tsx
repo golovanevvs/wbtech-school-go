@@ -1,23 +1,13 @@
 "use client"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import { Box, Typography, Button, Stack } from "@mui/material"
 
 export default function Home() {
-  const { isAuthenticated, user, hasRole } = useAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    // Если пользователь не авторизован, перенаправляем на страницу входа
-    if (!isAuthenticated) {
-      router.push("/auth")
-    }
-  }, [isAuthenticated, router])
+  const { user, hasRole, isLoading } = useAuth()
 
   // Показываем загрузку, пока проверяется авторизация
-  if (!isAuthenticated) {
+  if (isLoading) {
     return (
       <Box 
         sx={{ 
@@ -32,6 +22,11 @@ export default function Home() {
     )
   }
 
+  // Если не авторизован, ничего не показываем (useAuthGuard перенаправит)
+  if (!user) {
+    return null
+  }
+
   // Если авторизован, показываем главную страницу
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
@@ -39,11 +34,9 @@ export default function Home() {
         Добро пожаловать в Warehouse Control!
       </Typography>
 
-      {user && (
-        <Typography variant="h6" sx={{ textAlign: "center", mb: 4 }}>
-          Здравствуйте, {user.name}! Ваша роль: {user.user_role}
-        </Typography>
-      )}
+      <Typography variant="h6" sx={{ textAlign: "center", mb: 4 }}>
+        Здравствуйте, {user.name}! Ваша роль: {user.user_role}
+      </Typography>
 
       <Stack spacing={3} sx={{ alignItems: "center" }}>
         <Typography variant="h5" gutterBottom>
@@ -54,7 +47,7 @@ export default function Home() {
           <Button 
             variant="contained" 
             size="large"
-            onClick={() => router.push("/items")}
+            onClick={() => window.location.href = "/items"}
             sx={{ minWidth: 200 }}
           >
             Список товаров
@@ -64,7 +57,7 @@ export default function Home() {
         <Button 
           variant="contained" 
           size="large"
-          onClick={() => router.push("/history")}
+          onClick={() => window.location.href = "/history"}
           sx={{ minWidth: 200 }}
         >
           История действий
