@@ -132,10 +132,6 @@ class ApiClient {
     const error: HttpError = new Error(errorMessage)
     error.status = response.status
 
-    if (response.status === 401) {
-      await this.handleUnauthorized()
-    }
-
     throw error
   }
 
@@ -147,13 +143,18 @@ class ApiClient {
       })
 
       if (refreshResponse.ok) {
-        return
+        return  // Успешно обновили токен
       }
+      
+      // Если ответ не ok, пробрасываем ошибку
+      const errorData = await refreshResponse.json().catch(() => ({}))
+      throw new Error(errorData.message || "Failed to refresh token")
     } catch (error) {
       console.error("Token refresh failed:", error)
+      
+      // Пробрасываем ошибку, чтобы request() знал, что обновление не удалось
+      throw error
     }
-
-    await this.redirectToLogin()
   }
 
   private async redirectToLogin(): Promise<void> {
