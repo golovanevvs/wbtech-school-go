@@ -137,9 +137,9 @@ class ApiClient {
     if (typeof window !== "undefined") {
       try {
         const { redirect } = await import("next/navigation")
-        redirect("/login")
+        redirect("/auth")
       } catch {
-        window.location.href = "/login"
+        window.location.href = "/auth"
       }
     }
   }
