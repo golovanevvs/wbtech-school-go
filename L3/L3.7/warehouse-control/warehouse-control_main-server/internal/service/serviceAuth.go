@@ -125,7 +125,7 @@ func (sv *AuthService) generateAccessToken(user *model.User) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(sv.cfg.AccessTokenExpiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "event-booker",
+			Issuer:    "warehouse-control",
 		},
 	}
 

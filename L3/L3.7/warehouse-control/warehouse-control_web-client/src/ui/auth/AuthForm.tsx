@@ -56,7 +56,6 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
           onAuthSuccess()
         }
         router.push("/")
-        router.refresh()
       } else {
         // Если нет локальной ошибки, но есть ошибка из AuthContext, показываем ее
         if (!authError) {
