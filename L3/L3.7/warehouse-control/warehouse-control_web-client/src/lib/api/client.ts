@@ -148,6 +148,12 @@ class ApiClient {
 
   private async redirectToLogin(): Promise<void> {
     if (typeof window !== "undefined") {
+      // Сохраняем текущий путь для возврата после авторизации
+      const currentPath = window.location.pathname + window.location.search
+      if (currentPath !== "/auth") {
+        sessionStorage.setItem("redirectAfterLogin", currentPath)
+      }
+      
       try {
         const { redirect } = await import("next/navigation")
         redirect("/auth")

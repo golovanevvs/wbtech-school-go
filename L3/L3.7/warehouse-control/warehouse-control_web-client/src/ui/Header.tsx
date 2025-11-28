@@ -84,7 +84,18 @@ export default function Header() {
           px: { xs: 1, sm: 2 },
         }}
       >
+        {/* Левая часть - кнопка меню и название */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {isAuthenticated && (
+            <IconButton
+              color="inherit"
+              onClick={handleMenuOpen}
+              sx={{ ml: -1 }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          
           <Typography
             variant="h6"
             component="div"
@@ -99,16 +110,6 @@ export default function Header() {
           >
             Warehouse Control
           </Typography>
-
-          {isAuthenticated && (
-            <IconButton
-              color="inherit"
-              onClick={handleMenuOpen}
-              sx={{ ml: -1 }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
         </Box>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -155,11 +156,12 @@ export default function Header() {
         PaperProps={{
           sx: {
             width: 250,
-            mt: 8, // Отступ сверху для учета AppBar
+            height: "100vh", // Вся доступная высота
+            mt: 0, // Убираем отступ сверху
           },
         }}
       >
-        <List>
+        <List sx={{ pt: 8 }}> {/* Отступ сверху для учета AppBar */}
           {hasRole(["Кладовщик", "Менеджер"]) && (
             <ListItem disablePadding>
               <ListItemButton onClick={handleItems}>

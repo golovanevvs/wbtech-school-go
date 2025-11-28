@@ -100,8 +100,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const currentUser = await authAPI.getCurrentUser()
       setUser(currentUser)
 
-      // Перенаправляем на главную страницу после успешного логина
-      if (pathname === "/auth") {
+      // Проверяем, есть ли сохраненный путь для перенаправления
+      const redirectPath = sessionStorage.getItem("redirectAfterLogin")
+      if (redirectPath) {
+        sessionStorage.removeItem("redirectAfterLogin")
+        router.push(redirectPath)
+      } else if (pathname === "/auth") {
         router.push("/")
       }
 
@@ -134,8 +138,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const currentUser = await authAPI.getCurrentUser()
       setUser(currentUser)
 
-      // Перенаправляем на главную страницу после успешной регистрации
-      if (pathname === "/auth") {
+      // Проверяем, есть ли сохраненный путь для перенаправления
+      const redirectPath = sessionStorage.getItem("redirectAfterLogin")
+      if (redirectPath) {
+        sessionStorage.removeItem("redirectAfterLogin")
+        router.push(redirectPath)
+      } else if (pathname === "/auth") {
         router.push("/")
       }
 
@@ -158,6 +166,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Очищение состояния
     setUser(null)
+
+    // Очищаем сохраненный путь для перенаправления
+    sessionStorage.removeItem("redirectAfterLogin")
 
     authAPI.logout().catch(console.error)
   }
