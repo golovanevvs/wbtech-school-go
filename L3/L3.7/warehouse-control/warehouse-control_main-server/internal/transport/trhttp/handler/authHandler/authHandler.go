@@ -14,6 +14,18 @@ import (
 	"github.com/wb-go/wbf/zlog"
 )
 
+// extractDomain извлекает домен из URL, убирая протокол
+func extractDomain(url string) string {
+	// Убираем протокол (http:// или https://)
+	if strings.HasPrefix(url, "https://") {
+		return strings.TrimPrefix(url, "https://")
+	}
+	if strings.HasPrefix(url, "http://") {
+		return strings.TrimPrefix(url, "http://")
+	}
+	return url
+}
+
 // ISvForAuthHandler interface for auth handler service
 type ISvForAuthHandler interface {
 	Register(ctx context.Context, username, password, name, role string) (*model.User, error)
@@ -102,8 +114,8 @@ func (hd *AuthHandler) Register(c *gin.Context) {
 
 	lg.Debug().Int("user_id", user.ID).Str("username", user.UserName).Msgf("%s user registered successfully", pkgConst.OpSuccess)
 
-	c.SetCookie("access_token", accessToken, 3600, "/", hd.webHost, false, true)
-	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", hd.webHost, false, true)
+	c.SetCookie("access_token", accessToken, 3600, "/", extractDomain(hd.webHost), false, true)
+	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", extractDomain(hd.webHost), false, true)
 
 	c.JSON(http.StatusCreated, ginext.H{
 		"message": "Registration successful",
@@ -141,8 +153,8 @@ func (hd *AuthHandler) Login(c *gin.Context) {
 
 	lg.Debug().Str("username", req.Username).Msgf("%s user logged in successfully", pkgConst.OpSuccess)
 
-	c.SetCookie("access_token", accessToken, 3600, "/", hd.webHost, false, true)
-	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", hd.webHost, false, true)
+	c.SetCookie("access_token", accessToken, 3600, "/", extractDomain(hd.webHost), false, true)
+	c.SetCookie("refresh_token", refreshToken, 7*24*3600, "/", extractDomain(hd.webHost), false, true)
 
 	c.JSON(http.StatusOK, ginext.H{
 		"message": "Login successful",
@@ -186,8 +198,8 @@ func (hd *AuthHandler) Refresh(c *gin.Context) {
 
 	lg.Debug().Msgf("%s tokens refreshed successfully", pkgConst.OpSuccess)
 
-	c.SetCookie("access_token", newAccessToken, 3600, "/", hd.webHost, false, true)
-	c.SetCookie("refresh_token", newRefreshToken, 7*24*3600, "/", hd.webHost, false, true)
+	c.SetCookie("access_token", newAccessToken, 3600, "/", extractDomain(hd.webHost), false, true)
+	c.SetCookie("refresh_token", newRefreshToken, 7*24*3600, "/", extractDomain(hd.webHost), false, true)
 
 	c.JSON(http.StatusOK, ginext.H{
 		"message": "Tokens refreshed successfully",
@@ -216,8 +228,8 @@ func (hd *AuthHandler) GetCurrentUser(c *gin.Context) {
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s user not found in database, clearing invalid cookies", pkgConst.Warn)
 
-		c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
-		c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
+		c.SetCookie("access_token", "", -1, "/", extractDomain(hd.webHost), false, true)
+		c.SetCookie("refresh_token", "", -1, "/", extractDomain(hd.webHost), false, true)
 
 		c.JSON(http.StatusUnauthorized, ginext.H{"error": "User not found"})
 		return
@@ -249,8 +261,8 @@ func (hd *AuthHandler) UpdateUser(c *gin.Context) {
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s user not found in database, clearing invalid cookies", pkgConst.Warn)
 
-		c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
-		c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
+		c.SetCookie("access_token", "", -1, "/", extractDomain(hd.webHost), false, true)
+		c.SetCookie("refresh_token", "", -1, "/", extractDomain(hd.webHost), false, true)
 
 		c.JSON(http.StatusUnauthorized, ginext.H{"error": "User not found"})
 		return
@@ -315,8 +327,8 @@ func (hd *AuthHandler) DeleteUser(c *gin.Context) {
 	if err != nil {
 		lg.Warn().Err(err).Int("user_id", userIDInt).Msgf("%s user not found in database, clearing invalid cookies", pkgConst.Warn)
 
-		c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
-		c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
+		c.SetCookie("access_token", "", -1, "/", extractDomain(hd.webHost), false, true)
+		c.SetCookie("refresh_token", "", -1, "/", extractDomain(hd.webHost), false, true)
 
 		c.JSON(http.StatusUnauthorized, ginext.H{"error": "User not found"})
 		return
@@ -331,8 +343,8 @@ func (hd *AuthHandler) DeleteUser(c *gin.Context) {
 
 	lg.Debug().Int("user_id", userIDInt).Msgf("%s user deleted successfully", pkgConst.OpSuccess)
 
-	c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
-	c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
+	c.SetCookie("access_token", "", -1, "/", extractDomain(hd.webHost), false, true)
+	c.SetCookie("refresh_token", "", -1, "/", extractDomain(hd.webHost), false, true)
 
 	c.JSON(http.StatusOK, ginext.H{
 		"message": "User deleted successfully",
@@ -345,8 +357,8 @@ func (hd *AuthHandler) Logout(c *gin.Context) {
 
 	lg.Debug().Msg("User logout initiated")
 
-	c.SetCookie("access_token", "", -1, "/", hd.webHost, false, true)
-	c.SetCookie("refresh_token", "", -1, "/", hd.webHost, false, true)
+	c.SetCookie("access_token", "", -1, "/", extractDomain(hd.webHost), false, true)
+	c.SetCookie("refresh_token", "", -1, "/", extractDomain(hd.webHost), false, true)
 
 	lg.Debug().Msgf("%s user logged out successfully", pkgConst.OpSuccess)
 	c.JSON(http.StatusOK, ginext.H{

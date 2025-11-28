@@ -4,12 +4,25 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/pkg/pkgErrors"
 	"github.com/wb-go/wbf/zlog"
 )
+
+// extractDomain извлекает домен из URL, убирая протокол
+func extractDomain(url string) string {
+	// Убираем протокол (http:// или https://)
+	if strings.HasPrefix(url, "https://") {
+		return strings.TrimPrefix(url, "https://")
+	}
+	if strings.HasPrefix(url, "http://") {
+		return strings.TrimPrefix(url, "http://")
+	}
+	return url
+}
 
 // ISvForAuthHandler interface for auth handler
 type ISvForAuthHandler interface {
@@ -68,8 +81,8 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 			return
 		}
 
-		c.SetCookie("access_token", newAccessToken, 3600, "/", mw.webHost, true, true)
-		c.SetCookie("refresh_token", newRefreshToken, 7*24*3600, "/", mw.webHost, true, true)
+		c.SetCookie("access_token", newAccessToken, 3600, "/", extractDomain(mw.webHost), true, true)
+		c.SetCookie("refresh_token", newRefreshToken, 7*24*3600, "/", extractDomain(mw.webHost), true, true)
 
 		userID, userEmail, err = mw.sv.ValidateToken(c.Request.Context(), newAccessToken)
 		if err != nil {
