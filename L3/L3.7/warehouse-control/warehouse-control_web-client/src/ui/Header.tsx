@@ -9,7 +9,14 @@ import {
   Button,
   Menu,
   MenuItem,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
 } from "@mui/material"
+import MenuIcon from "@mui/icons-material/Menu"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import ThemeToggle from "./ThemeToggle"
 import { useRouter } from "next/navigation"
@@ -18,18 +25,18 @@ export default function Header() {
   const { isAuthenticated, user, logout, hasRole } = useAuth()
   const router = useRouter()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null)
+  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false)
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
   }
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMenuAnchorEl(event.currentTarget)
+  const handleMenuOpen = () => {
+    setMenuDrawerOpen(true)
   }
 
   const handleMenuClose = () => {
-    setMenuAnchorEl(null)
+    setMenuDrawerOpen(false)
   }
 
   const handleProfileMenuClose = () => {
@@ -94,33 +101,13 @@ export default function Header() {
           </Typography>
 
           {isAuthenticated && (
-            <>
-              <Button
-                color="inherit"
-                onClick={handleMenuOpen}
-                sx={{ textTransform: "none" }}
-              >
-                Меню
-              </Button>
-              <Menu
-                anchorEl={menuAnchorEl}
-                open={Boolean(menuAnchorEl)}
-                onClose={handleMenuClose}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "left",
-                }}
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "left",
-                }}
-              >
-                {hasRole(["Кладовщик", "Менеджер"]) && (
-                  <MenuItem onClick={handleItems}>Список товаров</MenuItem>
-                )}
-                <MenuItem onClick={handleHistory}>История действий</MenuItem>
-              </Menu>
-            </>
+            <IconButton
+              color="inherit"
+              onClick={handleMenuOpen}
+              sx={{ ml: -1 }}
+            >
+              <MenuIcon />
+            </IconButton>
           )}
         </Box>
 
@@ -159,6 +146,34 @@ export default function Header() {
           )}
         </Box>
       </Toolbar>
+
+      {/* Выдвижное меню слева */}
+      <Drawer
+        anchor="left"
+        open={menuDrawerOpen}
+        onClose={handleMenuClose}
+        PaperProps={{
+          sx: {
+            width: 250,
+            mt: 8, // Отступ сверху для учета AppBar
+          },
+        }}
+      >
+        <List>
+          {hasRole(["Кладовщик", "Менеджер"]) && (
+            <ListItem disablePadding>
+              <ListItemButton onClick={handleItems}>
+                <ListItemText primary="Список товаров" />
+              </ListItemButton>
+            </ListItem>
+          )}
+          <ListItem disablePadding>
+            <ListItemButton onClick={handleHistory}>
+              <ListItemText primary="История действий" />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </Drawer>
     </AppBar>
   )
 }

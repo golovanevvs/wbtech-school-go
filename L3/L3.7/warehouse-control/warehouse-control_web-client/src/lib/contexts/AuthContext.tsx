@@ -7,6 +7,7 @@ import {
   useEffect,
   useState,
 } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { User, UserRole } from "../types/auth"
 import { authAPI } from "../api/auth"
 
@@ -54,6 +55,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const pathname = usePathname()
+  const router = useRouter()
 
   // Логирование изменений error
   console.log("AuthProvider render - error:", error)
@@ -97,6 +100,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const currentUser = await authAPI.getCurrentUser()
       setUser(currentUser)
 
+      // Перенаправляем на главную страницу после успешного логина
+      if (pathname === "/auth") {
+        router.push("/")
+      }
+
       return true
     } catch (error) {
       console.error("Login failed:", error)
@@ -125,6 +133,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Получение данных пользователя после регистрации
       const currentUser = await authAPI.getCurrentUser()
       setUser(currentUser)
+
+      // Перенаправляем на главную страницу после успешной регистрации
+      if (pathname === "/auth") {
+        router.push("/")
+      }
 
       return true
     } catch (error) {
@@ -163,8 +176,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Проверка авторизации при монтировании компонента
   useEffect(() => {
-    checkAuth()
-  }, [])
+    // Не проверяем авторизацию на странице входа
+    if (pathname !== "/auth") {
+      checkAuth()
+    }
+  }, [pathname])
 
   // Значение контекста
   const value: AuthContextType = {
