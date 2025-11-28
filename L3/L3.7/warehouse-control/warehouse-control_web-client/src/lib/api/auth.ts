@@ -96,8 +96,8 @@ export const authAPI = {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      const response = await apiClient.get<GetUserResponse>("/auth/me")
-      return response.user
+      const response = await apiClient.get<User>("/auth/me")  // Изменили с GetUserResponse на User
+      return response
     } catch (error) {
       console.error("Get current user failed:", error)
       // Пробрасываем оригинальную ошибку, чтобы пользователь видел правильное сообщение
@@ -107,22 +107,6 @@ export const authAPI = {
       throw new Error("Не удалось получить данные пользователя")
     }
   },
-
-  /**
-   * Обновление access токена
-   * @returns Новый access токен
-   */
-  // async refreshToken(): Promise<RefreshTokenResponse> {
-  //   try {
-  //     const response = await apiClient.post<RefreshTokenResponse>(
-  //       "/auth/refresh"
-  //     )
-  //     return response
-  //   } catch (error) {
-  //     console.error("Token refresh failed:", error)
-  //     throw new Error("Не удалось обновить токен")
-  //   }
-  // },
 
   /**
    * Проверка валидности токена

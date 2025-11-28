@@ -169,6 +169,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log("checkAuth: making request to get current user")
       const currentUser = await authAPI.getCurrentUser()
       console.log("checkAuth: success, user:", currentUser)
+      console.log("checkAuth: user type:", typeof currentUser)
+      console.log("checkAuth: user keys:", currentUser ? Object.keys(currentUser) : "null/undefined")
       setUser(currentUser)
     } catch (error) {
       console.error("Check auth failed:", error)

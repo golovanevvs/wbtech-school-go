@@ -205,16 +205,18 @@ func (hd *AuthHandler) GetCurrentUser(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
 		lg.Warn().Msgf("%s User ID not found in context", pkgConst.Warn)
-		c.JSON(http.StatusUnauthorized, ginext.H{"error": pkgErrors.ErrUnauthorized.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
 		return
 	}
 
 	userIDInt, ok := userID.(int)
 	if !ok {
 		lg.Warn().Msgf("%s User ID is not of type int", pkgConst.Warn)
-		c.JSON(http.StatusInternalServerError, ginext.H{"error": "Internal server error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
+
+	lg.Debug().Int("user_id", userIDInt).Msg("Getting user from database")
 
 	user, err := hd.sv.GetUserByID(c.Request.Context(), userIDInt)
 	if err != nil {
@@ -223,7 +225,7 @@ func (hd *AuthHandler) GetCurrentUser(c *gin.Context) {
 		c.SetCookie("access_token", "", -1, "/", extractDomain(hd.publicHost), true, true)
 		c.SetCookie("refresh_token", "", -1, "/", extractDomain(hd.publicHost), true, true)
 
-		c.JSON(http.StatusUnauthorized, ginext.H{"error": "User not found"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
 

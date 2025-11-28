@@ -28,6 +28,8 @@ class ApiClient {
     options: RequestInit = {},
     hasRetried = false
   ): Promise<T> {
+    console.log("ApiClient.request:", endpoint, "hasRetried:", hasRetried)
+    
     const url = `${this.baseURL}${endpoint}`
 
     const config: RequestInit = {
@@ -49,9 +51,11 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config)
+      console.log("ApiClient.request response:", endpoint, "status:", response.status)
 
       if (!response.ok) {
         if (response.status === 401 && !hasRetried) {
+          console.log("ApiClient.request: 401 detected, calling handleUnauthorized")
           try {
             await this.handleUnauthorized()
             return this.request(endpoint, options, true)
@@ -70,6 +74,7 @@ class ApiClient {
 
       return {} as T
     } catch (error) {
+      console.log("ApiClient.request error:", endpoint, error)
       if (
         error instanceof TypeError &&
         error.message.includes("Failed to fetch")
@@ -136,11 +141,18 @@ class ApiClient {
   }
 
   private async handleUnauthorized(): Promise<void> {
+    console.log("handleUnauthorized: current cookies:", document.cookie)
+    console.log("handleUnauthorized: refresh token from cookies:", this.getRefreshToken())
+    
     try {
       const refreshResponse = await fetch(`${this.baseURL}/auth/refresh`, {
         method: "POST",
         credentials: "include",
       })
+
+      console.log("handleUnauthorized: refresh response status:", refreshResponse.status)
+      console.log("handleUnauthorized: cookies after refresh:", document.cookie)
+      console.log("handleUnauthorized: refresh token after refresh:", this.getRefreshToken())
 
       if (refreshResponse.ok) {
         return  // Успешно обновили токен

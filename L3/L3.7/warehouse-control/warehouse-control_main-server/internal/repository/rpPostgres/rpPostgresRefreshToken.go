@@ -133,7 +133,6 @@ func (rp *RefreshTokenRepository) GetByUserID(userID int) ([]*model.RefreshToken
 // DeleteByID deletes a refresh token by ID
 func (rp *RefreshTokenRepository) DeleteByID(id int) error {
 	query := `
-	
 		DELETE FROM
 			refresh_tokens
 		WHERE
@@ -177,8 +176,11 @@ func (rp *RefreshTokenRepository) DeleteByToken(token string) error {
 		return fmt.Errorf("failed to get affected rows: %w", err)
 	}
 
+	// Не возвращаем ошибку, если токен не найден - это нормально для операции удаления
 	if rowsAffected == 0 {
-		return fmt.Errorf("refresh token with value %s not found", token)
+		// Логируем, но не возвращаем ошибку
+		fmt.Printf("Refresh token with value %s not found for deletion (already deleted or never existed)\n", token)
+		return nil
 	}
 
 	return nil
