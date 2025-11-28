@@ -53,7 +53,7 @@ func New(
 		Rt: rt,
 	}
 
-	authMiddleware := middleware.NewAuthMiddleware(parentLg, sv.MiddlewareService(), webPublicHost, accessTokenExp, refreshTokenExp)
+	authMiddleware := middleware.NewAuthMiddleware(parentLg, sv.MiddlewareService(), accessTokenExp, refreshTokenExp)
 
 	// public := rt.Group("/")
 	{
@@ -63,13 +63,13 @@ func New(
 	protected := rt.Group("/")
 	protected.Use(authMiddleware.JWTMiddleware)
 	{
-		authHandler := authHandler.New(&lg, sv.AuthService(), webPublicHost, accessTokenExp, refreshTokenExp)
+		authHandler := authHandler.New(&lg, sv.AuthService(), publicHost, accessTokenExp, refreshTokenExp)
 		authHandler.RegisterProtectedRoutes(protected)
 	}
 
 	publicAuth := rt.Group("/auth")
 	{
-		authHandler := authHandler.New(&lg, sv.AuthService(), webPublicHost, accessTokenExp, refreshTokenExp)
+		authHandler := authHandler.New(&lg, sv.AuthService(), publicHost, accessTokenExp, refreshTokenExp)
 		authHandler.RegisterPublicRoutes(publicAuth)
 	}
 

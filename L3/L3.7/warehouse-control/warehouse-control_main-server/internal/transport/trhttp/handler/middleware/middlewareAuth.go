@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,25 +15,25 @@ import (
 // ISvForAuthHandler interface for auth handler
 type ISvForAuthHandler interface {
 	ValidateToken(ctx context.Context, tokenString string) (userID int, userRole string, err error)
-	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
+	// RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 }
 
 // AuthMiddleware handles JWT authentication
 type AuthMiddleware struct {
-	lg              *zlog.Zerolog
-	sv              ISvForAuthHandler
-	webHost         string
+	lg *zlog.Zerolog
+	sv ISvForAuthHandler
+	// publicHost         string
 	accessTokenExp  time.Duration
 	refreshTokenExp time.Duration
 }
 
 // NewAuthMiddleware creates a new AuthMiddleware
-func NewAuthMiddleware(parentLg *zlog.Zerolog, sv ISvForAuthHandler, webHost string, accessTokenExp, refreshTokenExp time.Duration) *AuthMiddleware {
+func NewAuthMiddleware(parentLg *zlog.Zerolog, sv ISvForAuthHandler, accessTokenExp, refreshTokenExp time.Duration) *AuthMiddleware {
 	lg := parentLg.With().Str("component", "middleware-auth").Logger()
 	return &AuthMiddleware{
-		lg:              &lg,
-		sv:              sv,
-		webHost:         webHost,
+		lg: &lg,
+		sv: sv,
+		// publicHost:         publicHost,
 		accessTokenExp:  accessTokenExp,
 		refreshTokenExp: refreshTokenExp,
 	}
@@ -115,12 +114,12 @@ func GetUserIDFromContext(c *gin.Context) (int, error) {
 }
 
 // extractDomain extracts the domain from a URL
-func extractDomain(url string) string {
-	if strings.HasPrefix(url, "https://") {
-		return strings.TrimPrefix(url, "https://")
-	}
-	if strings.HasPrefix(url, "http://") {
-		return strings.TrimPrefix(url, "http://")
-	}
-	return url
-}
+// func extractDomain(url string) string {
+// 	if strings.HasPrefix(url, "https://") {
+// 		return strings.TrimPrefix(url, "https://")
+// 	}
+// 	if strings.HasPrefix(url, "http://") {
+// 		return strings.TrimPrefix(url, "http://")
+// 	}
+// 	return url
+// }
