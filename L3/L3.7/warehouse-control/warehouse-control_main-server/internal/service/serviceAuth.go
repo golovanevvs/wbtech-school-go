@@ -39,7 +39,7 @@ type AuthService struct {
 // Claims represents JWT claims
 type Claims struct {
 	UserID   int    `json:"user_id"`
-	Username string `json:"username"`
+	UserRole string `json:"user_role"`
 	jwt.RegisteredClaims
 }
 
@@ -121,7 +121,7 @@ func (sv *AuthService) Login(ctx context.Context, username, password string) (st
 func (sv *AuthService) generateAccessToken(user *model.User) (string, error) {
 	claims := &Claims{
 		UserID:   user.ID,
-		Username: user.UserName,
+		UserRole: user.UserRole,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(sv.cfg.AccessTokenExpiry)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -202,5 +202,5 @@ func (sv *AuthService) ValidateToken(ctx context.Context, tokenString string) (i
 		return 0, "", errors.New("invalid token")
 	}
 
-	return claims.UserID, claims.Username, nil
+	return claims.UserID, claims.UserRole, nil
 }

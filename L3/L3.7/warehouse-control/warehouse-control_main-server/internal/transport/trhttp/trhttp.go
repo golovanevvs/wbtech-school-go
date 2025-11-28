@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/pkg/pkgRetry"
@@ -27,6 +28,7 @@ func New(
 	parentLg *zlog.Zerolog,
 	rs *pkgRetry.Retry,
 	sv IService,
+	accessTokenExp, refreshTokenExp time.Duration,
 ) *HTTP {
 	lg := parentLg.With().Str("component", "HTTP").Logger()
 	return &HTTP{
@@ -40,6 +42,8 @@ func New(
 				sv,
 				cfg.PublicHost,
 				cfg.WebPublicHost,
+				accessTokenExp,
+				refreshTokenExp,
 			).Rt,
 		},
 	}

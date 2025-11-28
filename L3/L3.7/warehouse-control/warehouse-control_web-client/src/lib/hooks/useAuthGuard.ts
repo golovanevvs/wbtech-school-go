@@ -12,12 +12,12 @@ export const useAuthGuard = (requiredRoles?: UserRole[]) => {
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
-        router.push("/login")
+        router.push("/auth")
         return
       }
 
       if (requiredRoles && !hasRole(requiredRoles)) {
-        router.push("/login")
+        router.push("/auth")
         return
       }
     }

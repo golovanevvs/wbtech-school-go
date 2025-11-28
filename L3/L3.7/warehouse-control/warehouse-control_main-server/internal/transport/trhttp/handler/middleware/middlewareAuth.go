@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/pkg/pkgConst"
@@ -12,38 +13,30 @@ import (
 	"github.com/wb-go/wbf/zlog"
 )
 
-// extractDomain извлекает домен из URL, убирая протокол
-func extractDomain(url string) string {
-	// Убираем протокол (http:// или https://)
-	if strings.HasPrefix(url, "https://") {
-		return strings.TrimPrefix(url, "https://")
-	}
-	if strings.HasPrefix(url, "http://") {
-		return strings.TrimPrefix(url, "http://")
-	}
-	return url
-}
-
 // ISvForAuthHandler interface for auth handler
 type ISvForAuthHandler interface {
-	ValidateToken(ctx context.Context, tokenString string) (userID int, userEmail string, err error)
+	ValidateToken(ctx context.Context, tokenString string) (userID int, userRole string, err error)
 	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 }
 
 // AuthMiddleware handles JWT authentication
 type AuthMiddleware struct {
-	lg      *zlog.Zerolog
-	sv      ISvForAuthHandler
-	webHost string
+	lg              *zlog.Zerolog
+	sv              ISvForAuthHandler
+	webHost         string
+	accessTokenExp  time.Duration
+	refreshTokenExp time.Duration
 }
 
 // NewAuthMiddleware creates a new AuthMiddleware
-func NewAuthMiddleware(parentLg *zlog.Zerolog, sv ISvForAuthHandler, webHost string) *AuthMiddleware {
+func NewAuthMiddleware(parentLg *zlog.Zerolog, sv ISvForAuthHandler, webHost string, accessTokenExp, refreshTokenExp time.Duration) *AuthMiddleware {
 	lg := parentLg.With().Str("component", "middleware-auth").Logger()
 	return &AuthMiddleware{
-		lg:      &lg,
-		sv:      sv,
-		webHost: webHost,
+		lg:              &lg,
+		sv:              sv,
+		webHost:         webHost,
+		accessTokenExp:  accessTokenExp,
+		refreshTokenExp: refreshTokenExp,
 	}
 }
 
@@ -61,7 +54,7 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 
 	lg.Debug().Msgf("%s Validating token...", pkgConst.Starting)
 
-	userID, userEmail, err := mw.sv.ValidateToken(c.Request.Context(), tokenString)
+	userID, userRole, err := mw.sv.ValidateToken(c.Request.Context(), tokenString)
 	if err != nil {
 		lg.Warn().Err(err).Msg("Failed to validate token, attempting refresh")
 
@@ -81,10 +74,10 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 			return
 		}
 
-		c.SetCookie("access_token", newAccessToken, 3600, "/", extractDomain(mw.webHost), true, true)
-		c.SetCookie("refresh_token", newRefreshToken, 7*24*3600, "/", extractDomain(mw.webHost), true, true)
+		c.SetCookie("access_token", newAccessToken, int(mw.accessTokenExp.Seconds()), "/", extractDomain(mw.webHost), true, true)
+		c.SetCookie("refresh_token", newRefreshToken, int(mw.refreshTokenExp.Seconds()), "/", extractDomain(mw.webHost), true, true)
 
-		userID, userEmail, err = mw.sv.ValidateToken(c.Request.Context(), newAccessToken)
+		userID, userRole, err = mw.sv.ValidateToken(c.Request.Context(), newAccessToken)
 		if err != nil {
 			lg.Warn().Err(err).Msg("Failed to validate refreshed token")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
@@ -96,9 +89,9 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 	}
 
 	c.Set("user_id", userID)
-	c.Set("user_email", userEmail)
+	c.Set("user_role", userRole)
 
-	lg.Debug().Int("user_id", userID).Str("email", userEmail).Msgf("%s Token validated successfully", pkgConst.Finished)
+	lg.Debug().Int("user_id", userID).Str("user_role", userRole).Msgf("%s Token validated successfully", pkgConst.Finished)
 
 	c.Next()
 }
@@ -116,4 +109,15 @@ func GetUserIDFromContext(c *gin.Context) (int, error) {
 	}
 
 	return userIDInt, nil
+}
+
+// extractDomain extracts the domain from a URL
+func extractDomain(url string) string {
+	if strings.HasPrefix(url, "https://") {
+		return strings.TrimPrefix(url, "https://")
+	}
+	if strings.HasPrefix(url, "http://") {
+		return strings.TrimPrefix(url, "http://")
+	}
+	return url
 }

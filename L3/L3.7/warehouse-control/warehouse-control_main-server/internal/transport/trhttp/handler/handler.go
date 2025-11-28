@@ -28,6 +28,7 @@ func New(
 	sv IService,
 	publicHost string,
 	webPublicHost string,
+	accessTokenExp, refreshTokenExp time.Duration,
 ) *Handler {
 	lg := parentLg.With().Str("component", "handler").Logger()
 
@@ -52,7 +53,7 @@ func New(
 		Rt: rt,
 	}
 
-	authMiddleware := middleware.NewAuthMiddleware(parentLg, sv.MiddlewareService(), webPublicHost)
+	authMiddleware := middleware.NewAuthMiddleware(parentLg, sv.MiddlewareService(), webPublicHost, accessTokenExp, refreshTokenExp)
 
 	// public := rt.Group("/")
 	{
@@ -62,13 +63,13 @@ func New(
 	protected := rt.Group("/")
 	protected.Use(authMiddleware.JWTMiddleware)
 	{
-		authHandler := authHandler.New(&lg, sv.AuthService(), webPublicHost)
+		authHandler := authHandler.New(&lg, sv.AuthService(), webPublicHost, accessTokenExp, refreshTokenExp)
 		authHandler.RegisterProtectedRoutes(protected)
 	}
 
 	publicAuth := rt.Group("/auth")
 	{
-		authHandler := authHandler.New(&lg, sv.AuthService(), webPublicHost)
+		authHandler := authHandler.New(&lg, sv.AuthService(), webPublicHost, accessTokenExp, refreshTokenExp)
 		authHandler.RegisterPublicRoutes(publicAuth)
 	}
 

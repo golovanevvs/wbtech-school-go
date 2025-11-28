@@ -105,7 +105,7 @@ func (b *dependencyBuilder) initService() {
 
 func (b *dependencyBuilder) initTransport() {
 	b.lg.Debug().Msgf("%s transport has been initialized", pkgConst.Info)
-	b.deps.tr = transport.New(b.cfg.tr, b.deps.rs, b.deps.sv)
+	b.deps.tr = transport.New(b.cfg.tr, b.deps.rs, b.deps.sv, b.cfg.sv.AccessTokenExpiry, b.cfg.sv.RefreshTokenExpiry)
 }
 
 func (b *dependencyBuilder) build() (*dependencies, *resourceManager, error) {
