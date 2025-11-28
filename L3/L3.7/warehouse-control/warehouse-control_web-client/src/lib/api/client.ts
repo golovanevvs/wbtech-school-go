@@ -25,7 +25,8 @@ class ApiClient {
   // Универсальный метод для HTTP запросов
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    hasRetried = false
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`
 
@@ -38,18 +39,27 @@ class ApiClient {
       ...options,
     }
 
-    const token = this.getAccessToken()
-    if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      }
-    }
+    // const token = this.getAccessToken()
+    // if (token) {
+    //   config.headers = {
+    //     ...config.headers,
+    //     Authorization: `Bearer ${token}`,
+    //   }
+    // }
 
     try {
       const response = await fetch(url, config)
 
       if (!response.ok) {
+        if (response.status === 401 && !hasRetried) {
+          try {
+            await this.handleUnauthorized()
+            return this.request(endpoint, options, true)
+          } catch {
+            await this.redirectToLogin()
+            throw new Error("Unauthorized")
+          }
+        }
         await this.handleHttpError(response)
       }
 
@@ -153,7 +163,7 @@ class ApiClient {
       if (currentPath !== "/auth") {
         sessionStorage.setItem("redirectAfterLogin", currentPath)
       }
-      
+
       try {
         const { redirect } = await import("next/navigation")
         redirect("/auth")

@@ -56,36 +56,39 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 
 	userID, userRole, err := mw.sv.ValidateToken(c.Request.Context(), tokenString)
 	if err != nil {
-		lg.Warn().Err(err).Msg("Failed to validate token, attempting refresh")
+		// lg.Warn().Err(err).Msg("Failed to validate token, attempting refresh")
 
-		refreshToken, err := c.Cookie("refresh_token")
-		if err != nil || refreshToken == "" {
-			lg.Warn().Msg("Refresh token cookie is missing")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
-			c.Abort()
-			return
-		}
+		lg.Warn().Msgf("%s Access token cookie is missing", pkgConst.Warn)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
 
-		newAccessToken, newRefreshToken, err := mw.sv.RefreshTokens(c.Request.Context(), refreshToken)
-		if err != nil {
-			lg.Warn().Err(err).Msg("Failed to refresh tokens")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
-			c.Abort()
-			return
-		}
+		// refreshToken, err := c.Cookie("refresh_token")
+		// if err != nil || refreshToken == "" {
+		// 	lg.Warn().Msg("Refresh token cookie is missing")
+		// 	c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
+		// 	c.Abort()
+		// 	return
+		// }
 
-		c.SetCookie("access_token", newAccessToken, int(mw.accessTokenExp.Seconds()), "/", extractDomain(mw.webHost), true, true)
-		c.SetCookie("refresh_token", newRefreshToken, int(mw.refreshTokenExp.Seconds()), "/", extractDomain(mw.webHost), true, true)
+		// newAccessToken, newRefreshToken, err := mw.sv.RefreshTokens(c.Request.Context(), refreshToken)
+		// if err != nil {
+		// 	lg.Warn().Err(err).Msg("Failed to refresh tokens")
+		// 	c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
+		// 	c.Abort()
+		// 	return
+		// }
 
-		userID, userRole, err = mw.sv.ValidateToken(c.Request.Context(), newAccessToken)
-		if err != nil {
-			lg.Warn().Err(err).Msg("Failed to validate refreshed token")
-			c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
-			c.Abort()
-			return
-		}
+		// c.SetCookie("access_token", newAccessToken, int(mw.accessTokenExp.Seconds()), "/", extractDomain(mw.webHost), true, true)
+		// c.SetCookie("refresh_token", newRefreshToken, int(mw.refreshTokenExp.Seconds()), "/", extractDomain(mw.webHost), true, true)
 
-		lg.Debug().Msg("Token refreshed and validated successfully")
+		// userID, userRole, err = mw.sv.ValidateToken(c.Request.Context(), newAccessToken)
+		// if err != nil {
+		// 	lg.Warn().Err(err).Msg("Failed to validate refreshed token")
+		// 	c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
+		// 	c.Abort()
+		// 	return
+		// }
+
+		// lg.Debug().Msg("Token refreshed and validated successfully")
 	}
 
 	c.Set("user_id", userID)

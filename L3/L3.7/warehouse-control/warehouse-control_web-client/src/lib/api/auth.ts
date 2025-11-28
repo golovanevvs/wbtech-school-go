@@ -112,17 +112,17 @@ export const authAPI = {
    * Обновление access токена
    * @returns Новый access токен
    */
-  async refreshToken(): Promise<RefreshTokenResponse> {
-    try {
-      const response = await apiClient.post<RefreshTokenResponse>(
-        "/auth/refresh"
-      )
-      return response
-    } catch (error) {
-      console.error("Token refresh failed:", error)
-      throw new Error("Не удалось обновить токен")
-    }
-  },
+  // async refreshToken(): Promise<RefreshTokenResponse> {
+  //   try {
+  //     const response = await apiClient.post<RefreshTokenResponse>(
+  //       "/auth/refresh"
+  //     )
+  //     return response
+  //   } catch (error) {
+  //     console.error("Token refresh failed:", error)
+  //     throw new Error("Не удалось обновить токен")
+  //   }
+  // },
 
   /**
    * Проверка валидности токена
