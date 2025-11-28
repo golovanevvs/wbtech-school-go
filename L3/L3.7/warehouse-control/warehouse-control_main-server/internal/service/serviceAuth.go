@@ -78,19 +78,25 @@ func (sv *AuthService) Register(ctx context.Context, username, password, name, r
 	return createdUser, nil
 }
 
-// GetUserByID returns a user by ID
-func (sv *AuthService) GetUserByID(ctx context.Context, id int) (*model.User, error) {
-	return sv.userRp.GetByID(id)
-}
-
-// UpdateUser updates a user
-func (sv *AuthService) UpdateUser(ctx context.Context, user *model.User) error {
-	return sv.userRp.Update(user)
-}
-
 // DeleteUser deletes a user by ID
 func (sv *AuthService) DeleteUser(ctx context.Context, id int) error {
 	return sv.userRp.Delete(id)
+}
+
+// DeleteRefreshTokensByUserID deletes all refresh tokens for a user
+func (sv *AuthService) DeleteRefreshTokensByUserID(ctx context.Context, userID int) error {
+	lg := zlog.Logger.With().Str("service", "DeleteRefreshTokensByUserID").Logger()
+
+	lg.Debug().Int("userID", userID).Msg("Deleting all refresh tokens for user")
+
+	err := sv.refreshTokenRp.DeleteByUserID(userID)
+	if err != nil {
+		lg.Warn().Err(err).Int("userID", userID).Msg("Failed to delete refresh tokens")
+		return fmt.Errorf("failed to delete refresh tokens: %w", err)
+	}
+
+	lg.Debug().Int("userID", userID).Msg("All refresh tokens deleted successfully")
+	return nil
 }
 
 // Login authenticates user and returns access and refresh tokens
@@ -225,4 +231,19 @@ func (sv *AuthService) ValidateToken(ctx context.Context, tokenString string) (i
 	}
 
 	return claims.UserID, claims.UserRole, nil
+}
+
+// GetUserByID returns a user by ID
+func (sv *AuthService) GetUserByID(ctx context.Context, id int) (*model.User, error) {
+	return sv.userRp.GetByID(id)
+}
+
+// GetUserByUsername returns a user by username
+func (sv *AuthService) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
+	return sv.userRp.GetByUsername(username)
+}
+
+// UpdateUser updates a user
+func (sv *AuthService) UpdateUser(ctx context.Context, user *model.User) error {
+	return sv.userRp.Update(user)
 }

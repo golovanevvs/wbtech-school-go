@@ -21,8 +21,10 @@ type ISvForAuthHandler interface {
 	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 	ValidateToken(ctx context.Context, tokenString string) (int, string, error)
 	GetUserByID(ctx context.Context, id int) (*model.User, error)
+	GetUserByUsername(ctx context.Context, username string) (*model.User, error)
 	UpdateUser(ctx context.Context, user *model.User) error
 	DeleteUser(ctx context.Context, id int) error
+	DeleteRefreshTokensByUserID(ctx context.Context, userID int) error
 }
 
 // AuthHandler handles authentication requests
@@ -144,6 +146,20 @@ func (hd *AuthHandler) Login(c *gin.Context) {
 	}
 
 	lg.Debug().Str("username", req.Username).Msgf("%s user logged in successfully", pkgConst.OpSuccess)
+
+	// Получаем данные пользователя для удаления старых refresh токенов
+	user, err := hd.sv.GetUserByUsername(c.Request.Context(), req.Username)
+	if err != nil {
+		lg.Warn().Err(err).Str("username", req.Username).Msg("Failed to get user for deleting refresh tokens")
+		// Продолжаем без удаления старых токенов
+	} else {
+		// Удаляем старые refresh токены для пользователя перед установкой нового
+		err = hd.sv.DeleteRefreshTokensByUserID(c.Request.Context(), user.ID)
+		if err != nil {
+			lg.Warn().Err(err).Int("user_id", user.ID).Msg("Failed to delete old refresh tokens")
+			// Продолжаем, это не критично
+		}
+	}
 
 	c.SetCookie("access_token", accessToken, int(hd.accessTokenExp.Seconds()), "/", extractDomain(hd.publicHost), true, true)
 	c.SetCookie("refresh_token", refreshToken, int(hd.refreshTokenExp.Seconds()), "/", extractDomain(hd.publicHost), true, true)
