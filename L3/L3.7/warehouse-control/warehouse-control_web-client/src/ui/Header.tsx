@@ -1,11 +1,18 @@
-'use client'
+"use client"
 
-import Link from 'next/link'
-import { useState } from 'react'
-import { AppBar, Toolbar, Typography, Box, Button, Menu, MenuItem } from '@mui/material'
-import { useAuth } from '@/lib/contexts/AuthContext'
-import ThemeToggle from './ThemeToggle'
-import { useRouter } from 'next/navigation'
+import { useState } from "react"
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Box,
+  Button,
+  Menu,
+  MenuItem,
+} from "@mui/material"
+import { useAuth } from "@/lib/contexts/AuthContext"
+import ThemeToggle from "./ThemeToggle"
+import { useRouter } from "next/navigation"
 
 export default function Header() {
   const { isAuthenticated, user, logout, hasRole } = useAuth()
@@ -32,54 +39,54 @@ export default function Header() {
   const handleLogout = () => {
     logout()
     handleProfileMenuClose()
-    router.push('/auth')
+    router.push("/auth")
   }
 
   const handleProfile = () => {
     handleProfileMenuClose()
-    router.push('/profile')
+    router.push("/profile")
   }
 
   const handleItems = () => {
     handleMenuClose()
-    router.push('/items')
+    router.push("/items")
   }
 
   const handleHistory = () => {
     handleMenuClose()
-    router.push('/history')
+    router.push("/history")
   }
 
   const handleHome = () => {
-    router.push('/')
+    router.push("/")
   }
 
   return (
-    <AppBar 
-      position="static" 
-      sx={{ 
-        boxShadow: '0px 4px 6px -1px rgba(0,0,0,0.2)',
+    <AppBar
+      position="static"
+      sx={{
+        boxShadow: "0px 4px 6px -1px rgba(0,0,0,0.2)",
         borderRadius: 0,
       }}
     >
-      <Toolbar 
-        sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          px: { xs: 1, sm: 2 }
+      <Toolbar
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          px: { xs: 1, sm: 2 },
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography 
-            variant="h6" 
-            component="div" 
-            sx={{ 
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              '&:hover': {
-                opacity: 0.8
-              }
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{
+              fontWeight: "bold",
+              cursor: "pointer",
+              "&:hover": {
+                opacity: 0.8,
+              },
             }}
             onClick={handleHome}
           >
@@ -88,10 +95,10 @@ export default function Header() {
 
           {isAuthenticated && (
             <>
-              <Button 
-                color="inherit" 
+              <Button
+                color="inherit"
                 onClick={handleMenuOpen}
-                sx={{ textTransform: 'none' }}
+                sx={{ textTransform: "none" }}
               >
                 Меню
               </Button>
@@ -100,34 +107,30 @@ export default function Header() {
                 open={Boolean(menuAnchorEl)}
                 onClose={handleMenuClose}
                 anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
+                  vertical: "bottom",
+                  horizontal: "left",
                 }}
                 transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'left',
+                  vertical: "top",
+                  horizontal: "left",
                 }}
               >
-                {hasRole(['Кладовщик', 'Менеджер']) && (
-                  <MenuItem onClick={handleItems}>
-                    Список товаров
-                  </MenuItem>
+                {hasRole(["Кладовщик", "Менеджер"]) && (
+                  <MenuItem onClick={handleItems}>Список товаров</MenuItem>
                 )}
-                <MenuItem onClick={handleHistory}>
-                  История действий
-                </MenuItem>
+                <MenuItem onClick={handleHistory}>История действий</MenuItem>
               </Menu>
             </>
           )}
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {isAuthenticated && user ? (
             <>
-              <Button 
-                color="inherit" 
+              <Button
+                color="inherit"
                 onClick={handleProfileMenuOpen}
-                sx={{ textTransform: 'none' }}
+                sx={{ textTransform: "none" }}
               >
                 Профиль
               </Button>
@@ -136,23 +139,19 @@ export default function Header() {
                 open={Boolean(anchorEl)}
                 onClose={handleProfileMenuClose}
                 anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
+                  vertical: "bottom",
+                  horizontal: "right",
                 }}
                 transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
+                  vertical: "top",
+                  horizontal: "right",
                 }}
               >
-                <MenuItem onClick={handleProfile}>
-                  Профиль
-                </MenuItem>
+                <MenuItem onClick={handleProfile}>Профиль</MenuItem>
                 <MenuItem onClick={handleProfileMenuClose}>
                   <ThemeToggle />
                 </MenuItem>
-                <MenuItem onClick={handleLogout}>
-                  Выйти
-                </MenuItem>
+                <MenuItem onClick={handleLogout}>Выйти</MenuItem>
               </Menu>
             </>
           ) : (

@@ -1,5 +1,5 @@
-import { User, RegisterResponse } from "../types/auth";
-import apiClient from "./client";
+import { User, RegisterResponse } from "../types/auth"
+import apiClient from "./client"
 
 // Интерфейсы для API ответов
 interface LoginResponse {
@@ -29,16 +29,16 @@ export const authAPI = {
    */
   async login(username: string, password: string): Promise<LoginResponse> {
     try {
-      const response = await apiClient.post<LoginResponse>('/auth/login', {
+      const response = await apiClient.post<LoginResponse>("/auth/login", {
         username,
         password,
       })
-      
+
       // Сервер уже установил cookie с токенами
       return response
     } catch (error) {
-      console.error('Login failed:', error)
-      throw new Error('Не удалось выполнить вход. Проверьте логин и пароль.')
+      console.error("Login failed:", error)
+      throw new Error("Не удалось выполнить вход. Проверьте логин и пароль.")
     }
   },
 
@@ -50,20 +50,30 @@ export const authAPI = {
    * @param role Роль пользователя
    * @returns Данные пользователя
    */
-  async register(username: string, password: string, name: string, role: string): Promise<RegisterResponse> {
+  async register(
+    username: string,
+    password: string,
+    name: string,
+    role: string
+  ): Promise<RegisterResponse> {
     try {
-      const response = await apiClient.post<RegisterResponse>('/auth/register', {
-        username,
-        password,
-        name,
-        role,
-      })
-      
+      const response = await apiClient.post<RegisterResponse>(
+        "/auth/register",
+        {
+          username,
+          password,
+          name,
+          role,
+        }
+      )
+
       // Сервер уже установил cookie с токенами
       return response
     } catch (error) {
-      console.error('Registration failed:', error)
-      throw new Error('Не удалось зарегистрироваться. Проверьте введенные данные.')
+      console.error("Registration failed:", error)
+      throw new Error(
+        "Не удалось зарегистрироваться. Проверьте введенные данные."
+      )
     }
   },
 
@@ -72,10 +82,10 @@ export const authAPI = {
    */
   async logout(): Promise<void> {
     try {
-      await apiClient.post('/auth/logout')
+      await apiClient.post("/auth/logout")
       // Cookie будут удалены сервером
     } catch (error) {
-      console.error('Logout failed:', error)
+      console.error("Logout failed:", error)
       // Очищение локальных данных, даже если сервер не ответил
     }
   },
@@ -86,15 +96,15 @@ export const authAPI = {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      const response = await apiClient.get<GetUserResponse>('/auth/me')
+      const response = await apiClient.get<GetUserResponse>("/auth/me")
       return response.user
     } catch (error) {
-      console.error('Get current user failed:', error)
+      console.error("Get current user failed:", error)
       // Пробрасываем оригинальную ошибку, чтобы пользователь видел правильное сообщение
       if (error instanceof Error) {
         throw error
       }
-      throw new Error('Не удалось получить данные пользователя')
+      throw new Error("Не удалось получить данные пользователя")
     }
   },
 
@@ -104,11 +114,13 @@ export const authAPI = {
    */
   async refreshToken(): Promise<RefreshTokenResponse> {
     try {
-      const response = await apiClient.post<RefreshTokenResponse>('/auth/refresh')
+      const response = await apiClient.post<RefreshTokenResponse>(
+        "/auth/refresh"
+      )
       return response
     } catch (error) {
-      console.error('Token refresh failed:', error)
-      throw new Error('Не удалось обновить токен')
+      console.error("Token refresh failed:", error)
+      throw new Error("Не удалось обновить токен")
     }
   },
 
@@ -118,10 +130,12 @@ export const authAPI = {
    */
   async validateToken(): Promise<boolean> {
     try {
-      const response = await apiClient.get<ValidateTokenResponse>('/auth/validate')
+      const response = await apiClient.get<ValidateTokenResponse>(
+        "/auth/validate"
+      )
       return response.valid
     } catch (error) {
-      console.error('Token validation failed:', error)
+      console.error("Token validation failed:", error)
       return false
     }
   },
@@ -134,7 +148,7 @@ export const authAPI = {
     try {
       return await apiClient.ping()
     } catch (error) {
-      console.error('Server status check failed:', error)
+      console.error("Server status check failed:", error)
       return false
     }
   },

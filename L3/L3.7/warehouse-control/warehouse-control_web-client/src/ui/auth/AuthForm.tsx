@@ -60,9 +60,10 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
       } else {
         // Если нет локальной ошибки, но есть ошибка из AuthContext, показываем ее
         if (!authError) {
-          setError(mode === "login" 
-            ? "Неверный логин или пароль" 
-            : "Не удалось зарегистрироваться. Проверьте введенные данные."
+          setError(
+            mode === "login"
+              ? "Неверный логин или пароль"
+              : "Не удалось зарегистрироваться. Проверьте введенные данные."
           )
         }
       }
@@ -152,22 +153,24 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
               <Typography variant="body2" color="text.secondary" gutterBottom>
                 Роль
               </Typography>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {(["Кладовщик", "Менеджер", "Аудитор"] as UserRole[]).map((r) => (
-                  <Button
-                    key={r}
-                    type="button"
-                    variant={role === r ? "contained" : "outlined"}
-                    onClick={() => setRole(r)}
-                    sx={{ 
-                      flex: 1, 
-                      minWidth: '100px',
-                      fontSize: '0.8rem'
-                    }}
-                  >
-                    {r}
-                  </Button>
-                ))}
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                {(["Кладовщик", "Менеджер", "Аудитор"] as UserRole[]).map(
+                  (r) => (
+                    <Button
+                      key={r}
+                      type="button"
+                      variant={role === r ? "contained" : "outlined"}
+                      onClick={() => setRole(r)}
+                      sx={{
+                        flex: 1,
+                        minWidth: "100px",
+                        fontSize: "0.8rem",
+                      }}
+                    >
+                      {r}
+                    </Button>
+                  )
+                )}
               </Box>
             </Box>
           </>
@@ -182,15 +185,18 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
         {/* Логирование условия для Alert */}
         {(() => {
           const showAlert = error || authError
-          console.log("Alert condition check - error:", error, "authError:", authError, "showAlert:", showAlert)
+          console.log(
+            "Alert condition check - error:",
+            error,
+            "authError:",
+            authError,
+            "showAlert:",
+            showAlert
+          )
           return null
         })()}
 
-        <Button 
-          type="submit" 
-          disabled={isLoading} 
-          sx={{ mt: 3 }}
-        >
+        <Button type="submit" disabled={isLoading} sx={{ mt: 3 }}>
           {isLoading
             ? "Загрузка..."
             : mode === "login"
@@ -206,14 +212,14 @@ export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
             component="button"
             type="button"
             onClick={handleModeChange}
-            sx={{ 
-              color: "primary.main", 
+            sx={{
+              color: "primary.main",
               textDecoration: "underline",
               cursor: "pointer",
               border: "none",
               background: "none",
               font: "inherit",
-              padding: 0
+              padding: 0,
             }}
           >
             {mode === "login" ? "Зарегистрироваться" : "Войти"}

@@ -60,10 +60,15 @@ class ApiClient {
 
       return {} as T
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes("Failed to fetch")) {
-        throw new Error("Сервер недоступен. Проверьте подключение к интернету или обратитесь к администратору.")
+      if (
+        error instanceof TypeError &&
+        error.message.includes("Failed to fetch")
+      ) {
+        throw new Error(
+          "Сервер недоступен. Проверьте подключение к интернету или обратитесь к администратору."
+        )
       }
-      
+
       if (error instanceof Error) {
         if (
           error.message.includes("401") ||
@@ -141,30 +146,30 @@ class ApiClient {
 
   // HTTP методы
   async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' })
+    return this.request<T>(endpoint, { method: "GET" })
   }
 
   async post<T, D = unknown>(endpoint: string, data?: D): Promise<T> {
     return this.request<T>(endpoint, {
-      method: 'POST',
+      method: "POST",
       body: data ? JSON.stringify(data) : undefined,
     })
   }
 
   async put<T, D = unknown>(endpoint: string, data?: D): Promise<T> {
     return this.request<T>(endpoint, {
-      method: 'PUT',
+      method: "PUT",
       body: data ? JSON.stringify(data) : undefined,
     })
   }
 
   async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' })
+    return this.request<T>(endpoint, { method: "DELETE" })
   }
 
   async ping(): Promise<boolean> {
     try {
-      await this.get('/health')
+      await this.get("/health")
       return true
     } catch {
       return false

@@ -16,11 +16,13 @@ export default function AuthPage() {
   }
 
   return (
-    <Box sx={{ 
-      display: "flex", 
-      justifyContent: "center",
-      px: { xs: 2, sm: 2 },
-    }}>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        px: { xs: 2, sm: 2 },
+      }}
+    >
       <AuthForm mode={mode} onAuthSuccess={handleAuthSuccess} />
     </Box>
   )

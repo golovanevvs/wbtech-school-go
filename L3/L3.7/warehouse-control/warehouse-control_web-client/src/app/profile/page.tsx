@@ -16,19 +16,15 @@ export default function ProfilePage() {
       <Typography variant="h4" gutterBottom>
         Профиль пользователя
       </Typography>
-      
+
       <Card>
         <CardContent>
           <Typography variant="h6">
             Имя пользователя: {user.username}
           </Typography>
-          <Typography variant="h6">
-            Роль: {user.role}
-          </Typography>
-          <Typography variant="h6">
-            ID: {user.id}
-          </Typography>
-          
+          <Typography variant="h6">Роль: {user.role}</Typography>
+          <Typography variant="h6">ID: {user.id}</Typography>
+
           <button onClick={logout} style={{ marginTop: 16 }}>
             Выйти из системы
           </button>

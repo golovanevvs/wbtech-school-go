@@ -20,7 +20,12 @@ interface AuthContextType {
 
   // Функции
   login: (username: string, password: string) => Promise<boolean>
-  register: (username: string, password: string, name: string, role: string) => Promise<boolean>
+  register: (
+    username: string,
+    password: string,
+    name: string,
+    role: string
+  ) => Promise<boolean>
   logout: () => void
   checkAuth: () => Promise<void>
   hasRole: (roles: UserRole[]) => boolean
@@ -85,7 +90,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       await authAPI.login(username, password)
 
       // Получение данных пользователя
@@ -114,7 +119,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       await authAPI.register(username, password, name, role)
 
       // Получение данных пользователя после регистрации
