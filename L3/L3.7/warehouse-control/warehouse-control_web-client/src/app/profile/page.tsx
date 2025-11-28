@@ -22,7 +22,7 @@ export default function ProfilePage() {
           <Typography variant="h6">
             Имя пользователя: {user.username}
           </Typography>
-          <Typography variant="h6">Роль: {user.role}</Typography>
+          <Typography variant="h6">Роль: {user.user_role}</Typography>
           <Typography variant="h6">ID: {user.id}</Typography>
 
           <button onClick={logout} style={{ marginTop: 16 }}>
