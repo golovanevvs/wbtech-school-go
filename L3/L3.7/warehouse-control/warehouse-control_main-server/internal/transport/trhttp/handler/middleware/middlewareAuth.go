@@ -19,16 +19,18 @@ type ISvForAuthHandler interface {
 
 // AuthMiddleware handles JWT authentication
 type AuthMiddleware struct {
-	lg *zlog.Zerolog
-	sv ISvForAuthHandler
+	lg      *zlog.Zerolog
+	sv      ISvForAuthHandler
+	webHost string
 }
 
 // NewAuthMiddleware creates a new AuthMiddleware
-func NewAuthMiddleware(parentLg *zlog.Zerolog, sv ISvForAuthHandler) *AuthMiddleware {
+func NewAuthMiddleware(parentLg *zlog.Zerolog, sv ISvForAuthHandler, webHost string) *AuthMiddleware {
 	lg := parentLg.With().Str("component", "middleware-auth").Logger()
 	return &AuthMiddleware{
-		lg: &lg,
-		sv: sv,
+		lg:      &lg,
+		sv:      sv,
+		webHost: webHost,
 	}
 }
 
@@ -66,8 +68,8 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 			return
 		}
 
-		c.SetCookie("access_token", newAccessToken, 3600, "/", "", true, true)
-		c.SetCookie("refresh_token", newRefreshToken, 7*24*3600, "/", "", true, true)
+		c.SetCookie("access_token", newAccessToken, 3600, "/", mw.webHost, true, true)
+		c.SetCookie("refresh_token", newRefreshToken, 7*24*3600, "/", mw.webHost, true, true)
 
 		userID, userEmail, err = mw.sv.ValidateToken(c.Request.Context(), newAccessToken)
 		if err != nil {

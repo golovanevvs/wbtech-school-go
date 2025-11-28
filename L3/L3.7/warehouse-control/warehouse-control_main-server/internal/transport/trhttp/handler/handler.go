@@ -52,7 +52,7 @@ func New(
 		Rt: rt,
 	}
 
-	authMiddleware := middleware.NewAuthMiddleware(parentLg, sv.MiddlewareService())
+	authMiddleware := middleware.NewAuthMiddleware(parentLg, sv.MiddlewareService(), webPublicHost)
 
 	// public := rt.Group("/")
 	{

@@ -85,11 +85,24 @@ class ApiClient {
   private getAccessToken(): string | null {
     if (typeof document === "undefined") return null
 
-    const cookies = document.cookie.split(":")
+    const cookies = document.cookie.split(";")
     for (const cookie of cookies) {
-      const [name, value] = cookie.trim().split("=")
+      const [name, ...valueParts] = cookie.trim().split("=")
       if (name === "access_token") {
-        return value
+        return valueParts.join("=") // Восстанавливаем значение, если в нем были знаки '='
+      }
+    }
+    return null
+  }
+
+  private getRefreshToken(): string | null {
+    if (typeof document === "undefined") return null
+
+    const cookies = document.cookie.split(";")
+    for (const cookie of cookies) {
+      const [name, ...valueParts] = cookie.trim().split("=")
+      if (name === "refresh_token") {
+        return valueParts.join("=") // Восстанавливаем значение, если в нем были знаки '='
       }
     }
     return null
