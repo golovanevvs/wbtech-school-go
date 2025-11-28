@@ -16,6 +16,7 @@ interface AuthContextType {
   // Состояние
   user: User | null
   isLoading: boolean
+  isChecking: boolean
   isAuthenticated: boolean
   error: string | null
 
@@ -54,19 +55,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Состояние
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isChecking, setIsChecking] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const pathname = usePathname()
   const router = useRouter()
 
-  // Логирование изменений error
-  console.log("AuthProvider render - error:", error)
-
-  // Авторизован?
-  const isAuthenticated = user !== null
-
   // Функция проверки авторизации при загрузке
   const checkAuth = async () => {
     try {
+      setIsChecking(true)
       setIsLoading(true)
       setError(null)
       console.log("checkAuth: starting...")
@@ -82,8 +79,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } finally {
       setIsLoading(false)
+      setIsChecking(false)
     }
   }
+
+  // Логирование изменений error
+  console.log("AuthProvider render - error:", error)
+
+  // Авторизован?
+  const isAuthenticated = user !== null
 
   // Функция входа в систему
   const login = async (
@@ -91,6 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     password: string
   ): Promise<boolean> => {
     try {
+      setIsChecking(true)
       setIsLoading(true)
       setError(null)
 
@@ -118,6 +123,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return false
     } finally {
       setIsLoading(false)
+      setIsChecking(false)
     }
   }
 
@@ -129,6 +135,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     role: string
   ): Promise<boolean> => {
     try {
+      setIsChecking(true)
       setIsLoading(true)
       setError(null)
 
@@ -156,6 +163,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return false
     } finally {
       setIsLoading(false)
+      setIsChecking(false)
     }
   }
 
@@ -197,6 +205,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     isLoading,
+    isChecking,
     isAuthenticated,
     error,
     login,
