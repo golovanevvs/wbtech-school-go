@@ -1,29 +1,29 @@
 "use client"
 
-import { useSearchParams } from "next/navigation"
-import AuthForm from "@/ui/auth/AuthForm"
-import { Box } from "@mui/material"
+import { Suspense } from "react"
+import AuthPageContent from "./AuthPageContent"
+import { Box, CircularProgress } from "@mui/material"
 
-export default function AuthPage() {
-  const searchParams = useSearchParams()
-  const mode = searchParams.get("mode") === "register" ? "register" : "login"
-
-  console.log("AuthPage render - mode:", mode)
-
-  const handleAuthSuccess = () => {
-    // Дополнительные действия после успешной авторизации
-    // можно добавить здесь, если нужно
-  }
-
+function AuthPageSkeleton() {
   return (
     <Box
       sx={{
         display: "flex",
         justifyContent: "center",
+        alignItems: "center",
+        minHeight: "50vh",
         px: { xs: 2, sm: 2 },
       }}
     >
-      <AuthForm mode={mode} onAuthSuccess={handleAuthSuccess} />
+      <CircularProgress />
     </Box>
+  )
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<AuthPageSkeleton />}>
+      <AuthPageContent />
+    </Suspense>
   )
 }
