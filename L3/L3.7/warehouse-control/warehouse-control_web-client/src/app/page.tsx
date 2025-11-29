@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/contexts/AuthContext"
 import { useAuthGuard } from "@/lib/hooks/useAuthGuard"
 import { itemsAPI } from "@/lib/api/items"
 import { Item } from "@/lib/types/items"
+import { useRouter } from "next/navigation"
 import {
   Box,
   Typography,
@@ -28,6 +29,7 @@ import AddIcon from "@mui/icons-material/Add"
 export default function Home() {
   const { user, hasRole } = useAuth()
   const { isLoading, isAuthenticated } = useAuthGuard()
+  const router = useRouter()
 
   const [items, setItems] = useState<Item[]>([])
   const [loading, setLoading] = useState(true)
@@ -71,8 +73,7 @@ export default function Home() {
 
   // Обработчики действий
   const handleEdit = (itemId: number) => {
-    console.log("Edit item:", itemId)
-    // TODO: Реализовать редактирование
+    router.push(`/edit-item?id=${itemId}`)
   }
 
   const handleDelete = (itemId: number) => {
@@ -86,8 +87,7 @@ export default function Home() {
   }
 
   const handleAdd = () => {
-    console.log("Add new item")
-    // TODO: Реализовать добавление нового товара
+    router.push("/add-item")
   }
 
   // Показываем загрузку
@@ -112,7 +112,7 @@ export default function Home() {
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", p: 1 }}>
+    <Box sx={{ maxWidth: 1200, mx: "auto", p: 2 }}>
       <Typography variant="h4" sx={{ mb: 2, textAlign: "center" }}>
         Список товаров склада
       </Typography>
@@ -178,7 +178,7 @@ export default function Home() {
               width: { xs: "100%", md: 120 },
               height: { xs: 60, md: "auto" },
               flex: { xs: "none", md: "none" },
-              mt: {xs:-2, md: 0},
+              mt: { xs: -2, md: 0 },
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -196,9 +196,12 @@ export default function Home() {
             }}
             onClick={handleAdd}
           >
-            <Box sx={{ textAlign: "center"}}>
+            <Box sx={{ textAlign: "center" }}>
               <AddIcon sx={{ fontSize: 32, mb: -0.5 }} />
-              <Typography variant="body2" sx={{ fontWeight: "medium", mt: -0.5 }}>
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: "medium", mt: -0.5 }}
+              >
                 Добавить
               </Typography>
             </Box>

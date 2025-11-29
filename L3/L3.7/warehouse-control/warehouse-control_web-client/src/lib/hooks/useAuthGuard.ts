@@ -10,8 +10,13 @@ export const useAuthGuard = (requiredRoles?: UserRole[]) => {
   const router = useRouter()
 
   useEffect(() => {
-    console.log("useAuthGuard effect:", { isLoading, isChecking, isAuthenticated, requiredRoles })
-    
+    console.log("useAuthGuard effect:", {
+      isLoading,
+      isChecking,
+      isAuthenticated,
+      requiredRoles,
+    })
+
     if (!isLoading && !isChecking) {
       console.log("AuthGuard: checking permissions...")
       if (!isAuthenticated) {
@@ -25,11 +30,14 @@ export const useAuthGuard = (requiredRoles?: UserRole[]) => {
         router.push("/auth")
         return
       }
-      
+
       console.log("AuthGuard: access granted")
     } else {
-      console.log("AuthGuard: waiting for auth check...", { isLoading, isChecking })
+      console.log("AuthGuard: waiting for auth check...", {
+        isLoading,
+        isChecking,
+      })
     }
   }, [isLoading, isChecking, isAuthenticated, requiredRoles, hasRole, router])
-  return { user, isLoading, isAuthenticated }
+  return { user, isLoading, isAuthenticated, hasRole }
 }

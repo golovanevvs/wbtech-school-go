@@ -48,7 +48,7 @@ export default function RootLayout({
                 }}
               >
                 <Stack
-                  spacing={4}
+                  spacing={2}
                   alignItems="center"
                   sx={{
                     flex: 1,
