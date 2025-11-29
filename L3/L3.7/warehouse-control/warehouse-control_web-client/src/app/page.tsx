@@ -112,13 +112,13 @@ export default function Home() {
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", p: 3 }}>
-      <Typography variant="h4" sx={{ mb: 3, textAlign: "center" }}>
+    <Box sx={{ maxWidth: 1200, mx: "auto", p: 1 }}>
+      <Typography variant="h4" sx={{ mb: 2, textAlign: "center" }}>
         Список товаров склада
       </Typography>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
@@ -129,7 +129,6 @@ export default function Home() {
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
           gap: 2,
-          mb: 3,
           alignItems: "stretch",
         }}
       >
@@ -138,7 +137,7 @@ export default function Home() {
           sx={{
             flex: { xs: "none", md: 1 },
             width: { xs: "100%", md: "auto" },
-            p: 3,
+            p: 2,
             backgroundColor: "background.paper",
             border: "1px solid",
             borderColor: "divider",
@@ -177,8 +176,9 @@ export default function Home() {
             elevation={1}
             sx={{
               width: { xs: "100%", md: 120 },
-              minHeight: { xs: 40, md: "auto" },
+              height: { xs: 60, md: "auto" },
               flex: { xs: "none", md: "none" },
+              mt: {xs:-2, md: 0},
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
