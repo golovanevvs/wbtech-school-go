@@ -55,7 +55,6 @@ func (hd *AuthHandler) RegisterPublicRoutes(rt *ginext.RouterGroup) {
 		auth.POST("/register", hd.Register)
 		auth.POST("/login", hd.Login)
 		auth.POST("/refresh", hd.Refresh)
-		auth.POST("/logout", hd.Logout)
 	}
 }
 
@@ -66,6 +65,7 @@ func (hd *AuthHandler) RegisterProtectedRoutes(rt *ginext.RouterGroup) {
 		auth.GET("/me", hd.GetCurrentUser)
 		auth.PUT("/update", hd.UpdateUser)
 		auth.DELETE("/delete", hd.DeleteUser)
+		auth.POST("/logout", hd.Logout)
 	}
 }
 
@@ -366,6 +366,24 @@ func (hd *AuthHandler) Logout(c *gin.Context) {
 	lg := hd.lg.With().Str("handler", "Logout").Logger()
 
 	lg.Debug().Msg("User logout initiated")
+
+	// Попытка получить userID из контекста (если пользователь был аутентифицирован)
+	userID, exists := c.Get("user_id")
+	if exists {
+		userIDInt, ok := userID.(int)
+		if ok {
+			// Удаляем все refresh токены пользователя из базы данных
+			err := hd.sv.DeleteRefreshTokensByUserID(c.Request.Context(), userIDInt)
+			if err != nil {
+				lg.Warn().Err(err).Int("user_id", userIDInt).Msg("Failed to delete refresh tokens from database")
+				// Продолжаем выполнение, очистка cookie важнее
+			} else {
+				lg.Debug().Int("user_id", userIDInt).Msg("All refresh tokens deleted from database")
+			}
+		}
+	} else {
+		lg.Debug().Msg("User ID not found in context, skipping database cleanup")
+	}
 
 	c.SetCookie("access_token", "", -1, "/", extractDomain(hd.publicHost), true, true)
 	c.SetCookie("refresh_token", "", -1, "/", extractDomain(hd.publicHost), true, true)

@@ -147,15 +147,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Функция выхода из системы
   const logout = () => {
-    document.cookie = "access_token=; path=/; max-age=0"
-    document.cookie = "refresh_token=; path=/; max-age=0"
-
     // Очищение состояния
     setUser(null)
 
     // Очищаем сохраненный путь для перенаправления
     sessionStorage.removeItem("redirectAfterLogin")
 
+    // Делегируем полную очистку серверу (включая cookie)
     authAPI.logout().catch(console.error)
   }
 

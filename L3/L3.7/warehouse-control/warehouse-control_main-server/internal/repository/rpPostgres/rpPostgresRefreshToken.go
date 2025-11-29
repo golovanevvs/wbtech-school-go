@@ -201,15 +201,12 @@ func (rp *RefreshTokenRepository) DeleteByUserID(userID int) error {
 		return fmt.Errorf("failed to delete refresh tokens for user %d: %w", userID, err)
 	}
 
-	rowsAffected, err := result.RowsAffected()
+	_, err = result.RowsAffected()
 	if err != nil {
 		return fmt.Errorf("failed to get affected rows: %w", err)
 	}
 
-	if rowsAffected == 0 {
-		return fmt.Errorf("no refresh tokens found for user %d", userID)
-	}
-
+	// Не возвращаем ошибку, если токены не найдены - это нормально
 	return nil
 }
 

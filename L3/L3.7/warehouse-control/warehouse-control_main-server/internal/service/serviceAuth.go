@@ -197,13 +197,14 @@ func (sv *AuthService) RefreshTokens(ctx context.Context, refreshToken string) (
 		return "", "", fmt.Errorf("failed to generate new access token: %w", err)
 	}
 
-	err = sv.refreshTokenRp.DeleteByToken(refreshToken)
+	// Удаляем ВСЕ старые refresh токены для пользователя перед созданием нового
+	err = sv.refreshTokenRp.DeleteByUserID(token.UserID)
 	if err != nil {
-		lg.Warn().Err(err).Str("refreshToken", refreshToken).Msg("Failed to delete old refresh token")
-		return "", "", fmt.Errorf("failed to delete old refresh token: %w", err)
+		lg.Warn().Err(err).Int("userID", token.UserID).Msg("Failed to delete old refresh tokens")
+		return "", "", fmt.Errorf("failed to delete old refresh tokens: %w", err)
 	}
 
-	lg.Debug().Int("userID", token.UserID).Msg("Old refresh token deleted, generating new refresh token")
+	lg.Debug().Int("userID", token.UserID).Msg("All old refresh tokens deleted, generating new refresh token")
 
 	newRefreshToken, err := sv.generateRefreshToken(user)
 	if err != nil {
