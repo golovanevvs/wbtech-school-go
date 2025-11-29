@@ -6,37 +6,27 @@ import {
   Toolbar,
   Typography,
   Box,
-  Button,
   Menu,
   MenuItem,
-  Drawer,
   IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
 } from "@mui/material"
-import MenuIcon from "@mui/icons-material/Menu"
+import AccountCircleIcon from "@mui/icons-material/AccountCircle"
+import LoginIcon from "@mui/icons-material/Login"
+import LogoutIcon from "@mui/icons-material/Logout"
+import Brightness4Icon from "@mui/icons-material/Brightness4"
+import Brightness7Icon from "@mui/icons-material/Brightness7"
 import { useAuth } from "@/lib/contexts/AuthContext"
-import ThemeToggle from "./ThemeToggle"
+import { useThemeContext } from "@/lib/components/ThemeProvider"
 import { useRouter } from "next/navigation"
 
 export default function Header() {
-  const { isAuthenticated, user, logout, hasRole } = useAuth()
+  const { isAuthenticated, user, logout } = useAuth()
+  const { mode, toggleTheme } = useThemeContext()
   const router = useRouter()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const [menuDrawerOpen, setMenuDrawerOpen] = useState(false)
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
-  }
-
-  const handleMenuOpen = () => {
-    setMenuDrawerOpen(true)
-  }
-
-  const handleMenuClose = () => {
-    setMenuDrawerOpen(false)
   }
 
   const handleProfileMenuClose = () => {
@@ -54,18 +44,17 @@ export default function Header() {
     router.push("/profile")
   }
 
-  const handleItems = () => {
-    handleMenuClose()
-    router.push("/items")
-  }
-
-  const handleHistory = () => {
-    handleMenuClose()
-    router.push("/history")
+  const handleLogin = () => {
+    router.push("/auth")
   }
 
   const handleHome = () => {
     router.push("/")
+  }
+
+  const handleToggleTheme = () => {
+    toggleTheme()
+    handleProfileMenuClose()
   }
 
   return (
@@ -84,18 +73,8 @@ export default function Header() {
           px: { xs: 1, sm: 2 },
         }}
       >
-        {/* Левая часть - кнопка меню и название */}
+        {/* Левая часть - название */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {isAuthenticated && (
-            <IconButton
-              color="inherit"
-              onClick={handleMenuOpen}
-              sx={{ ml: -1 }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-          
           <Typography
             variant="h6"
             component="div"
@@ -115,13 +94,13 @@ export default function Header() {
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {isAuthenticated && user ? (
             <>
-              <Button
+              <IconButton
                 color="inherit"
                 onClick={handleProfileMenuOpen}
-                sx={{ textTransform: "none" }}
+                aria-label="profile"
               >
-                Профиль
-              </Button>
+                <AccountCircleIcon />
+              </IconButton>
               <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
@@ -135,47 +114,37 @@ export default function Header() {
                   horizontal: "right",
                 }}
               >
-                <MenuItem onClick={handleProfile}>Профиль</MenuItem>
-                <MenuItem onClick={handleProfileMenuClose}>
-                  <ThemeToggle />
+                <MenuItem onClick={handleProfile}>
+                  <IconButton color="inherit" sx={{ mr: 1 }}>
+                    <AccountCircleIcon />
+                  </IconButton>
+                  Профиль
                 </MenuItem>
-                <MenuItem onClick={handleLogout}>Выйти</MenuItem>
+                <MenuItem onClick={handleToggleTheme}>
+                  <IconButton color="inherit" sx={{ mr: 1 }}>
+                    {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
+                  </IconButton>
+                  {mode === "dark" ? "Светлая тема" : "Тёмная тема"}
+                </MenuItem>
+                <MenuItem onClick={handleLogout}>
+                  <IconButton color="inherit" sx={{ mr: 1 }}>
+                    <LogoutIcon />
+                  </IconButton>
+                  Выйти
+                </MenuItem>
               </Menu>
             </>
           ) : (
-            <ThemeToggle />
+            <IconButton
+              color="inherit"
+              onClick={handleLogin}
+              aria-label="login"
+            >
+              <LoginIcon />
+            </IconButton>
           )}
         </Box>
       </Toolbar>
-
-      {/* Выдвижное меню слева */}
-      <Drawer
-        anchor="left"
-        open={menuDrawerOpen}
-        onClose={handleMenuClose}
-        PaperProps={{
-          sx: {
-            width: 250,
-            height: "100vh", // Вся доступная высота
-            mt: 0, // Убираем отступ сверху
-          },
-        }}
-      >
-        <List sx={{ pt: 8 }}> {/* Отступ сверху для учета AppBar */}
-          {hasRole(["Кладовщик", "Менеджер"]) && (
-            <ListItem disablePadding>
-              <ListItemButton onClick={handleItems}>
-                <ListItemText primary="Список товаров" />
-              </ListItemButton>
-            </ListItem>
-          )}
-          <ListItem disablePadding>
-            <ListItemButton onClick={handleHistory}>
-              <ListItemText primary="История действий" />
-            </ListItemButton>
-          </ListItem>
-        </List>
-      </Drawer>
     </AppBar>
   )
 }
