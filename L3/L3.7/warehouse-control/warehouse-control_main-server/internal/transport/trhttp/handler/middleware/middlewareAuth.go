@@ -59,6 +59,7 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 
 		lg.Warn().Msgf("%s Access token cookie is missing", pkgConst.Warn)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
+		return
 
 		// refreshToken, err := c.Cookie("refresh_token")
 		// if err != nil || refreshToken == "" {

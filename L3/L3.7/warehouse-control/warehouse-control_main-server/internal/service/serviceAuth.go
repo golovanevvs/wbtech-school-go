@@ -101,6 +101,8 @@ func (sv *AuthService) DeleteRefreshTokensByUserID(ctx context.Context, userID i
 
 // Login authenticates user and returns access and refresh tokens
 func (sv *AuthService) Login(ctx context.Context, username, password string) (string, string, error) {
+	lg := zlog.Logger.With().Str("service", "Login").Logger()
+
 	user, err := sv.userRp.GetByUsername(username)
 	if err != nil {
 		return "", "", fmt.Errorf("invalid username or password")
@@ -109,6 +111,15 @@ func (sv *AuthService) Login(ctx context.Context, username, password string) (st
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
 		return "", "", fmt.Errorf("invalid username or password")
+	}
+
+	// Удаляем ВСЕ старые refresh токены пользователя при входе
+	err = sv.refreshTokenRp.DeleteByUserID(user.ID)
+	if err != nil {
+		lg.Warn().Err(err).Int("userID", user.ID).Msg("Failed to delete old refresh tokens during login")
+		// Продолжаем выполнение, очистка старых токенов не критична для входа
+	} else {
+		lg.Debug().Int("userID", user.ID).Msg("Old refresh tokens deleted successfully during login")
 	}
 
 	accessToken, err := sv.generateAccessToken(user)
@@ -120,6 +131,8 @@ func (sv *AuthService) Login(ctx context.Context, username, password string) (st
 	if err != nil {
 		return "", "", fmt.Errorf("failed to generate refresh token: %w", err)
 	}
+
+	lg.Debug().Int("userID", user.ID).Str("username", username).Msg("User logged in successfully")
 
 	return accessToken, refreshToken, nil
 }

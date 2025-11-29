@@ -148,18 +148,17 @@ func (hd *AuthHandler) Login(c *gin.Context) {
 	lg.Debug().Str("username", req.Username).Msgf("%s user logged in successfully", pkgConst.OpSuccess)
 
 	// Получаем данные пользователя для удаления старых refresh токенов
-	user, err := hd.sv.GetUserByUsername(c.Request.Context(), req.Username)
-	if err != nil {
-		lg.Warn().Err(err).Str("username", req.Username).Msg("Failed to get user for deleting refresh tokens")
-		// Продолжаем без удаления старых токенов
-	} else {
-		// Удаляем старые refresh токены для пользователя перед установкой нового
-		err = hd.sv.DeleteRefreshTokensByUserID(c.Request.Context(), user.ID)
-		if err != nil {
-			lg.Warn().Err(err).Int("user_id", user.ID).Msg("Failed to delete old refresh tokens")
-			// Продолжаем, это не критично
-		}
-	}
+	// user, err := hd.sv.GetUserByUsername(c.Request.Context(), req.Username)
+	// if err != nil {
+	// 	lg.Warn().Err(err).Str("username", req.Username).Msg("Failed to get user for deleting refresh tokens")
+	// 	// Продолжаем без удаления старых токенов
+	// } else {
+	// 	// Удаляем старые refresh токены для пользователя перед установкой нового
+	// 	err = hd.sv.DeleteRefreshTokensByUserID(c.Request.Context(), user.ID)
+	// 	if err != nil {
+	// 		lg.Warn().Err(err).Int("user_id", user.ID).Msg("Failed to delete old refresh tokens")
+	// 	}
+	// }
 
 	c.SetCookie("access_token", accessToken, int(hd.accessTokenExp.Seconds()), "/", extractDomain(hd.publicHost), true, true)
 	c.SetCookie("refresh_token", refreshToken, int(hd.refreshTokenExp.Seconds()), "/", extractDomain(hd.publicHost), true, true)
@@ -179,22 +178,22 @@ func (hd *AuthHandler) Refresh(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil || refreshToken == "" {
 		// If not found in cookie, try to get from request body
-		if strings.Contains(c.ContentType(), "application/json") {
-			var req struct {
-				RefreshToken string `json:"refreshToken" binding:"required"`
-			}
+		// if strings.Contains(c.ContentType(), "application/json") {
+		// 	var req struct {
+		// 		RefreshToken string `json:"refreshToken" binding:"required"`
+		// 	}
 
-			if err := c.ShouldBindJSON(&req); err != nil {
-				lg.Warn().Err(err).Msgf("%s error bind json", pkgConst.Warn)
-				c.JSON(http.StatusBadRequest, ginext.H{"error": err.Error()})
-				return
-			}
-			refreshToken = req.RefreshToken
-		} else {
-			lg.Warn().Str("content-type", c.ContentType()).Msgf("%s No refresh token found in cookie or request body", pkgConst.Warn)
-			c.JSON(http.StatusBadRequest, ginext.H{"error": "Refresh token is required"})
-			return
-		}
+		// 	if err := c.ShouldBindJSON(&req); err != nil {
+		// 		lg.Warn().Err(err).Msgf("%s error bind json", pkgConst.Warn)
+		// 		c.JSON(http.StatusBadRequest, ginext.H{"error": err.Error()})
+		// 		return
+		// 	}
+		// 	refreshToken = req.RefreshToken
+		// } else {
+		lg.Warn().Str("content-type", c.ContentType()).Msgf("%s No refresh token found in cookie", pkgConst.Warn)
+		c.JSON(http.StatusBadRequest, ginext.H{"error": "Refresh token is required"})
+		return
+		// }
 	}
 
 	newAccessToken, newRefreshToken, err := hd.sv.RefreshTokens(c.Request.Context(), refreshToken)
@@ -396,11 +395,17 @@ func (hd *AuthHandler) Logout(c *gin.Context) {
 
 // extractDomain extracts the domain from a URL
 func extractDomain(url string) string {
+	domain := url
 	if strings.HasPrefix(url, "https://") {
-		return strings.TrimPrefix(url, "https://")
+		domain = strings.TrimPrefix(url, "https://")
+	} else if strings.HasPrefix(url, "http://") {
+		domain = strings.TrimPrefix(url, "http://")
 	}
-	if strings.HasPrefix(url, "http://") {
-		return strings.TrimPrefix(url, "http://")
+
+	// Always add dot prefix for subdomain support
+	if !strings.HasPrefix(domain, ".") {
+		domain = "." + domain
 	}
-	return url
+
+	return domain
 }

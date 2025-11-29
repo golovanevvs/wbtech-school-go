@@ -6,7 +6,7 @@ import { Box, Typography, Card, CardContent } from "@mui/material"
 
 export default function ProfilePage() {
   const { user, logout } = useAuth()
-  // Проверяем авторизацию для всех ролей
+  // Проверка авторизации для всех ролей
   useAuthGuard()
 
   if (!user) return null

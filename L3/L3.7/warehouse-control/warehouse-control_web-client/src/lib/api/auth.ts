@@ -96,7 +96,7 @@ export const authAPI = {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      const response = await apiClient.get<User>("/auth/me")  // Изменили с GetUserResponse на User
+      const response = await apiClient.get<User>("/auth/me")
       return response
     } catch (error) {
       console.error("Get current user failed:", error)

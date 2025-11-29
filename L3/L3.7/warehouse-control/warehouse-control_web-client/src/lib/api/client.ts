@@ -29,7 +29,7 @@ class ApiClient {
     hasRetried = false
   ): Promise<T> {
     console.log("ApiClient.request:", endpoint, "hasRetried:", hasRetried)
-    
+
     const url = `${this.baseURL}${endpoint}`
 
     const config: RequestInit = {
@@ -41,21 +41,20 @@ class ApiClient {
       ...options,
     }
 
-    // const token = this.getAccessToken()
-    // if (token) {
-    //   config.headers = {
-    //     ...config.headers,
-    //     Authorization: `Bearer ${token}`,
-    //   }
-    // }
-
     try {
       const response = await fetch(url, config)
-      console.log("ApiClient.request response:", endpoint, "status:", response.status)
+      console.log(
+        "ApiClient.request response:",
+        endpoint,
+        "status:",
+        response.status
+      )
 
       if (!response.ok) {
         if (response.status === 401 && !hasRetried) {
-          console.log("ApiClient.request: 401 detected, calling handleUnauthorized")
+          console.log(
+            "ApiClient.request: 401 detected, calling handleUnauthorized"
+          )
           try {
             await this.handleUnauthorized()
             return this.request(endpoint, options, true)
@@ -97,32 +96,6 @@ class ApiClient {
     }
   }
 
-  private getAccessToken(): string | null {
-    if (typeof document === "undefined") return null
-
-    const cookies = document.cookie.split(";")
-    for (const cookie of cookies) {
-      const [name, ...valueParts] = cookie.trim().split("=")
-      if (name === "access_token") {
-        return valueParts.join("=") // Восстанавливаем значение, если в нем были знаки '='
-      }
-    }
-    return null
-  }
-
-  private getRefreshToken(): string | null {
-    if (typeof document === "undefined") return null
-
-    const cookies = document.cookie.split(";")
-    for (const cookie of cookies) {
-      const [name, ...valueParts] = cookie.trim().split("=")
-      if (name === "refresh_token") {
-        return valueParts.join("=") // Восстанавливаем значение, если в нем были знаки '='
-      }
-    }
-    return null
-  }
-
   private async handleHttpError(response: Response): Promise<never> {
     let errorMessage = `HTTP error! status: ${response.status}`
 
@@ -141,29 +114,22 @@ class ApiClient {
   }
 
   private async handleUnauthorized(): Promise<void> {
-    console.log("handleUnauthorized: current cookies:", document.cookie)
-    console.log("handleUnauthorized: refresh token from cookies:", this.getRefreshToken())
-    
     try {
       const refreshResponse = await fetch(`${this.baseURL}/auth/refresh`, {
         method: "POST",
         credentials: "include",
       })
 
-      console.log("handleUnauthorized: refresh response status:", refreshResponse.status)
-      console.log("handleUnauthorized: cookies after refresh:", document.cookie)
-      console.log("handleUnauthorized: refresh token after refresh:", this.getRefreshToken())
-
       if (refreshResponse.ok) {
-        return  // Успешно обновили токен
+        return // Успешно обновили токен
       }
-      
+
       // Если ответ не ok, пробрасываем ошибку
       const errorData = await refreshResponse.json().catch(() => ({}))
       throw new Error(errorData.message || "Failed to refresh token")
     } catch (error) {
       console.error("Token refresh failed:", error)
-      
+
       // Пробрасываем ошибку, чтобы request() знал, что обновление не удалось
       throw error
     }
