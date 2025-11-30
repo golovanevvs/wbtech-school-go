@@ -76,14 +76,25 @@ export default function Home() {
     router.push(`/edit-item?id=${itemId}`)
   }
 
-  const handleDelete = (itemId: number) => {
-    console.log("Delete item:", itemId)
-    // TODO: Реализовать удаление
+  const handleDelete = async (itemId: number) => {
+    if (!window.confirm("Вы уверены, что хотите удалить этот товар?")) {
+      return
+    }
+    
+    try {
+      await itemsAPI.deleteItem(itemId)
+      // Обновляем список товаров после удаления
+      setItems(items.filter(item => item.id !== itemId))
+    } catch (err) {
+      console.error("Failed to delete item:", err)
+      setError(
+        err instanceof Error ? err.message : "Не удалось удалить товар"
+      )
+    }
   }
 
   const handleHistory = (itemId: number) => {
-    console.log("View history for item:", itemId)
-    // TODO: Реализовать просмотр истории
+    router.push(`/history?itemId=${itemId}`)
   }
 
   const handleAdd = () => {

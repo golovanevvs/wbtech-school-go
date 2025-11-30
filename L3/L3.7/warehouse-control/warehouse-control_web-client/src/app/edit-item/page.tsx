@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useAuthGuard } from "@/lib/hooks/useAuthGuard"
 import { itemsAPI } from "@/lib/api/items"
 import { Item } from "@/lib/types/items"
@@ -8,7 +8,8 @@ import ItemForm from "@/ui/ItemForm"
 import { Box, Alert, CircularProgress } from "@mui/material"
 import { useRouter, useSearchParams } from "next/navigation"
 
-export default function EditItemPage() {
+// Компонент для содержимого страницы редактирования
+function EditItemContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { isLoading, isAuthenticated, hasRole } = useAuthGuard()
@@ -33,15 +34,8 @@ export default function EditItemPage() {
         setLoading(true)
         setError(null)
         
-        // Получаем список товаров и ищем нужный
-        const response = await itemsAPI.getItems()
-        const foundItem = response.items.find(item => item.id === parseInt(itemId))
-        
-        if (!foundItem) {
-          setError("Товар не найден")
-          return
-        }
-        
+        // Получаем один товар по ID
+        const foundItem = await itemsAPI.getItem(parseInt(itemId))
         setItem(foundItem)
       } catch (err) {
         console.error("Failed to load item:", err)
@@ -64,6 +58,17 @@ export default function EditItemPage() {
   }, [isLoading, isAuthenticated, hasRole, router])
 
   const handleSubmit = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!item) return
+    
+    try {
+      setError(null)
+      await itemsAPI.updateItem(item.id, data)
+      router.push("/")
+    } catch (err) {
+      console.error("Failed to update item:", err)
+      setError(err instanceof Error ? err.message : "Не удалось обновить товар")
+      throw err // Перебрасываем ошибку для обработки в форме
+    }
   }
 
   const handleCancel = () => {
@@ -119,5 +124,18 @@ export default function EditItemPage() {
         loading={loading}
       />
     </Box>
+  )
+}
+
+// Главный компонент страницы с Suspense
+export default function EditItemPage() {
+  return (
+    <Suspense fallback={
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "50vh" }}>
+        <CircularProgress />
+      </Box>
+    }>
+      <EditItemContent />
+    </Suspense>
   )
 }

@@ -21,6 +21,24 @@ export const itemsAPI = {
   },
 
   /**
+   * Получение одного товара по ID
+   * @param itemId ID товара
+   * @returns Товар
+   */
+  async getItem(itemId: number): Promise<Item> {
+    try {
+      const response = await apiClient.get<Item>(`/items/${itemId}`)
+      return response
+    } catch (error) {
+      console.error("Failed to fetch item:", error)
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error("Не удалось загрузить товар")
+    }
+  },
+
+  /**
    * Получение истории действий с товаром
    * @param itemId ID товара
    * @returns История действий
@@ -88,6 +106,32 @@ export const itemsAPI = {
         throw error
       }
       throw new Error("Не удалось удалить товар")
+    }
+  },
+
+  /**
+   * Экспорт истории товара в CSV
+   * @param itemId ID товара
+   * @returns Blob с CSV данными
+   */
+  async exportItemHistoryCSV(itemId: number): Promise<Blob> {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/items/${itemId}/history/export`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      return await response.blob()
+    } catch (error) {
+      console.error("Failed to export CSV:", error)
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error("Не удалось экспортировать CSV")
     }
   }
 }
