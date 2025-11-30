@@ -23,8 +23,15 @@ func NewItemRepository(db *pkgPostgres.Postgres) *ItemRepository {
 // Create creates a new item
 func (rp *ItemRepository) Create(item *model.Item, userID int, userName string) (*model.Item, error) {
 	// Устанавливаем контекст пользователя для триггера
-	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_id = $1", userID)
-	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_name = $1", userName)
+	_, err := rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_id = $1", userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set user_id: %w", err)
+	}
+
+	_, err = rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_name = $1", userName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set user_name: %w", err)
+	}
 
 	query := `
 		INSERT INTO items
@@ -37,7 +44,7 @@ func (rp *ItemRepository) Create(item *model.Item, userID int, userName string) 
 
 	var createdItem model.Item
 	createdItem = *item
-	err := rp.db.DB.Master.QueryRowContext(
+	err = rp.db.DB.Master.QueryRowContext(
 		context.Background(),
 		query,
 		item.Name,
@@ -128,12 +135,19 @@ func (rp *ItemRepository) GetByID(id int) (*model.Item, error) {
 // Update updates an item
 func (rp *ItemRepository) Update(item *model.Item, userID int, userName string) error {
 	// Устанавливаем контекст пользователя для триггера
-	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_id = $1", userID)
-	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_name = $1", userName)
+	_, err := rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_id = $1", userID)
+	if err != nil {
+		return fmt.Errorf("failed to set user_id: %w", err)
+	}
+
+	_, err = rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_name = $1", userName)
+	if err != nil {
+		return fmt.Errorf("failed to set user_name: %w", err)
+	}
 
 	query := `
 		UPDATE
-			items 
+			items
 		SET
 			name = $1, 
 			price = $2,
@@ -171,8 +185,15 @@ func (rp *ItemRepository) Update(item *model.Item, userID int, userName string) 
 // Delete deletes an item by ID
 func (rp *ItemRepository) Delete(id int, userID int, userName string) error {
 	// Устанавливаем контекст пользователя для триггера
-	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_id = $1", userID)
-	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_name = $1", userName)
+	_, err := rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_id = $1", userID)
+	if err != nil {
+		return fmt.Errorf("failed to set user_id: %w", err)
+	}
+
+	_, err = rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_name = $1", userName)
+	if err != nil {
+		return fmt.Errorf("failed to set user_name: %w", err)
+	}
 
 	query := `
 		DELETE FROM

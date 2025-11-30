@@ -45,36 +45,28 @@ DECLARE
     current_user_id INTEGER;
     current_user_name TEXT;
 BEGIN
+    -- Логирование для отладки
+    RAISE NOTICE 'Trigger fired for operation: %', TG_OP;
+    
     -- Получаем информацию о пользователе из пользовательских параметров
     BEGIN
         current_user_id := NULLIF(current_setting('app.current_user_id', true), '')::INTEGER;
-        current_user_name := COALESCE(current_setting('app.current_user_name', true), 'System');
+        current_user_name := COALESCE(current_setting('app.current_user_name', true), 'Unknown User');
+        RAISE NOTICE 'User ID from session: %, User Name: %', current_user_id, current_user_name;
     EXCEPTION WHEN others THEN
-        -- Если произошла ошибка при получении настроек, используем значения по умолчанию
+        RAISE NOTICE 'Error getting user settings: %', SQLERRM;
         current_user_id := NULL;
         current_user_name := 'System';
     END;
     
-    -- Если user_id все еще NULL, пропускаем логирование (безопасно)
-    IF current_user_id IS NULL THEN
-        RAISE NOTICE 'Skipping item action logging - user_id not set';
-        IF TG_OP = 'INSERT' THEN
-            RETURN NEW;
-        ELSIF TG_OP = 'UPDATE' THEN
-            RETURN NEW;
-        ELSIF TG_OP = 'DELETE' THEN
-            RETURN OLD;
-        END IF;
-        RETURN NULL;
-    END IF;
-    
     -- Для операции INSERT
     IF TG_OP = 'INSERT' THEN
+        RAISE NOTICE 'Creating item with ID: %, Name: %', NEW.id, NEW.name;
         INSERT INTO item_actions (item_id, action_type, user_id, user_name, changes)
         VALUES (
             NEW.id,
             'create',
-            current_user_id,
+            COALESCE(current_user_id, 0),
             current_user_name,
             jsonb_build_object(
                 'name', NEW.name,
@@ -82,16 +74,18 @@ BEGIN
                 'quantity', NEW.quantity
             )
         );
+        RAISE NOTICE 'Item action record created for INSERT';
         RETURN NEW;
     END IF;
     
     -- Для операции UPDATE
     IF TG_OP = 'UPDATE' THEN
+        RAISE NOTICE 'Updating item with ID: %', NEW.id;
         INSERT INTO item_actions (item_id, action_type, user_id, user_name, changes)
         VALUES (
             NEW.id,
             'update',
-            current_user_id,
+            COALESCE(current_user_id, 0),
             current_user_name,
             jsonb_build_object(
                 'name', jsonb_build_object('old', OLD.name, 'new', NEW.name),
@@ -99,16 +93,18 @@ BEGIN
                 'quantity', jsonb_build_object('old', OLD.quantity, 'new', NEW.quantity)
             )
         );
+        RAISE NOTICE 'Item action record created for UPDATE';
         RETURN NEW;
     END IF;
     
     -- Для операции DELETE
     IF TG_OP = 'DELETE' THEN
+        RAISE NOTICE 'Deleting item with ID: %', OLD.id;
         INSERT INTO item_actions (item_id, action_type, user_id, user_name, changes)
         VALUES (
             OLD.id,
             'delete',
-            current_user_id,
+            COALESCE(current_user_id, 0),
             current_user_name,
             jsonb_build_object(
                 'name', OLD.name,
@@ -116,6 +112,7 @@ BEGIN
                 'quantity', OLD.quantity
             )
         );
+        RAISE NOTICE 'Item action record created for DELETE';
         RETURN OLD;
     END IF;
     
