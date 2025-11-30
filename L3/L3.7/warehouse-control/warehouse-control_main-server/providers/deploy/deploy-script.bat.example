@@ -15,7 +15,7 @@ if "%VERSION%"=="" (
 )
 
 echo Changing to project directory...
-cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.7\warehouse-control\warehouse-control_main-server\deploy"
+cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.7\warehouse-control\warehouse-control_main-server\providers\deploy"
 
 echo Stopping existing containers...
 docker compose down
