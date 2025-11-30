@@ -93,6 +93,49 @@ function HistoryContent() {
     }
   }
 
+  // Форматирование изменений для отображения
+  const formatChanges = (changes: string | undefined) => {
+    if (!changes || changes === "null") return "Нет данных"
+    
+    try {
+      const parsed = JSON.parse(changes)
+      const parts = []
+      
+      // Обрабатываем разные типы изменений
+      for (const [key, value] of Object.entries(parsed)) {
+        if (typeof value === 'object' && value !== null && 'old' in value && 'new' in value) {
+          // Это изменение (есть old и new)
+          parts.push(
+            <Box key={key} sx={{ mb: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'primary.main' }}>
+                {key}:
+              </Typography>
+              <Box sx={{ ml: 2 }}>
+                <Typography variant="body2" sx={{ color: 'error.main' }}>
+                  Было: {String(value.old)}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'success.main' }}>
+                  Стало: {String(value.new)}
+                </Typography>
+              </Box>
+            </Box>
+          )
+        } else {
+          // Это создание (просто значение)
+          parts.push(
+            <Typography key={key} variant="body2" sx={{ mb: 0.5 }}>
+              <strong>{key}:</strong> {String(value)}
+            </Typography>
+          )
+        }
+      }
+      
+      return <Box>{parts}</Box>
+    } catch (error) {
+      return <Typography variant="body2" color="error">Ошибка парсинга данных</Typography>
+    }
+  }
+
   // Обработчик экспорта в CSV
   const handleExportCSV = async () => {
     if (!itemId) return
@@ -219,9 +262,7 @@ function HistoryContent() {
                     </TableCell>
                     <TableCell>
                       <Box sx={{ maxWidth: 400 }}>
-                        <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
-                          {action.changes ? JSON.stringify(action.changes, null, 2) : "Нет данных"}
-                        </Typography>
+                        {formatChanges(action.changes)}
                       </Box>
                     </TableCell>
                   </TableRow>

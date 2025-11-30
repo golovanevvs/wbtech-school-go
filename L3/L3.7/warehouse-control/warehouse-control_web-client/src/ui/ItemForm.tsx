@@ -111,19 +111,21 @@ export default function ItemForm({
               <TextField
                 fullWidth
                 label="Цена (руб.)"
-                type="number"
-                inputProps={{ 
-                  min: 0, 
-                  step: 0.01 
-                }}
+                type="text"
                 value={formData.price}
                 onChange={(e) => {
                   const value = e.target.value;
-                  const numValue = value === '' ? 0 : parseFloat(value);
+                  // Разрешаем только цифры и одну точку
+                  const cleanValue = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+                  const numValue = cleanValue === '' ? 0 : parseFloat(cleanValue);
                   handleInputChange("price", numValue);
                 }}
+                inputProps={{ 
+                  inputMode: 'decimal',
+                  pattern: '[0-9]*[.,]?[0-9]*'
+                }}
                 error={!!errors.price}
-                helperText={errors.price}
+                helperText={errors.price || "Введите цену (например: 123.45)"}
                 disabled={submitting || loading}
                 required
               />
@@ -131,14 +133,21 @@ export default function ItemForm({
               <TextField
                 fullWidth
                 label="Количество"
-                type="number"
-                inputProps={{ 
-                  min: 0 
-                }}
+                type="text"
                 value={formData.quantity}
-                onChange={(e) => handleInputChange("quantity", parseInt(e.target.value) || 0)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Разрешаем только цифры
+                  const cleanValue = value.replace(/[^0-9]/g, '');
+                  const numValue = cleanValue === '' ? 0 : parseInt(cleanValue);
+                  handleInputChange("quantity", numValue);
+                }}
+                inputProps={{
+                  inputMode: 'numeric',
+                  pattern: '[0-9]*'
+                }}
                 error={!!errors.quantity}
-                helperText={errors.quantity}
+                helperText={errors.quantity || "Введите количество"}
                 disabled={submitting || loading}
                 required
               />

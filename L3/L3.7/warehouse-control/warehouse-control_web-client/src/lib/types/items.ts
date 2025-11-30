@@ -24,7 +24,7 @@ export interface ItemAction {
   action_type: "create" | "update" | "delete"
   user_id: number
   user_name: string
-  changes?: Record<string, unknown>
+  changes?: string
   created_at: string
 }
 
