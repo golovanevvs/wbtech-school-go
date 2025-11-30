@@ -14,7 +14,7 @@ import (
 
 // ISvForAuthHandler interface for auth handler
 type ISvForAuthHandler interface {
-	ValidateToken(ctx context.Context, tokenString string) (userID int, userRole string, err error)
+	ValidateToken(ctx context.Context, tokenString string) (userID int, userRole, userName string, err error)
 	// RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 }
 
@@ -53,7 +53,7 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 
 	lg.Debug().Msgf("%s Validating token...", pkgConst.Starting)
 
-	userID, userRole, err := mw.sv.ValidateToken(c.Request.Context(), tokenString)
+	userID, userRole, userName, err := mw.sv.ValidateToken(c.Request.Context(), tokenString)
 	if err != nil {
 		// lg.Warn().Err(err).Msg("Failed to validate token, attempting refresh")
 
@@ -93,8 +93,9 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 
 	c.Set("user_id", userID)
 	c.Set("user_role", userRole)
+	c.Set("user_name", userName)
 
-	lg.Debug().Int("user_id", userID).Str("user_role", userRole).Msgf("%s Token validated successfully", pkgConst.Finished)
+	lg.Debug().Int("user_id", userID).Str("user_role", userRole).Str("user_name", userName).Msgf("%s Token validated successfully", pkgConst.Finished)
 
 	c.Next()
 }

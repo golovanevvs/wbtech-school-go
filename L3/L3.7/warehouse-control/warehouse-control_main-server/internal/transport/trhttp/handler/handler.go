@@ -5,8 +5,10 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/pkg/pkgPrometheus"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/service"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/transport/trhttp/handler/authHandler"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/transport/trhttp/handler/healthHandler"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/transport/trhttp/handler/itemHandler"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/transport/trhttp/handler/middleware"
 
 	"github.com/wb-go/wbf/ginext"
@@ -16,6 +18,7 @@ import (
 type IService interface {
 	MiddlewareService() middleware.ISvForAuthHandler
 	AuthService() authHandler.ISvForAuthHandler
+	ItemService() service.IItemService
 }
 
 type Handler struct {
@@ -65,6 +68,10 @@ func New(
 	{
 		authHandler := authHandler.New(&lg, sv.AuthService(), publicHost, accessTokenExp, refreshTokenExp)
 		authHandler.RegisterProtectedRoutes(protected)
+
+		// Добавляем хендлер для товаров
+		itemHandler := itemHandler.New(&lg, sv.ItemService())
+		itemHandler.RegisterProtectedRoutes(protected)
 	}
 
 	publicAuth := rt.Group("/auth")

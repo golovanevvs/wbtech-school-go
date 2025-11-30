@@ -230,21 +230,27 @@ func (sv *AuthService) RefreshTokens(ctx context.Context, refreshToken string) (
 }
 
 // ValidateToken validates an access token
-func (sv *AuthService) ValidateToken(ctx context.Context, tokenString string) (int, string, error) {
+func (sv *AuthService) ValidateToken(ctx context.Context, tokenString string) (int, string, string, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(sv.cfg.JWTSecret), nil
 	})
 
 	if err != nil {
-		return 0, "", fmt.Errorf("failed to parse token: %w", err)
+		return 0, "", "", fmt.Errorf("failed to parse token: %w", err)
 	}
 
 	if !token.Valid {
-		return 0, "", errors.New("invalid token")
+		return 0, "", "", errors.New("invalid token")
 	}
 
-	return claims.UserID, claims.UserRole, nil
+	// Получаем полную информацию о пользователе из базы данных
+	user, err := sv.userRp.GetByID(claims.UserID)
+	if err != nil {
+		return 0, "", "", fmt.Errorf("user not found: %w", err)
+	}
+
+	return claims.UserID, claims.UserRole, user.Name, nil
 }
 
 // GetUserByID returns a user by ID

@@ -19,7 +19,7 @@ type ISvForAuthHandler interface {
 	Register(ctx context.Context, username, password, name, role string) (*model.User, error)
 	Login(ctx context.Context, username, password string) (string, string, error)
 	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
-	ValidateToken(ctx context.Context, tokenString string) (int, string, error)
+	ValidateToken(ctx context.Context, tokenString string) (int, string, string, error)
 	GetUserByID(ctx context.Context, id int) (*model.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*model.User, error)
 	UpdateUser(ctx context.Context, user *model.User) error
@@ -182,7 +182,7 @@ func (hd *AuthHandler) Refresh(c *gin.Context) {
 		// 	var req struct {
 		// 		RefreshToken string `json:"refreshToken" binding:"required"`
 		// 	}
-
+		//
 		// 	if err := c.ShouldBindJSON(&req); err != nil {
 		// 		lg.Warn().Err(err).Msgf("%s error bind json", pkgConst.Warn)
 		// 		c.JSON(http.StatusBadRequest, ginext.H{"error": err.Error()})
@@ -193,7 +193,6 @@ func (hd *AuthHandler) Refresh(c *gin.Context) {
 		lg.Warn().Str("content-type", c.ContentType()).Msgf("%s No refresh token found in cookie", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ginext.H{"error": "Refresh token is required"})
 		return
-		// }
 	}
 
 	newAccessToken, newRefreshToken, err := hd.sv.RefreshTokens(c.Request.Context(), refreshToken)

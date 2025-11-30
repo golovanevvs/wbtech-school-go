@@ -26,3 +26,13 @@ func (rp *RpPostgres) User() *UserRepository {
 func (rp *RpPostgres) RefreshToken() *RefreshTokenRepository {
 	return NewRefreshTokenRepository(rp.db)
 }
+
+// Item returns the item repository
+func (rp *RpPostgres) Item() *ItemRepository {
+	return NewItemRepository(rp.db)
+}
+
+// ItemHistory returns the item history repository
+func (rp *RpPostgres) ItemHistory() *ItemHistoryRepository {
+	return NewItemHistoryRepository(rp.db)
+}

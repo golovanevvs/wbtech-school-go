@@ -11,6 +11,7 @@ import (
 type Service struct {
 	User *UserService
 	Auth *AuthService
+	Item *ItemService
 }
 
 // New creates a new Service structure
@@ -23,10 +24,12 @@ func New(
 
 	userService := NewUserService(rp.User())
 	authService := NewAuthService(cfg, rp.User(), rp.RefreshToken())
+	itemService := NewItemService(rp.Item(), rp.ItemHistory())
 
 	return &Service{
 		User: userService,
 		Auth: authService,
+		Item: itemService,
 	}
 }
 
@@ -38,4 +41,9 @@ func (sv *Service) MiddlewareService() middleware.ISvForAuthHandler {
 // AuthService returns the auth service
 func (sv *Service) AuthService() authHandler.ISvForAuthHandler {
 	return sv.Auth
+}
+
+// ItemService returns the item service
+func (sv *Service) ItemService() IItemService {
+	return sv.Item
 }
