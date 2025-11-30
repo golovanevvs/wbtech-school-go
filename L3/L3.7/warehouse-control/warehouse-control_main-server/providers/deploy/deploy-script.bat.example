@@ -1,29 +1,20 @@
 @echo off
-echo ======================================================
+echo ==================================================
 echo    Starting warehouse-control_main-server deployment
 echo    Time: %date% %time%
-echo ======================================================
+echo ==================================================
 echo.
 
-set VERSION=%~1
-if "%VERSION%"=="" (
-    echo No version specified, using 'latest'
-    set APP_VERSION=latest
-) else (
-    echo Deploying version: %VERSION%
-    set APP_VERSION=%VERSION%
-)
-
 echo Changing to project directory...
-cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.7\warehouse-control\warehouse-control_main-server\deploy"
+cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.7\warehouse-control\warehouse-control_main-server\providers\deploy"
 
 echo Stopping existing containers...
 docker compose down
 
-echo Pulling image...
+echo Pulling latest image...
 docker compose pull
 
-echo Starting new containers with version: %APP_VERSION%
+echo Starting new containers...
 docker compose -p warehouse-control_main-server up -d
 
 echo.
@@ -31,9 +22,9 @@ echo Checking container status...
 docker ps --filter "name=warehouse-control_main-server"
 
 echo.
-echo =====================================================================
+echo ==================================================================
 echo    warehouse-control_main-server deployment completed successfully!
-echo =====================================================================
+echo ==================================================================
 echo.
 
 ping -n 3 127.0.0.1 > nul
