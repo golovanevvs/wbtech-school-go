@@ -1,6 +1,11 @@
 import { User, RegisterResponse } from "../types/auth"
 import apiClient from "./client"
 
+interface UpdateUserRequest {
+  name?: string
+  user_role?: string
+}
+
 // Интерфейсы для API ответов
 interface LoginResponse {
   message: string
@@ -134,6 +139,34 @@ export const authAPI = {
     } catch (error) {
       console.error("Server status check failed:", error)
       return false
+    }
+  },
+
+  /**
+   * Обновление данных пользователя
+   * @param userData Данные для обновления
+   * @returns Обновленные данные пользователя
+   */
+  async updateUser(userData: UpdateUserRequest): Promise<User> {
+    try {
+      const response = await apiClient.put<User>("/auth/update", userData)
+      return response
+    } catch (error) {
+      console.error("Update user failed:", error)
+      throw new Error("Не удалось обновить данные пользователя")
+    }
+  },
+
+  /**
+   * Удаление пользователя
+   */
+  async deleteUser(): Promise<void> {
+    try {
+      await apiClient.delete("/auth/delete")
+      // Cookie будут удалены сервером
+    } catch (error) {
+      console.error("Delete user failed:", error)
+      throw new Error("Не удалось удалить пользователя")
     }
   },
 }

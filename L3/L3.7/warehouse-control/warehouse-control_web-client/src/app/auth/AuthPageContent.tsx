@@ -10,11 +10,6 @@ export default function AuthPageContent() {
 
   console.log("AuthPage render - mode:", mode)
 
-  const handleAuthSuccess = () => {
-    // Дополнительные действия после успешной авторизации
-    // можно добавить здесь, если нужно
-  }
-
   return (
     <Box
       sx={{
@@ -23,7 +18,7 @@ export default function AuthPageContent() {
         px: { xs: 2, sm: 2 },
       }}
     >
-      <AuthForm mode={mode} onAuthSuccess={handleAuthSuccess} />
+      <AuthForm initialMode={mode} />
     </Box>
   )
 }

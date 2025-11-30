@@ -33,6 +33,8 @@ interface AuthContextType {
   checkAuth: () => Promise<void>
   hasRole: (roles: UserRole[]) => boolean
   clearError: () => void
+  updateUser: (userData: { name?: string; user_role?: string }) => Promise<boolean>
+  deleteUser: () => Promise<boolean>
 }
 
 // Контекст
@@ -196,6 +198,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null)
   }
 
+  // Функция обновления данных пользователя
+  const updateUser = async (
+    userData: { name?: string; user_role?: string }
+  ): Promise<boolean> => {
+    try {
+      setIsChecking(true)
+      setError(null)
+
+      const updatedUser = await authAPI.updateUser(userData)
+      setUser(updatedUser)
+
+      return true
+    } catch (error) {
+      console.error("Update user failed:", error)
+      if (error instanceof Error) {
+        setError(error.message)
+      }
+      return false
+    } finally {
+      setIsChecking(false)
+    }
+  }
+
+  // Функция удаления пользователя
+  const deleteUser = async (): Promise<boolean> => {
+    try {
+      setIsChecking(true)
+      setError(null)
+
+      await authAPI.deleteUser()
+      
+      // Очищаем локальное состояние
+      setUser(null)
+      sessionStorage.removeItem("redirectAfterLogin")
+
+      return true
+    } catch (error) {
+      console.error("Delete user failed:", error)
+      if (error instanceof Error) {
+        setError(error.message)
+      }
+      return false
+    } finally {
+      setIsChecking(false)
+    }
+  }
+
   // Проверка авторизации при монтировании компонента
   useEffect(() => {
     console.log("AuthContext useEffect triggered, pathname:", pathname)
@@ -221,6 +270,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkAuth,
     hasRole,
     clearError,
+    updateUser,
+    deleteUser,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

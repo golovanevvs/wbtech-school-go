@@ -48,7 +48,7 @@ interface AuthFormProps {
 
 export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
   const router = useRouter()
-  const { login } = useAuth()
+  const { login, register } = useAuth()
 
   const [mode, setMode] = useState<"login" | "register">(initialMode)
   const [formData, setFormData] = useState({
@@ -104,9 +104,7 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
         await login(formData.username, formData.password)
         router.push("/")
       } else {
-        // TODO: Реализовать регистрацию
-        // await register(formData.username, formData.password, formData.name, formData.role)
-        console.log("Registration not implemented yet")
+        await register(formData.username, formData.password, formData.name, formData.role)
       }
     } catch (err) {
       console.error("Auth error:", err)
