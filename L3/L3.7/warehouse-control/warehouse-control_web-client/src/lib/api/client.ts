@@ -139,15 +139,23 @@ class ApiClient {
     if (typeof window !== "undefined") {
       // Сохранение текущего пути для возврата после авторизации
       const currentPath = window.location.pathname + window.location.search
+      // Избегаем сохранения пути /auth, чтобы не создавать циклы переадресации
       if (currentPath !== "/auth") {
         sessionStorage.setItem("redirectAfterLogin", currentPath)
       }
 
+      // Формируем полный путь с basePath
+      const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ""
+      const authPath = basePath ? `${basePath}/auth` : "/auth"
+
       try {
+        // Используем Next.js redirect с полным путем
         const { redirect } = await import("next/navigation")
-        redirect("/auth")
-      } catch {
-        window.location.href = "/auth"
+        redirect(authPath)
+      } catch (error) {
+        console.error("Next.js redirect failed, falling back to window.location:", error)
+        // Fallback: window.location с полным путем
+        window.location.href = authPath
       }
     }
   }
