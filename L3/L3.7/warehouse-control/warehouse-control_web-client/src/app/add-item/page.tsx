@@ -7,6 +7,7 @@ import ItemForm from "@/ui/ItemForm"
 import { Box, Alert, CircularProgress } from "@mui/material"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
+import { getFullPath } from "@/lib/utils/paths"
 
 export default function AddItemPage() {
   const router = useRouter()
@@ -15,7 +16,7 @@ export default function AddItemPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && !hasRole(["Кладовщик"])) {
-      router.push("/")
+      router.push(getFullPath("/"))
     }
   }, [isLoading, isAuthenticated, hasRole, router])
 
@@ -25,7 +26,7 @@ export default function AddItemPage() {
     try {
       setError(null)
       await itemsAPI.createItem(data)
-      router.push("/")
+      router.push(getFullPath("/"))
     } catch (err) {
       console.error("Failed to create item:", err)
       setError(err instanceof Error ? err.message : "Не удалось создать товар")
@@ -34,7 +35,7 @@ export default function AddItemPage() {
   }
 
   const handleCancel = () => {
-    router.push("/")
+    router.push(getFullPath("/"))
   }
 
   if (isLoading) {

@@ -18,6 +18,7 @@ import Brightness7Icon from "@mui/icons-material/Brightness7"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import { useThemeContext } from "@/lib/components/ThemeProvider"
 import { useRouter } from "next/navigation"
+import { getFullPath } from "@/lib/utils/paths"
 
 export default function Header() {
   const { isAuthenticated, user, logout } = useAuth()
@@ -36,20 +37,20 @@ export default function Header() {
   const handleLogout = () => {
     logout()
     handleProfileMenuClose()
-    router.push("/auth")
+    router.push(getFullPath("/auth"))
   }
 
   const handleProfile = () => {
     handleProfileMenuClose()
-    router.push("/profile")
+    router.push(getFullPath("/profile"))
   }
 
   const handleLogin = () => {
-    router.push("/auth")
+    router.push(getFullPath("/auth"))
   }
 
   const handleHome = () => {
-    router.push("/")
+    router.push(getFullPath("/"))
   }
 
   const handleToggleTheme = () => {

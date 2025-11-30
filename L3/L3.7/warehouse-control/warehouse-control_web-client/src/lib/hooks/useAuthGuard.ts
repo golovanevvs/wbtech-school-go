@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "../contexts/AuthContext"
 import { UserRole } from "../types/auth"
 import { useEffect } from "react"
+import { getFullPath } from "../utils/paths"
 
 export const useAuthGuard = (requiredRoles?: UserRole[]) => {
   const { user, isLoading, isAuthenticated, isChecking, hasRole } = useAuth()
@@ -21,13 +22,13 @@ export const useAuthGuard = (requiredRoles?: UserRole[]) => {
       console.log("AuthGuard: checking permissions...")
       if (!isAuthenticated) {
         console.log("AuthGuard: not authenticated, redirecting to /auth")
-        router.push("/auth")
+        router.push(getFullPath("/auth"))
         return
       }
 
       if (requiredRoles && !hasRole(requiredRoles)) {
         console.log("AuthGuard: insufficient role, redirecting to /auth")
-        router.push("/auth")
+        router.push(getFullPath("/auth"))
         return
       }
 

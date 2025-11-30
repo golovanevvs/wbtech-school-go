@@ -11,6 +11,7 @@ import {
 import { usePathname, useRouter } from "next/navigation"
 import { User, UserRole } from "../types/auth"
 import { authAPI } from "../api/auth"
+import { getFullPath, getRelativePath } from "../utils/paths"
 
 // Интерфейс для контекста авторизации
 interface AuthContextType {
@@ -89,9 +90,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const redirectPath = sessionStorage.getItem("redirectAfterLogin")
       if (redirectPath) {
         sessionStorage.removeItem("redirectAfterLogin")
-        router.push(redirectPath)
+        // Используем относительный путь для router.push
+        const relativePath = getRelativePath(redirectPath)
+        router.push(relativePath)
       } else if (pathname === "/auth") {
-        router.push("/")
+        router.push(getFullPath("/"))
       }
 
       return true
@@ -129,9 +132,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const redirectPath = sessionStorage.getItem("redirectAfterLogin")
       if (redirectPath) {
         sessionStorage.removeItem("redirectAfterLogin")
-        router.push(redirectPath)
+        // Используем относительный путь для router.push
+        const relativePath = getRelativePath(redirectPath)
+        router.push(relativePath)
       } else if (pathname === "/auth") {
-        router.push("/")
+        router.push(getFullPath("/"))
       }
 
       return true

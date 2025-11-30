@@ -6,6 +6,7 @@ import { useAuthGuard } from "@/lib/hooks/useAuthGuard"
 import { itemsAPI } from "@/lib/api/items"
 import { Item } from "@/lib/types/items"
 import { useRouter } from "next/navigation"
+import { getFullPath } from "@/lib/utils/paths"
 import {
   Box,
   Typography,
@@ -73,7 +74,7 @@ export default function Home() {
 
   // Обработчики действий
   const handleEdit = (itemId: number) => {
-    router.push(`/edit-item?id=${itemId}`)
+    router.push(getFullPath(`/edit-item?id=${itemId}`))
   }
 
   const handleDelete = async (itemId: number) => {
@@ -92,11 +93,11 @@ export default function Home() {
   }
 
   const handleHistory = (itemId: number) => {
-    router.push(`/history?itemId=${itemId}`)
+    router.push(getFullPath(`/history?itemId=${itemId}`))
   }
 
   const handleAdd = () => {
-    router.push("/add-item")
+    router.push(getFullPath("/add-item"))
   }
 
   if (isLoading || loading) {

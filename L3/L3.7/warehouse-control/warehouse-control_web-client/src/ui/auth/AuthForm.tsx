@@ -19,6 +19,7 @@ import {
 } from "@mui/material"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import { useRouter } from "next/navigation"
+import { getFullPath } from "@/lib/utils/paths"
 
 // Предустановленные аккаунты для быстрого тестирования
 const TEST_ACCOUNTS = [
@@ -77,7 +78,7 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
       })
 
       await login(account.login, account.password)
-      router.push("/")
+      router.push(getFullPath("/"))
     } catch (err) {
       console.error("Failed to login with test account:", err)
       setError(err instanceof Error ? err.message : "Ошибка входа")
@@ -104,7 +105,7 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
 
       if (mode === "login") {
         await login(formData.username, formData.password)
-        router.push("/")
+        router.push(getFullPath("/"))
       } else {
         await register(
           formData.username,

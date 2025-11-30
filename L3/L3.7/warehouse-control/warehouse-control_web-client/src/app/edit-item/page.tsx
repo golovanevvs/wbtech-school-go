@@ -7,6 +7,7 @@ import { Item } from "@/lib/types/items"
 import ItemForm from "@/ui/ItemForm"
 import { Box, Alert, CircularProgress } from "@mui/material"
 import { useRouter, useSearchParams } from "next/navigation"
+import { getFullPath } from "@/lib/utils/paths"
 
 function EditItemContent() {
   const router = useRouter()
@@ -72,7 +73,7 @@ function EditItemContent() {
   // Проверка прав доступа
   useEffect(() => {
     if (!isLoading && isAuthenticated && !hasRole(["Кладовщик"])) {
-      router.push("/")
+      router.push(getFullPath("/"))
     }
   }, [isLoading, isAuthenticated, hasRole, router])
 
@@ -84,7 +85,7 @@ function EditItemContent() {
     try {
       setError(null)
       await itemsAPI.updateItem(item.id, data)
-      router.push("/")
+      router.push(getFullPath("/"))
     } catch (err) {
       console.error("Failed to update item:", err)
       setError(err instanceof Error ? err.message : "Не удалось обновить товар")
@@ -93,7 +94,7 @@ function EditItemContent() {
   }
 
   const handleCancel = () => {
-    router.push("/")
+    router.push(getFullPath("/"))
   }
 
   if (isLoading || loading) {
