@@ -120,10 +120,6 @@ export default function ItemForm({
                   const numValue = cleanValue === '' ? 0 : parseFloat(cleanValue);
                   handleInputChange("price", numValue);
                 }}
-                inputProps={{ 
-                  inputMode: 'decimal',
-                  pattern: '[0-9]*[.,]?[0-9]*'
-                }}
                 error={!!errors.price}
                 helperText={errors.price || "Введите цену (например: 123.45)"}
                 disabled={submitting || loading}
@@ -141,10 +137,6 @@ export default function ItemForm({
                   const cleanValue = value.replace(/[^0-9]/g, '');
                   const numValue = cleanValue === '' ? 0 : parseInt(cleanValue);
                   handleInputChange("quantity", numValue);
-                }}
-                inputProps={{
-                  inputMode: 'numeric',
-                  pattern: '[0-9]*'
                 }}
                 error={!!errors.quantity}
                 helperText={errors.quantity || "Введите количество"}

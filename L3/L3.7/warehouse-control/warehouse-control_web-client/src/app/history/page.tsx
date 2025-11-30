@@ -104,35 +104,62 @@ function HistoryContent() {
       // Обрабатываем разные типы изменений
       for (const [key, value] of Object.entries(parsed)) {
         if (typeof value === 'object' && value !== null && 'old' in value && 'new' in value) {
-          // Это изменение (есть old и new)
+          const oldValue = String(value.old)
+          const newValue = String(value.new)
+          
+          // Если значения одинаковые, не показываем изменение
+          if (oldValue === newValue) continue
+          
           parts.push(
-            <Box key={key} sx={{ mb: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'primary.main' }}>
-                {key}:
+            <Box key={key} sx={{ mb: 1.5, p: 1, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'grey.200' }}>
+              <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'primary.main', mb: 0.5 }}>
+                📝 {key}:
               </Typography>
-              <Box sx={{ ml: 2 }}>
-                <Typography variant="body2" sx={{ color: 'error.main' }}>
-                  Было: {String(value.old)}
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'success.main' }}>
-                  Стало: {String(value.new)}
-                </Typography>
+              <Box sx={{ ml: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="body2" sx={{ color: 'error.main', fontWeight: 'medium' }}>
+                    ❌ Было:
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'error.main' }}>
+                    {oldValue}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 'medium' }}>
+                    ✅ Стало:
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'success.main' }}>
+                    {newValue}
+                  </Typography>
+                </Box>
               </Box>
             </Box>
           )
         } else {
           // Это создание (просто значение)
           parts.push(
-            <Typography key={key} variant="body2" sx={{ mb: 0.5 }}>
-              <strong>{key}:</strong> {String(value)}
-            </Typography>
+            <Box key={key} sx={{ mb: 1, p: 1, bgcolor: 'success.light', borderRadius: 1, border: '1px solid', borderColor: 'success.main' }}>
+              <Typography variant="body2" sx={{ color: 'success.contrastText', fontWeight: 'medium' }}>
+                ➕ Создано: <strong>{key}</strong> = {String(value)}
+              </Typography>
+            </Box>
           )
         }
       }
       
+      if (parts.length === 0) {
+        return <Typography variant="body2" color="text.secondary">Изменений нет</Typography>
+      }
+      
       return <Box>{parts}</Box>
     } catch (error) {
-      return <Typography variant="body2" color="error">Ошибка парсинга данных</Typography>
+      return (
+        <Box sx={{ p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
+          <Typography variant="body2" color="error.contrastText">
+            ⚠️ Ошибка парсинга данных: {error instanceof Error ? error.message : 'Неизвестная ошибка'}
+          </Typography>
+        </Box>
+      )
     }
   }
 

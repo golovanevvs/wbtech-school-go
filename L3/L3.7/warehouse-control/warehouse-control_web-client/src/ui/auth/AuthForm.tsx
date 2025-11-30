@@ -1,230 +1,277 @@
 "use client"
 
 import { useState } from "react"
+import {
+  Box,
+  Paper,
+  TextField,
+  Button,
+  Typography,
+  ToggleButton,
+  ToggleButtonGroup,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert,
+  Divider,
+  Chip,
+} from "@mui/material"
 import { useAuth } from "@/lib/contexts/AuthContext"
-import { UserRole } from "@/lib/types/auth"
 import { useRouter } from "next/navigation"
-import { Typography, Box, Alert, Link as MuiLink } from "@mui/material"
-import VCard from "../VCard"
-import Button from "../Button"
-import Input from "../Input"
+
+// Предустановленные аккаунты для быстрого тестирования
+const TEST_ACCOUNTS = [
+  {
+    label: "🏪 Кладовщик (полный доступ)",
+    login: "storekeeper",
+    password: "password",
+    role: "Кладовщик",
+  },
+  {
+    label: "👔 Менеджер (просмотр)",
+    login: "manager",
+    password: "password",
+    role: "Менеджер",
+  },
+  {
+    label: "🔍 Аудитор (история)",
+    login: "auditor",
+    password: "password",
+    role: "Аудитор",
+  },
+]
 
 interface AuthFormProps {
-  mode: "login" | "register"
-  onAuthSuccess?: () => void
+  initialMode?: "login" | "register"
 }
 
-export default function AuthForm({ mode, onAuthSuccess }: AuthFormProps) {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [name, setName] = useState("")
-  const [role, setRole] = useState<UserRole>("Кладовщик")
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-
+export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
   const router = useRouter()
-  const { login, register, error: authError, clearError } = useAuth()
+  const { login } = useAuth()
 
-  // Логирование для отладки
-  console.log("AuthForm render - authError:", authError)
-  console.log("AuthForm render - mode:", mode)
-  console.log("AuthForm render - isLoading:", isLoading)
+  const [mode, setMode] = useState<"login" | "register">(initialMode)
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+    name: "",
+    role: "Кладовщик",
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    clearError()
-    setIsLoading(true)
-
+  // Обработчик выбора предустановленного аккаунта для тестирования
+  const handleTestAccountSelect = async (account: typeof TEST_ACCOUNTS[0]) => {
     try {
-      let success = false
-
-      if (mode === "login") {
-        success = await login(username, password)
-      } else {
-        if (password !== confirmPassword) {
-          setError("Пароли не совпадают")
-          setIsLoading(false)
-          return
-        }
-        success = await register(username, password, name, role)
-      }
-
-      if (success) {
-        if (onAuthSuccess) {
-          onAuthSuccess()
-        }
-        router.push("/")
-      } else {
-        // Если нет локальной ошибки, но есть ошибка из AuthContext, показываем ее
-        if (!authError) {
-          setError(
-            mode === "login"
-              ? "Неверный логин или пароль"
-              : "Не удалось зарегистрироваться. Проверьте введенные данные."
-          )
-        }
-      }
+      setLoading(true)
+      setError(null)
+      
+      // Автоматически заполняем форму и выполняем вход
+      setFormData({
+        username: account.login,
+        password: account.password,
+        name: account.login,
+        role: account.role,
+      })
+      
+      await login(account.login, account.password)
+      router.push("/")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Произошла ошибка")
+      console.error("Failed to login with test account:", err)
+      setError(err instanceof Error ? err.message : "Ошибка входа")
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  const handleModeChange = () => {
-    const newMode = mode === "login" ? "register" : "login"
-    router.push(`/auth?mode=${newMode}`)
+  // Обработчик изменения полей формы
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }))
   }
 
-  const handleInputChange = () => {
-    clearError()
-    setError("")
+  // Обработчик отправки формы
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      setLoading(true)
+      setError(null)
+      
+      if (mode === "login") {
+        await login(formData.username, formData.password)
+        router.push("/")
+      } else {
+        // TODO: Реализовать регистрацию
+        // await register(formData.username, formData.password, formData.name, formData.role)
+        console.log("Registration not implemented yet")
+      }
+    } catch (err) {
+      console.error("Auth error:", err)
+      setError(err instanceof Error ? err.message : "Произошла ошибка")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Обработчик переключения режима
+  const handleModeChange = (_: React.MouseEvent<HTMLElement>, newMode: "login" | "register") => {
+    if (newMode !== null) {
+      setMode(newMode)
+      setError(null)
+    }
   }
 
   return (
-    <VCard>
-      <Typography variant="h4" component="h1" gutterBottom>
-        {mode === "login" ? "Вход в систему" : "Регистрация"}
-      </Typography>
-
-      <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
-        <Input
-          label="Логин"
-          type="text"
-          value={username}
-          onChange={(e) => {
-            setUsername(e.target.value)
-            handleInputChange()
-          }}
-          required
-        />
-
-        <Input
-          label="Пароль"
-          type="password"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value)
-            handleInputChange()
-          }}
-          required
-        />
-
-        {mode === "register" && (
-          <>
-            <Input
-              label="Подтверждение пароля"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => {
-                setConfirmPassword(e.target.value)
-                handleInputChange()
-              }}
-              required
-              error={
-                password !== "" &&
-                confirmPassword !== "" &&
-                password !== confirmPassword
-              }
-              helperText={
-                password !== "" &&
-                confirmPassword !== "" &&
-                password !== confirmPassword
-                  ? "Пароли не совпадают"
-                  : ""
-              }
-            />
-
-            <Input
-              label="Имя"
-              type="text"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value)
-                handleInputChange()
-              }}
-              required
-            />
-
-            <Box sx={{ mt: 2, mb: 1 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Роль
-              </Typography>
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                {(["Кладовщик", "Менеджер", "Аудитор"] as UserRole[]).map(
-                  (r) => (
-                    <Button
-                      key={r}
-                      type="button"
-                      variant={role === r ? "contained" : "outlined"}
-                      onClick={() => setRole(r)}
-                      sx={{
-                        flex: 1,
-                        minWidth: "100px",
-                        fontSize: "0.8rem",
-                      }}
-                    >
-                      {r}
-                    </Button>
-                  )
-                )}
-              </Box>
-            </Box>
-          </>
-        )}
-
-        {(error || authError) && (
-          <Alert severity="error" sx={{ mt: 2, width: "100%" }}>
-            {error || authError}
-          </Alert>
-        )}
-
-        {/* Логирование условия для Alert */}
-        {(() => {
-          const showAlert = error || authError
-          console.log(
-            "Alert condition check - error:",
-            error,
-            "authError:",
-            authError,
-            "showAlert:",
-            showAlert
-          )
-          return null
-        })()}
-
-        <Button type="submit" disabled={isLoading} sx={{ mt: 3 }}>
-          {isLoading
-            ? "Загрузка..."
-            : mode === "login"
-            ? "Войти"
-            : "Зарегистрироваться"}
-        </Button>
-      </Box>
-
-      <Box sx={{ mt: 3, textAlign: "center" }}>
-        <Typography variant="body2" color="text.secondary">
-          {mode === "login" ? "Нет аккаунта? " : "Уже есть аккаунт? "}
-          <MuiLink
-            component="button"
-            type="button"
-            onClick={handleModeChange}
-            sx={{
-              color: "primary.main",
-              textDecoration: "underline",
-              cursor: "pointer",
-              border: "none",
-              background: "none",
-              font: "inherit",
-              padding: 0,
-            }}
-          >
-            {mode === "login" ? "Зарегистрироваться" : "Войти"}
-          </MuiLink>
+    <Box sx={{ maxWidth: 500, mx: "auto", p: 3 }}>
+      <Paper elevation={3} sx={{ p: 4 }}>
+        <Typography variant="h4" sx={{ mb: 3, textAlign: "center" }}>
+          Warehouse Control
         </Typography>
-      </Box>
-    </VCard>
+
+        {/* Раздел для быстрого тестирования */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6" sx={{ mb: 2, textAlign: "center", color: "primary.main" }}>
+            🧪 Быстрое тестирование
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2, textAlign: "center", color: "text.secondary" }}>
+            Выберите предустановленный аккаунт для быстрого входа:
+          </Typography>
+          
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            {TEST_ACCOUNTS.map((account, index) => (
+              <Button
+                key={index}
+                variant="outlined"
+                onClick={() => handleTestAccountSelect(account)}
+                disabled={loading}
+                sx={{ 
+                  justifyContent: "flex-start",
+                  textAlign: "left",
+                  py: 1.5,
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
+                  <Typography variant="body1" sx={{ flex: 1 }}>
+                    {account.label}
+                  </Typography>
+                  <Chip 
+                    label={account.role} 
+                    size="small" 
+                    color="primary" 
+                    variant="outlined"
+                  />
+                </Box>
+              </Button>
+            ))}
+          </Box>
+          
+          <Divider sx={{ my: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              или используйте форму ниже
+            </Typography>
+          </Divider>
+        </Box>
+
+        {/* Штатная форма авторизации */}
+        <form onSubmit={handleSubmit}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* Переключатель режима */}
+            <ToggleButtonGroup
+              value={mode}
+              exclusive
+              onChange={handleModeChange}
+              sx={{ width: "100%" }}
+            >
+              <ToggleButton value="login" sx={{ flex: 1 }}>
+                Вход
+              </ToggleButton>
+              <ToggleButton value="register" sx={{ flex: 1 }}>
+                Регистрация
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* Поле имени пользователя */}
+            <TextField
+              fullWidth
+              label="Имя пользователя"
+              value={formData.username}
+              onChange={(e) => handleInputChange("username", e.target.value)}
+              disabled={loading}
+              required
+            />
+
+            {/* Поле пароля */}
+            <TextField
+              fullWidth
+              label="Пароль"
+              type="password"
+              value={formData.password}
+              onChange={(e) => handleInputChange("password", e.target.value)}
+              disabled={loading}
+              required
+            />
+
+            {/* Дополнительные поля для регистрации */}
+            {mode === "register" && (
+              <>
+                <TextField
+                  fullWidth
+                  label="Полное имя"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  disabled={loading}
+                  required
+                />
+
+                <FormControl fullWidth>
+                  <InputLabel>Роль</InputLabel>
+                  <Select
+                    value={formData.role}
+                    onChange={(e) => handleInputChange("role", e.target.value)}
+                    disabled={loading}
+                    label="Роль"
+                  >
+                    <MenuItem value="Кладовщик">Кладовщик</MenuItem>
+                    <MenuItem value="Менеджер">Менеджер</MenuItem>
+                    <MenuItem value="Аудитор">Аудитор</MenuItem>
+                  </Select>
+                </FormControl>
+              </>
+            )}
+
+            {/* Ошибка */}
+            {error && (
+              <Alert severity="error">
+                {error}
+              </Alert>
+            )}
+
+            {/* Кнопка отправки */}
+            <Button
+              type="submit"
+              variant="contained"
+              size="large"
+              disabled={loading}
+              sx={{ mt: 2 }}
+            >
+              {loading ? "Обработка..." : mode === "login" ? "Войти" : "Зарегистрироваться"}
+            </Button>
+          </Box>
+        </form>
+
+        {/* Информация о тестовых аккаунтах */}
+        <Box sx={{ mt: 3, p: 2, bgcolor: "info.light", borderRadius: 1 }}>
+          <Typography variant="body2" color="info.contrastText">
+            <strong>Тестовые аккаунты:</strong><br />
+            • storekeeper / password (Кладовщик)<br />
+            • manager / password (Менеджер)<br />
+            • auditor / password (Аудитор)
+          </Typography>
+        </Box>
+      </Paper>
+    </Box>
   )
 }
