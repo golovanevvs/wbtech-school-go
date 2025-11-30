@@ -27,14 +27,14 @@ type IItemHistoryRp interface {
 
 // IItemService interface for item service
 type IItemService interface {
-	Create(ctx context.Context, item *model.Item, userRole, userName string) (*model.Item, error)
-	GetAll(ctx context.Context) ([]model.Item, error)
-	GetByID(ctx context.Context, id int) (*model.Item, error)
-	Update(ctx context.Context, item *model.Item, userRole, userName string) error
-	Delete(ctx context.Context, id int, userRole, userName string) error
-	GetHistory(ctx context.Context, itemID int, userRole string) ([]model.ItemAction, error)
-	GetAllHistory(ctx context.Context, userRole string) ([]model.ItemAction, error)
-	ExportHistoryToCSV(ctx context.Context, itemID int, userRole string) ([]map[string]interface{}, error)
+	Create(ctx context.Context, item *model.Item, userID int, userRole, userName string) (*model.Item, error)
+	GetAll(ctx context.Context, userID int) ([]model.Item, error)
+	GetByID(ctx context.Context, id int, userID int) (*model.Item, error)
+	Update(ctx context.Context, item *model.Item, userID int, userRole, userName string) error
+	Delete(ctx context.Context, id int, userID int, userRole, userName string) error
+	GetHistory(ctx context.Context, itemID int, userID int, userRole string) ([]model.ItemAction, error)
+	GetAllHistory(ctx context.Context, userID int, userRole string) ([]model.ItemAction, error)
+	ExportHistoryToCSV(ctx context.Context, itemID int, userID int, userRole string) ([]map[string]interface{}, error)
 }
 
 // ItemService service for working with items
@@ -52,7 +52,7 @@ func NewItemService(itemRp IItemRp, historyRp IItemHistoryRp) *ItemService {
 }
 
 // Create creates a new item (only for Кладовщик)
-func (sv *ItemService) Create(ctx context.Context, item *model.Item, userRole, userName string) (*model.Item, error) {
+func (sv *ItemService) Create(ctx context.Context, item *model.Item, userID int, userRole, userName string) (*model.Item, error) {
 	// Проверяем права доступа
 	if userRole != "Кладовщик" {
 		return nil, fmt.Errorf("access denied: only Кладовщик can create items")
@@ -74,40 +74,22 @@ func (sv *ItemService) Create(ctx context.Context, item *model.Item, userRole, u
 	item.CreatedAt = now
 	item.UpdatedAt = now
 
-	// Получаем ID пользователя из контекста
-	userID, ok := ctx.Value("user_id").(int)
-	if !ok {
-		return nil, fmt.Errorf("user ID not found in context")
-	}
-
 	// Создаем товар (триггер автоматически создаст запись в истории)
 	return sv.itemRp.Create(item, userID, userName)
 }
 
 // GetAll returns all items (for all authenticated users)
-func (sv *ItemService) GetAll(ctx context.Context) ([]model.Item, error) {
-	// Проверяем, что пользователь авторизован (проверка должна быть в middleware)
-	_, ok := ctx.Value("user_id").(int)
-	if !ok {
-		return nil, fmt.Errorf("user not authenticated")
-	}
-
+func (sv *ItemService) GetAll(ctx context.Context, userID int) ([]model.Item, error) {
 	return sv.itemRp.GetAll()
 }
 
 // GetByID returns an item by ID (for all authenticated users)
-func (sv *ItemService) GetByID(ctx context.Context, id int) (*model.Item, error) {
-	// Проверяем, что пользователь авторизован
-	_, ok := ctx.Value("user_id").(int)
-	if !ok {
-		return nil, fmt.Errorf("user not authenticated")
-	}
-
+func (sv *ItemService) GetByID(ctx context.Context, id int, userID int) (*model.Item, error) {
 	return sv.itemRp.GetByID(id)
 }
 
 // Update updates an item (only for Кладовщик)
-func (sv *ItemService) Update(ctx context.Context, item *model.Item, userRole, userName string) error {
+func (sv *ItemService) Update(ctx context.Context, item *model.Item, userID int, userRole, userName string) error {
 	// Проверяем права доступа
 	if userRole != "Кладовщик" {
 		return fmt.Errorf("access denied: only Кладовщик can update items")
@@ -127,27 +109,15 @@ func (sv *ItemService) Update(ctx context.Context, item *model.Item, userRole, u
 	// Обновляем время изменения
 	item.UpdatedAt = time.Now()
 
-	// Получаем ID пользователя из контекста
-	userID, ok := ctx.Value("user_id").(int)
-	if !ok {
-		return fmt.Errorf("user ID not found in context")
-	}
-
 	// Обновляем товар (триггер автоматически создаст запись в истории)
 	return sv.itemRp.Update(item, userID, userName)
 }
 
 // Delete deletes an item (only for Кладовщик)
-func (sv *ItemService) Delete(ctx context.Context, id int, userRole, userName string) error {
+func (sv *ItemService) Delete(ctx context.Context, id int, userID int, userRole, userName string) error {
 	// Проверяем права доступа
 	if userRole != "Кладовщик" {
 		return fmt.Errorf("access denied: only Кладовщик can delete items")
-	}
-
-	// Получаем ID пользователя из контекста
-	userID, ok := ctx.Value("user_id").(int)
-	if !ok {
-		return fmt.Errorf("user ID not found in context")
 	}
 
 	// Удаляем товар (триггер автоматически создаст запись в истории)
@@ -155,48 +125,30 @@ func (sv *ItemService) Delete(ctx context.Context, id int, userRole, userName st
 }
 
 // GetHistory returns item history (only for Аудитор)
-func (sv *ItemService) GetHistory(ctx context.Context, itemID int, userRole string) ([]model.ItemAction, error) {
+func (sv *ItemService) GetHistory(ctx context.Context, itemID int, userID int, userRole string) ([]model.ItemAction, error) {
 	// Проверяем права доступа
 	if userRole != "Аудитор" {
 		return nil, fmt.Errorf("access denied: only Аудитор can view item history")
-	}
-
-	// Проверяем, что пользователь авторизован
-	_, ok := ctx.Value("user_id").(int)
-	if !ok {
-		return nil, fmt.Errorf("user not authenticated")
 	}
 
 	return sv.historyRp.GetByItemID(itemID)
 }
 
 // GetAllHistory returns all item history (only for Аудитор)
-func (sv *ItemService) GetAllHistory(ctx context.Context, userRole string) ([]model.ItemAction, error) {
+func (sv *ItemService) GetAllHistory(ctx context.Context, userID int, userRole string) ([]model.ItemAction, error) {
 	// Проверяем права доступа
 	if userRole != "Аудитор" {
 		return nil, fmt.Errorf("access denied: only Аудитор can view item history")
-	}
-
-	// Проверяем, что пользователь авторизован
-	_, ok := ctx.Value("user_id").(int)
-	if !ok {
-		return nil, fmt.Errorf("user not authenticated")
 	}
 
 	return sv.historyRp.GetAll()
 }
 
 // ExportHistoryToCSV exports item history to CSV format (only for Аудитор)
-func (sv *ItemService) ExportHistoryToCSV(ctx context.Context, itemID int, userRole string) ([]map[string]interface{}, error) {
+func (sv *ItemService) ExportHistoryToCSV(ctx context.Context, itemID int, userID int, userRole string) ([]map[string]interface{}, error) {
 	// Проверяем права доступа
 	if userRole != "Аудитор" {
 		return nil, fmt.Errorf("access denied: only Аудитор can export item history")
-	}
-
-	// Проверяем, что пользователь авторизован
-	_, ok := ctx.Value("user_id").(int)
-	if !ok {
-		return nil, fmt.Errorf("user not authenticated")
 	}
 
 	return sv.historyRp.ExportToCSV(itemID)

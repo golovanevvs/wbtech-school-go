@@ -14,14 +14,14 @@ import (
 
 // IItemService interface for item service
 type IItemService interface {
-	Create(ctx context.Context, item *model.Item, userRole, userName string) (*model.Item, error)
-	GetAll(ctx context.Context) ([]model.Item, error)
-	GetByID(ctx context.Context, id int) (*model.Item, error)
-	Update(ctx context.Context, item *model.Item, userRole, userName string) error
-	Delete(ctx context.Context, id int, userRole, userName string) error
-	GetHistory(ctx context.Context, itemID int, userRole string) ([]model.ItemAction, error)
-	GetAllHistory(ctx context.Context, userRole string) ([]model.ItemAction, error)
-	ExportHistoryToCSV(ctx context.Context, itemID int, userRole string) ([]map[string]interface{}, error)
+	Create(ctx context.Context, item *model.Item, userID int, userRole, userName string) (*model.Item, error)
+	GetAll(ctx context.Context, userID int) ([]model.Item, error)
+	GetByID(ctx context.Context, id int, userID int) (*model.Item, error)
+	Update(ctx context.Context, item *model.Item, userID int, userRole, userName string) error
+	Delete(ctx context.Context, id int, userID int, userRole, userName string) error
+	GetHistory(ctx context.Context, itemID int, userID int, userRole string) ([]model.ItemAction, error)
+	GetAllHistory(ctx context.Context, userID int, userRole string) ([]model.ItemAction, error)
+	ExportHistoryToCSV(ctx context.Context, itemID int, userID int, userRole string) ([]map[string]interface{}, error)
 }
 
 // ItemHandler handles item-related HTTP requests
@@ -92,7 +92,7 @@ func (hd *ItemHandler) createItem(c *gin.Context) {
 	ctx := c.Request.Context()
 	ctx = context.WithValue(ctx, "user_id", userID)
 
-	createdItem, err := hd.sv.Create(ctx, &item, userRole.(string), userName.(string))
+	createdItem, err := hd.sv.Create(ctx, &item, userID.(int), userRole.(string), userName.(string))
 	if err != nil {
 		hd.lg.Err(err).Msg("failed to create item")
 		c.JSON(http.StatusForbidden, gin.H{
@@ -108,9 +108,26 @@ func (hd *ItemHandler) createItem(c *gin.Context) {
 
 // getAllItems returns all items
 func (hd *ItemHandler) getAllItems(c *gin.Context) {
+	// Получаем информацию о пользователе из Gin контекста
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "user not authenticated",
+		})
+		return
+	}
+
+	userIDInt, ok := userID.(int)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "invalid user ID type",
+		})
+		return
+	}
+
 	ctx := c.Request.Context()
 
-	items, err := hd.sv.GetAll(ctx)
+	items, err := hd.sv.GetAll(ctx, userIDInt)
 	if err != nil {
 		hd.lg.Err(err).Msg("failed to get all items")
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -135,9 +152,26 @@ func (hd *ItemHandler) getItemByID(c *gin.Context) {
 		return
 	}
 
+	// Получаем информацию о пользователе из Gin контекста
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "user not authenticated",
+		})
+		return
+	}
+
+	userIDInt, ok := userID.(int)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "invalid user ID type",
+		})
+		return
+	}
+
 	ctx := c.Request.Context()
 
-	item, err := hd.sv.GetByID(ctx, id)
+	item, err := hd.sv.GetByID(ctx, id, userIDInt)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "item not found",
@@ -200,7 +234,7 @@ func (hd *ItemHandler) updateItem(c *gin.Context) {
 	ctx := c.Request.Context()
 	ctx = context.WithValue(ctx, "user_id", userID)
 
-	err = hd.sv.Update(ctx, &item, userRole.(string), userName.(string))
+	err = hd.sv.Update(ctx, &item, userID.(int), userRole.(string), userName.(string))
 	if err != nil {
 		hd.lg.Err(err).Msg("failed to update item")
 		c.JSON(http.StatusForbidden, gin.H{
@@ -254,7 +288,7 @@ func (hd *ItemHandler) deleteItem(c *gin.Context) {
 	ctx := c.Request.Context()
 	ctx = context.WithValue(ctx, "user_id", userID)
 
-	err = hd.sv.Delete(ctx, id, userRole.(string), userName.(string))
+	err = hd.sv.Delete(ctx, id, userID.(int), userRole.(string), userName.(string))
 	if err != nil {
 		hd.lg.Err(err).Msg("failed to delete item")
 		c.JSON(http.StatusForbidden, gin.H{
@@ -288,9 +322,18 @@ func (hd *ItemHandler) getItemHistory(c *gin.Context) {
 		return
 	}
 
+	// Получаем ID пользователя
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "user not authenticated",
+		})
+		return
+	}
+
 	ctx := c.Request.Context()
 
-	history, err := hd.sv.GetHistory(ctx, itemID, userRole.(string))
+	history, err := hd.sv.GetHistory(ctx, itemID, userID.(int), userRole.(string))
 	if err != nil {
 		hd.lg.Err(err).Msg("failed to get item history")
 		c.JSON(http.StatusForbidden, gin.H{
@@ -315,9 +358,18 @@ func (hd *ItemHandler) getAllHistory(c *gin.Context) {
 		return
 	}
 
+	// Получаем ID пользователя
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "user not authenticated",
+		})
+		return
+	}
+
 	ctx := c.Request.Context()
 
-	history, err := hd.sv.GetAllHistory(ctx, userRole.(string))
+	history, err := hd.sv.GetAllHistory(ctx, userID.(int), userRole.(string))
 	if err != nil {
 		hd.lg.Err(err).Msg("failed to get all history")
 		c.JSON(http.StatusForbidden, gin.H{
@@ -351,9 +403,18 @@ func (hd *ItemHandler) exportItemHistory(c *gin.Context) {
 		return
 	}
 
+	// Получаем ID пользователя
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "user not authenticated",
+		})
+		return
+	}
+
 	ctx := c.Request.Context()
 
-	csvData, err := hd.sv.ExportHistoryToCSV(ctx, itemID, userRole.(string))
+	csvData, err := hd.sv.ExportHistoryToCSV(ctx, itemID, userID.(int), userRole.(string))
 	if err != nil {
 		hd.lg.Err(err).Msg("failed to export item history")
 		c.JSON(http.StatusForbidden, gin.H{
