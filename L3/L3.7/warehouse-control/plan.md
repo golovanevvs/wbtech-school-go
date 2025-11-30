@@ -1,15 +1,29 @@
 # warehouse-control
 
-Путь до проекта внутри репозитория:
-
-- L3/L3.7/warehouse-control
+- путь до проекта внутри репозитория: `L3/L3.7/warehouse-control`.
 
 ## План реализация
 
-- warehouse-control_main-server - api-сервер на Go;
-- warehouse-control_web-client - web-клиент на next.js (для запуска команд вместо npm использовать pnpm).
+- api-сервер: warehouse-control_main-server;
+- web-клиент: warehouse-control_web-client.
 
-### web-клиент (next.js)
+### warehouse-control_main-server
+
+- путь: `L3/L3.7/warehouse-control/warehouse-control_main-server`
+- язык программирования: `Go`;
+- БД - `PostgreSQL`:
+  - путь к файлам миграции: `providers/migrate/migrations`;
+- роутер - `Gin`;
+
+### warehouse-control_web-client
+
+- путь: `L3/L3.7/warehouse-control/warehouse-control_web-client`;
+
+- общее:
+  - используемые основные фреймфорки и библиотеки: `next.js`, `material-ui`, `material-react-table`;
+  - для запуска команд использовать: `pnpm`;
+  - после deploy клиент должен корректно работать через `nginx`;
+  - дизайн должен быть адаптирован в том числе к размерам экранов мобильных устройств.
 
 - авторизация (выполнено):
   - осуществляется с помощью access и refresh JWT (JWTs хранить в cookie);
@@ -18,7 +32,7 @@
     - "Менеджер";
     - "Аудитор";
 
-- Header общий для всех страниц:
+- Header общий для всех страниц (выполнено):
   - если авторизован:
     - название "Warehouse Control" -> переход на страницу "Главная" (`/`);
     - кнопка "Профиль" (`AccountCircleIcon`) -> всплывающее меню:
@@ -51,11 +65,11 @@
   - если не авторизован:
     - автоматический переход на страницу "Вход" (`/auth`);
 
-- страница "Профиль" (`/profile`):
+- страница "Профиль" (`/profile`) (выполнено):
   - загрузка данных с сервера (`GET /profile`);
   - отображение инфомации о пользователе;
 
-  - страница "Вход" (`/auth`):
+  - страница "Вход" (`/auth`) (выполнено):
     - режим "Вход":
       - форма для входа;
       - кнопка "Войти" -> `POST /auth/login`, переход на страницу "Главная" (`/`);
