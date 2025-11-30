@@ -9,6 +9,11 @@ export interface Item {
   updated_at: string
 }
 
+// Тип для ответа API при получении одного товара
+export interface ItemResponse {
+  item: Item
+}
+
 export interface ItemsResponse {
   items: Item[]
 }

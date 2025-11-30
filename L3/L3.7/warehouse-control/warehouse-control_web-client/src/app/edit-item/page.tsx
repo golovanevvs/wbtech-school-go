@@ -20,6 +20,9 @@ function EditItemContent() {
 
   // Получаем ID товара из URL
   const itemId = searchParams.get("id")
+  console.log("Edit item page - URL:", window.location.href)
+  console.log("Edit item page - itemId from searchParams:", itemId)
+  console.log("Edit item page - all searchParams:", Object.fromEntries(searchParams.entries()))
 
   // Загружаем данные товара
   useEffect(() => {
@@ -34,9 +37,18 @@ function EditItemContent() {
         setLoading(true)
         setError(null)
         
+        console.log("Edit item page - loading item with ID:", itemId)
+        
         // Получаем один товар по ID
         const foundItem = await itemsAPI.getItem(parseInt(itemId))
-        setItem(foundItem)
+        console.log("Edit item page - received item data:", foundItem)
+        console.log("Edit item page - item data type:", typeof foundItem)
+        console.log("Edit item page - item data keys:", Object.keys(foundItem))
+        console.log("Edit item page - foundItem.item:", foundItem.item)
+        console.log("Edit item page - foundItem.item.id:", foundItem.item?.id)
+        console.log("Edit item page - foundItem.item.name:", foundItem.item?.name)
+        
+        setItem(foundItem.item)
       } catch (err) {
         console.error("Failed to load item:", err)
         setError(err instanceof Error ? err.message : "Не удалось загрузить товар")

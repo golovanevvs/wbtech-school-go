@@ -1,5 +1,5 @@
 import apiClient from "./client"
-import { Item, ItemsResponse, ItemHistoryResponse } from "../types/items"
+import { Item, ItemsResponse, ItemHistoryResponse, ItemResponse } from "../types/items"
 
 // API для работы с товарами склада
 export const itemsAPI = {
@@ -25,9 +25,9 @@ export const itemsAPI = {
    * @param itemId ID товара
    * @returns Товар
    */
-  async getItem(itemId: number): Promise<Item> {
+  async getItem(itemId: number): Promise<ItemResponse> {
     try {
-      const response = await apiClient.get<Item>(`/items/${itemId}`)
+      const response = await apiClient.get<ItemResponse>(`/items/${itemId}`)
       return response
     } catch (error) {
       console.error("Failed to fetch item:", error)
