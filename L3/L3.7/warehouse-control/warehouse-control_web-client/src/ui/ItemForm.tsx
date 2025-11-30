@@ -117,7 +117,11 @@ export default function ItemForm({
                   step: 0.01 
                 }}
                 value={formData.price}
-                onChange={(e) => handleInputChange("price", parseFloat(e.target.value) || 0)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const numValue = value === '' ? 0 : parseFloat(value);
+                  handleInputChange("price", numValue);
+                }}
                 error={!!errors.price}
                 helperText={errors.price}
                 disabled={submitting || loading}
