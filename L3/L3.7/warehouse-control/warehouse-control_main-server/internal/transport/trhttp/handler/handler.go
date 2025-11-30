@@ -55,10 +55,7 @@ func New(
 	hd := &Handler{
 		Rt: rt,
 	}
-
 	authMiddleware := middleware.NewAuthMiddleware(parentLg, sv.MiddlewareService(), accessTokenExp, refreshTokenExp)
-
-	// public := rt.Group("/")
 	{
 
 	}
@@ -69,7 +66,6 @@ func New(
 		authHandler := authHandler.New(&lg, sv.AuthService(), publicHost, accessTokenExp, refreshTokenExp)
 		authHandler.RegisterProtectedRoutes(protected)
 
-		// Добавляем хендлер для товаров
 		itemHandler := itemHandler.New(&lg, sv.ItemService())
 		itemHandler.RegisterProtectedRoutes(protected)
 	}

@@ -147,19 +147,6 @@ func (hd *AuthHandler) Login(c *gin.Context) {
 
 	lg.Debug().Str("username", req.Username).Msgf("%s user logged in successfully", pkgConst.OpSuccess)
 
-	// Получаем данные пользователя для удаления старых refresh токенов
-	// user, err := hd.sv.GetUserByUsername(c.Request.Context(), req.Username)
-	// if err != nil {
-	// 	lg.Warn().Err(err).Str("username", req.Username).Msg("Failed to get user for deleting refresh tokens")
-	// 	// Продолжаем без удаления старых токенов
-	// } else {
-	// 	// Удаляем старые refresh токены для пользователя перед установкой нового
-	// 	err = hd.sv.DeleteRefreshTokensByUserID(c.Request.Context(), user.ID)
-	// 	if err != nil {
-	// 		lg.Warn().Err(err).Int("user_id", user.ID).Msg("Failed to delete old refresh tokens")
-	// 	}
-	// }
-
 	c.SetCookie("access_token", accessToken, int(hd.accessTokenExp.Seconds()), "/", extractDomain(hd.publicHost), true, true)
 	c.SetCookie("refresh_token", refreshToken, int(hd.refreshTokenExp.Seconds()), "/", extractDomain(hd.publicHost), true, true)
 
@@ -174,22 +161,9 @@ func (hd *AuthHandler) Refresh(c *gin.Context) {
 
 	var refreshToken string
 
-	// Try to get refresh token from cookie first
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil || refreshToken == "" {
-		// If not found in cookie, try to get from request body
-		// if strings.Contains(c.ContentType(), "application/json") {
-		// 	var req struct {
-		// 		RefreshToken string `json:"refreshToken" binding:"required"`
-		// 	}
-		//
-		// 	if err := c.ShouldBindJSON(&req); err != nil {
-		// 		lg.Warn().Err(err).Msgf("%s error bind json", pkgConst.Warn)
-		// 		c.JSON(http.StatusBadRequest, ginext.H{"error": err.Error()})
-		// 		return
-		// 	}
-		// 	refreshToken = req.RefreshToken
-		// } else {
+
 		lg.Warn().Str("content-type", c.ContentType()).Msgf("%s No refresh token found in cookie", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ginext.H{"error": "Refresh token is required"})
 		return
@@ -365,16 +339,13 @@ func (hd *AuthHandler) Logout(c *gin.Context) {
 
 	lg.Debug().Msg("User logout initiated")
 
-	// Попытка получить userID из контекста (если пользователь был аутентифицирован)
 	userID, exists := c.Get("user_id")
 	if exists {
 		userIDInt, ok := userID.(int)
 		if ok {
-			// Удаляем все refresh токены пользователя из базы данных
 			err := hd.sv.DeleteRefreshTokensByUserID(c.Request.Context(), userIDInt)
 			if err != nil {
 				lg.Warn().Err(err).Int("user_id", userIDInt).Msg("Failed to delete refresh tokens from database")
-				// Продолжаем выполнение, очистка cookie важнее
 			} else {
 				lg.Debug().Int("user_id", userIDInt).Msg("All refresh tokens deleted from database")
 			}
@@ -401,7 +372,6 @@ func extractDomain(url string) string {
 		domain = strings.TrimPrefix(url, "http://")
 	}
 
-	// Always add dot prefix for subdomain support
 	if !strings.HasPrefix(domain, ".") {
 		domain = "." + domain
 	}

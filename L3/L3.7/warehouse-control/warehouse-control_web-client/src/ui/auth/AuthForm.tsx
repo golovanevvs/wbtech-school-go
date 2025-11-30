@@ -23,19 +23,19 @@ import { useRouter } from "next/navigation"
 // Предустановленные аккаунты для быстрого тестирования
 const TEST_ACCOUNTS = [
   {
-    label: "🏪 Кладовщик (полный доступ)",
+    label: "Кладовщик (добавление, редактирование, удаление)",
     login: "storekeeper",
     password: "password",
     role: "Кладовщик",
   },
   {
-    label: "👔 Менеджер (просмотр)",
+    label: "Менеджер (просмотр списка товаров)",
     login: "manager",
     password: "password",
     role: "Менеджер",
   },
   {
-    label: "🔍 Аудитор (история)",
+    label: "Аудитор (просмотр истории изменений)",
     login: "auditor",
     password: "password",
     role: "Аудитор",
@@ -61,19 +61,21 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null)
 
   // Обработчик выбора предустановленного аккаунта для тестирования
-  const handleTestAccountSelect = async (account: typeof TEST_ACCOUNTS[0]) => {
+  const handleTestAccountSelect = async (
+    account: (typeof TEST_ACCOUNTS)[0]
+  ) => {
     try {
       setLoading(true)
       setError(null)
-      
-      // Автоматически заполняем форму и выполняем вход
+
+      // Автоматическое заполнение формы и выполнение входа
       setFormData({
         username: account.login,
         password: account.password,
         name: account.login,
         role: account.role,
       })
-      
+
       await login(account.login, account.password)
       router.push("/")
     } catch (err) {
@@ -86,7 +88,7 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
 
   // Обработчик изменения полей формы
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }))
@@ -95,16 +97,21 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
   // Обработчик отправки формы
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     try {
       setLoading(true)
       setError(null)
-      
+
       if (mode === "login") {
         await login(formData.username, formData.password)
         router.push("/")
       } else {
-        await register(formData.username, formData.password, formData.name, formData.role)
+        await register(
+          formData.username,
+          formData.password,
+          formData.name,
+          formData.role
+        )
       }
     } catch (err) {
       console.error("Auth error:", err)
@@ -115,7 +122,10 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
   }
 
   // Обработчик переключения режима
-  const handleModeChange = (_: React.MouseEvent<HTMLElement>, newMode: "login" | "register") => {
+  const handleModeChange = (
+    _: React.MouseEvent<HTMLElement>,
+    newMode: "login" | "register"
+  ) => {
     if (newMode !== null) {
       setMode(newMode)
       setError(null)
@@ -123,21 +133,27 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
   }
 
   return (
-    <Box sx={{ maxWidth: 500, mx: "auto", p: 3 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
+    <Box sx={{ maxWidth: 500, mx: "auto", p: 1 }}>
+      <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant="h4" sx={{ mb: 3, textAlign: "center" }}>
           Warehouse Control
         </Typography>
 
         {/* Раздел для быстрого тестирования */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" sx={{ mb: 2, textAlign: "center", color: "primary.main" }}>
-            🧪 Быстрое тестирование
+        <Box sx={{ mb: 1 }}>
+          <Typography
+            variant="h6"
+            sx={{ mb: 2, textAlign: "center", color: "primary.main" }}
+          >
+            Быстрое тестирование
           </Typography>
-          <Typography variant="body2" sx={{ mb: 2, textAlign: "center", color: "text.secondary" }}>
+          <Typography
+            variant="body2"
+            sx={{ mb: 2, textAlign: "center", color: "text.secondary" }}
+          >
             Выберите предустановленный аккаунт для быстрого входа:
           </Typography>
-          
+
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {TEST_ACCOUNTS.map((account, index) => (
               <Button
@@ -145,27 +161,34 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
                 variant="outlined"
                 onClick={() => handleTestAccountSelect(account)}
                 disabled={loading}
-                sx={{ 
+                sx={{
                   justifyContent: "flex-start",
                   textAlign: "left",
                   py: 1.5,
                 }}
               >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "100%" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    width: "100%",
+                  }}
+                >
                   <Typography variant="body1" sx={{ flex: 1 }}>
                     {account.label}
                   </Typography>
-                  <Chip 
-                    label={account.role} 
-                    size="small" 
-                    color="primary" 
+                  <Chip
+                    label={account.role}
+                    size="small"
+                    color="primary"
                     variant="outlined"
                   />
                 </Box>
               </Button>
             ))}
           </Box>
-          
+
           <Divider sx={{ my: 3 }}>
             <Typography variant="body2" color="text.secondary">
               или используйте форму ниже
@@ -241,11 +264,7 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
             )}
 
             {/* Ошибка */}
-            {error && (
-              <Alert severity="error">
-                {error}
-              </Alert>
-            )}
+            {error && <Alert severity="error">{error}</Alert>}
 
             {/* Кнопка отправки */}
             <Button
@@ -255,7 +274,11 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
               disabled={loading}
               sx={{ mt: 2 }}
             >
-              {loading ? "Обработка..." : mode === "login" ? "Войти" : "Зарегистрироваться"}
+              {loading
+                ? "Обработка..."
+                : mode === "login"
+                ? "Войти"
+                : "Зарегистрироваться"}
             </Button>
           </Box>
         </form>
@@ -263,10 +286,12 @@ export default function AuthForm({ initialMode = "login" }: AuthFormProps) {
         {/* Информация о тестовых аккаунтах */}
         <Box sx={{ mt: 3, p: 2, bgcolor: "info.light", borderRadius: 1 }}>
           <Typography variant="body2" color="info.contrastText">
-            <strong>Тестовые аккаунты:</strong><br />
-            • storekeeper / password (Кладовщик)<br />
-            • manager / password (Менеджер)<br />
-            • auditor / password (Аудитор)
+            <strong>Тестовые аккаунты:</strong>
+            <br />
+            • storekeeper / password (Кладовщик)
+            <br />
+            • manager / password (Менеджер)
+            <br />• auditor / password (Аудитор)
           </Typography>
         </Box>
       </Paper>

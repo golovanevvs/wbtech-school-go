@@ -1,37 +1,39 @@
 "use client"
 
-import { 
-  Box, 
-  Paper, 
-  TextField, 
-  Button, 
-  Typography, 
-  CircularProgress
+import {
+  Box,
+  Paper,
+  TextField,
+  Button,
+  Typography,
+  CircularProgress,
 } from "@mui/material"
 import { Item } from "@/lib/types/items"
 import { useState } from "react"
 
 interface ItemFormProps {
   initialData?: Partial<Item>
-  onSubmit: (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => Promise<void>
+  onSubmit: (
+    data: Omit<Item, "id" | "created_at" | "updated_at">
+  ) => Promise<void>
   onCancel: () => void
   title: string
   submitButtonText: string
   loading?: boolean
 }
 
-export default function ItemForm({ 
-  initialData, 
-  onSubmit, 
-  onCancel, 
-  title, 
+export default function ItemForm({
+  initialData,
+  onSubmit,
+  onCancel,
+  title,
   submitButtonText,
-  loading = false 
+  loading = false,
 }: ItemFormProps) {
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     price: initialData?.price || 0,
-    quantity: initialData?.quantity || 0
+    quantity: initialData?.quantity || 0,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -57,7 +59,7 @@ export default function ItemForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
@@ -73,16 +75,15 @@ export default function ItemForm({
   }
 
   const handleInputChange = (field: string, value: string | number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }))
-    
-    // Очищаем ошибку для этого поля
+
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ""
+        [field]: "",
       }))
     }
   }
@@ -114,11 +115,13 @@ export default function ItemForm({
                 type="text"
                 value={formData.price}
                 onChange={(e) => {
-                  const value = e.target.value;
-                  // Разрешаем только цифры и одну точку
-                  const cleanValue = value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
-                  const numValue = cleanValue === '' ? 0 : parseFloat(cleanValue);
-                  handleInputChange("price", numValue);
+                  const value = e.target.value
+                  const cleanValue = value
+                    .replace(/[^0-9.]/g, "")
+                    .replace(/(\..*)\./g, "$1")
+                  const numValue =
+                    cleanValue === "" ? 0 : parseFloat(cleanValue)
+                  handleInputChange("price", numValue)
                 }}
                 error={!!errors.price}
                 helperText={errors.price || "Введите цену (например: 123.45)"}
@@ -132,11 +135,10 @@ export default function ItemForm({
                 type="text"
                 value={formData.quantity}
                 onChange={(e) => {
-                  const value = e.target.value;
-                  // Разрешаем только цифры
-                  const cleanValue = value.replace(/[^0-9]/g, '');
-                  const numValue = cleanValue === '' ? 0 : parseInt(cleanValue);
-                  handleInputChange("quantity", numValue);
+                  const value = e.target.value
+                  const cleanValue = value.replace(/[^0-9]/g, "")
+                  const numValue = cleanValue === "" ? 0 : parseInt(cleanValue)
+                  handleInputChange("quantity", numValue)
                 }}
                 error={!!errors.quantity}
                 helperText={errors.quantity || "Введите количество"}
@@ -145,20 +147,22 @@ export default function ItemForm({
               />
             </Box>
 
-            <Box sx={{ 
-              display: "flex", 
-              gap: 2, 
-              justifyContent: { xs: "center", md: "flex-end" }, 
-              mt: 2,
-              flexWrap: { xs: "wrap", md: "nowrap" }
-            }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                justifyContent: { xs: "center", md: "flex-end" },
+                mt: 2,
+                flexWrap: { xs: "wrap", md: "nowrap" },
+              }}
+            >
               <Button
                 variant="outlined"
                 onClick={onCancel}
                 disabled={submitting || loading}
-                sx={{ 
+                sx={{
                   minWidth: { xs: "45%", md: "auto" },
-                  flex: { xs: 1, md: "none" }
+                  flex: { xs: 1, md: "none" },
                 }}
               >
                 Отменить
@@ -168,9 +172,9 @@ export default function ItemForm({
                 variant="contained"
                 disabled={submitting || loading}
                 startIcon={submitting ? <CircularProgress size={20} /> : null}
-                sx={{ 
+                sx={{
                   minWidth: { xs: "45%", md: "auto" },
-                  flex: { xs: 1, md: "none" }
+                  flex: { xs: 1, md: "none" },
                 }}
               >
                 {submitting ? "Сохранение..." : submitButtonText}

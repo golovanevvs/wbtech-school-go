@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.7/warehouse-control/warehouse-control_main-server/internal/pkg/pkgConst"
 	"github.com/wb-go/wbf/zlog"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -87,15 +88,13 @@ func (sv *AuthService) DeleteUser(ctx context.Context, id int) error {
 func (sv *AuthService) DeleteRefreshTokensByUserID(ctx context.Context, userID int) error {
 	lg := zlog.Logger.With().Str("service", "DeleteRefreshTokensByUserID").Logger()
 
-	lg.Debug().Int("userID", userID).Msg("Deleting all refresh tokens for user")
-
 	err := sv.refreshTokenRp.DeleteByUserID(userID)
 	if err != nil {
-		lg.Warn().Err(err).Int("userID", userID).Msg("Failed to delete refresh tokens")
+		lg.Warn().Err(err).Int("userID", userID).Msgf("%s failed to delete refresh tokens", pkgConst.Warn)
 		return fmt.Errorf("failed to delete refresh tokens: %w", err)
 	}
 
-	lg.Debug().Int("userID", userID).Msg("All refresh tokens deleted successfully")
+	lg.Debug().Int("userID", userID).Msgf("%s all refresh tokens deleted successfully", pkgConst.OpSuccess)
 	return nil
 }
 
@@ -113,13 +112,11 @@ func (sv *AuthService) Login(ctx context.Context, username, password string) (st
 		return "", "", fmt.Errorf("invalid username or password")
 	}
 
-	// Удаляем ВСЕ старые refresh токены пользователя при входе
 	err = sv.refreshTokenRp.DeleteByUserID(user.ID)
 	if err != nil {
-		lg.Warn().Err(err).Int("userID", user.ID).Msg("Failed to delete old refresh tokens during login")
-		// Продолжаем выполнение, очистка старых токенов не критична для входа
+		lg.Warn().Err(err).Int("userID", user.ID).Msgf("%s failed to delete old refresh tokens during login", pkgConst.Warn)
 	} else {
-		lg.Debug().Int("userID", user.ID).Msg("Old refresh tokens deleted successfully during login")
+		lg.Debug().Int("userID", user.ID).Msgf("%s old refresh tokens deleted successfully during login", pkgConst.OpSuccess)
 	}
 
 	accessToken, err := sv.generateAccessToken(user)
@@ -132,7 +129,7 @@ func (sv *AuthService) Login(ctx context.Context, username, password string) (st
 		return "", "", fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
-	lg.Debug().Int("userID", user.ID).Str("username", username).Msg("User logged in successfully")
+	lg.Debug().Int("userID", user.ID).Str("username", username).Msgf("%s user logged in successfully", pkgConst.OpSuccess)
 
 	return accessToken, refreshToken, nil
 }
@@ -166,15 +163,13 @@ func (sv *AuthService) generateRefreshToken(user *model.User) (string, error) {
 		CreatedAt: time.Now(),
 	}
 
-	lg.Debug().Int("userID", user.ID).Str("refreshTokenValue", refreshTokenValue).Msg("Creating refresh token in database")
-
 	_, err := sv.refreshTokenRp.Create(refreshToken)
 	if err != nil {
-		lg.Warn().Err(err).Int("userID", user.ID).Str("refreshTokenValue", refreshTokenValue).Msg("Failed to save refresh token to database")
+		lg.Warn().Err(err).Int("userID", user.ID).Str("refreshTokenValue", refreshTokenValue).Msgf("%s failed to save refresh token to database", pkgConst.Warn)
 		return "", fmt.Errorf("failed to save refresh token: %w", err)
 	}
 
-	lg.Debug().Int("userID", user.ID).Str("refreshTokenValue", refreshTokenValue).Msg("Refresh token saved to database successfully")
+	lg.Debug().Int("userID", user.ID).Str("refreshTokenValue", refreshTokenValue).Msgf("%s refresh token saved to database successfully", pkgConst.OpSuccess)
 	return refreshTokenValue, nil
 }
 
@@ -182,50 +177,47 @@ func (sv *AuthService) generateRefreshToken(user *model.User) (string, error) {
 func (sv *AuthService) RefreshTokens(ctx context.Context, refreshToken string) (string, string, error) {
 	lg := zlog.Logger.With().Str("service", "RefreshTokens").Logger()
 
-	lg.Debug().Str("refreshToken", refreshToken).Msg("Starting token refresh")
-
 	token, err := sv.refreshTokenRp.GetByToken(refreshToken)
 	if err != nil {
-		lg.Warn().Err(err).Str("refreshToken", refreshToken).Msg("Refresh token not found in database")
+		lg.Warn().Err(err).Str("refreshToken", refreshToken).Msgf("%s refresh token not found in database", pkgConst.Warn)
 		return "", "", fmt.Errorf("invalid refresh token")
 	}
 
 	if token.ExpiresAt.Before(time.Now()) {
-		lg.Warn().Str("refreshToken", refreshToken).Time("expiresAt", token.ExpiresAt).Msg("Refresh token expired")
+		lg.Warn().Str("refreshToken", refreshToken).Time("expiresAt", token.ExpiresAt).Msgf("%s refresh token expired", pkgConst.Warn)
 		_ = sv.refreshTokenRp.DeleteByToken(refreshToken)
 		return "", "", fmt.Errorf("refresh token has expired")
 	}
 
-	lg.Debug().Int("userID", token.UserID).Msg("Refresh token found, generating new tokens")
+	lg.Debug().Int("userID", token.UserID).Msgf("%s refresh token found, generating new tokens", pkgConst.Info)
 
 	user, err := sv.userRp.GetByID(token.UserID)
 	if err != nil {
-		lg.Warn().Err(err).Int("userID", token.UserID).Msg("User not found for refresh token")
+		lg.Warn().Err(err).Int("userID", token.UserID).Msgf("%s user not found for refresh token", pkgConst.Warn)
 		return "", "", fmt.Errorf("user not found")
 	}
 
 	newAccessToken, err := sv.generateAccessToken(user)
 	if err != nil {
-		lg.Warn().Err(err).Int("userID", token.UserID).Msg("Failed to generate new access token")
+		lg.Warn().Err(err).Int("userID", token.UserID).Msgf("%s failed to generate new access token", pkgConst.Warn)
 		return "", "", fmt.Errorf("failed to generate new access token: %w", err)
 	}
 
-	// Удаляем ВСЕ старые refresh токены для пользователя перед созданием нового
 	err = sv.refreshTokenRp.DeleteByUserID(token.UserID)
 	if err != nil {
-		lg.Warn().Err(err).Int("userID", token.UserID).Msg("Failed to delete old refresh tokens")
+		lg.Warn().Err(err).Int("userID", token.UserID).Msgf("%s failed to delete old refresh tokens", pkgConst.Warn)
 		return "", "", fmt.Errorf("failed to delete old refresh tokens: %w", err)
 	}
 
-	lg.Debug().Int("userID", token.UserID).Msg("All old refresh tokens deleted, generating new refresh token")
+	lg.Debug().Int("userID", token.UserID).Msgf("%s all old refresh tokens deleted, generating new refresh token", pkgConst.Info)
 
 	newRefreshToken, err := sv.generateRefreshToken(user)
 	if err != nil {
-		lg.Warn().Err(err).Int("userID", token.UserID).Msg("Failed to generate new refresh token")
+		lg.Warn().Err(err).Int("userID", token.UserID).Msgf("%s failed to generate new refresh token", pkgConst.Warn)
 		return "", "", fmt.Errorf("failed to generate new refresh token: %w", err)
 	}
 
-	lg.Debug().Int("userID", token.UserID).Msg("Tokens refreshed successfully")
+	lg.Debug().Int("userID", token.UserID).Msgf("%s tokens refreshed successfully", pkgConst.OpSuccess)
 	return newAccessToken, newRefreshToken, nil
 }
 
@@ -244,7 +236,6 @@ func (sv *AuthService) ValidateToken(ctx context.Context, tokenString string) (i
 		return 0, "", "", errors.New("invalid token")
 	}
 
-	// Получаем полную информацию о пользователе из базы данных
 	user, err := sv.userRp.GetByID(claims.UserID)
 	if err != nil {
 		return 0, "", "", fmt.Errorf("user not found: %w", err)

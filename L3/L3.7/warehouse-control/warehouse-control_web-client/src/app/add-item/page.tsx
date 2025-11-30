@@ -13,14 +13,15 @@ export default function AddItemPage() {
   const { isLoading, isAuthenticated, hasRole } = useAuthGuard()
   const [error, setError] = useState<string | null>(null)
 
-  // Проверяем, что пользователь - Кладовщик
   useEffect(() => {
     if (!isLoading && isAuthenticated && !hasRole(["Кладовщик"])) {
       router.push("/")
     }
   }, [isLoading, isAuthenticated, hasRole, router])
 
-  const handleSubmit = async (data: Omit<Item, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleSubmit = async (
+    data: Omit<Item, "id" | "created_at" | "updated_at">
+  ) => {
     try {
       setError(null)
       await itemsAPI.createItem(data)
@@ -28,7 +29,7 @@ export default function AddItemPage() {
     } catch (err) {
       console.error("Failed to create item:", err)
       setError(err instanceof Error ? err.message : "Не удалось создать товар")
-      throw err // Перебрасываем ошибку для обработки в форме
+      throw err
     }
   }
 
@@ -36,15 +37,14 @@ export default function AddItemPage() {
     router.push("/")
   }
 
-  // Показываем загрузку
   if (isLoading) {
     return (
-      <Box 
-        sx={{ 
-          display: "flex", 
-          justifyContent: "center", 
-          alignItems: "center", 
-          minHeight: "50vh" 
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "50vh",
         }}
       >
         <CircularProgress />
@@ -52,7 +52,6 @@ export default function AddItemPage() {
     )
   }
 
-  // Если не авторизован или не Кладовщик, useAuthGuard перенаправит
   if (!isAuthenticated || !hasRole(["Кладовщик"])) {
     return null
   }
@@ -64,7 +63,7 @@ export default function AddItemPage() {
           {error}
         </Alert>
       )}
-      
+
       <ItemForm
         title="Добавление товара"
         submitButtonText="Сохранить"

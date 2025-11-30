@@ -25,7 +25,6 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack"
 import DownloadIcon from "@mui/icons-material/Download"
 
-// Компонент для содержимого страницы истории
 function HistoryContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -36,17 +35,17 @@ function HistoryContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Получаем ID товара из URL
+  // Получение ID товара из URL
   const itemId = searchParams.get("itemId")
 
-  // Проверяем права доступа - только для Аудитора
+  // Проверка прав доступа - только для Аудитора
   useEffect(() => {
     if (!isLoading && isAuthenticated && !hasRole(["Аудитор"])) {
       router.push("/")
     }
   }, [isLoading, isAuthenticated, hasRole, router])
 
-  // Загружаем историю изменений
+  // Загрузка истории изменений
   useEffect(() => {
     const loadHistory = async () => {
       if (!itemId) {
@@ -58,12 +57,14 @@ function HistoryContent() {
       try {
         setLoading(true)
         setError(null)
-        
+
         const response = await itemsAPI.getItemHistory(parseInt(itemId))
         setHistory(response.history || [])
       } catch (err) {
         console.error("Failed to load history:", err)
-        setError(err instanceof Error ? err.message : "Не удалось загрузить историю")
+        setError(
+          err instanceof Error ? err.message : "Не удалось загрузить историю"
+        )
       } finally {
         setLoading(false)
       }
@@ -96,39 +97,70 @@ function HistoryContent() {
   // Форматирование изменений для отображения
   const formatChanges = (changes: string | undefined) => {
     if (!changes || changes === "null") return "Нет данных"
-    
+
     try {
       const parsed = JSON.parse(changes)
       const parts = []
-      
-      // Обрабатываем разные типы изменений
+
+      // Обрабатка разных типов изменений
       for (const [key, value] of Object.entries(parsed)) {
-        if (typeof value === 'object' && value !== null && 'old' in value && 'new' in value) {
+        if (
+          typeof value === "object" &&
+          value !== null &&
+          "old" in value &&
+          "new" in value
+        ) {
           const oldValue = String(value.old)
           const newValue = String(value.new)
-          
-          // Если значения одинаковые, не показываем изменение
+
+          // Если значения одинаковые
           if (oldValue === newValue) continue
-          
+
           parts.push(
-            <Box key={key} sx={{ mb: 1.5, p: 1, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'grey.200' }}>
-              <Typography variant="body2" sx={{ fontWeight: 'medium', color: 'primary.main', mb: 0.5 }}>
+            <Box
+              key={key}
+              sx={{
+                mb: 1.5,
+                p: 1,
+                bgcolor: "grey.50",
+                borderRadius: 1,
+                border: "1px solid",
+                borderColor: "grey.200",
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: "medium", color: "primary.main", mb: 0.5 }}
+              >
                 📝 {key}:
               </Typography>
-              <Box sx={{ ml: 2, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="body2" sx={{ color: 'error.main', fontWeight: 'medium' }}>
+              <Box
+                sx={{
+                  ml: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 0.5,
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "error.main", fontWeight: "medium" }}
+                  >
                     ❌ Было:
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'error.main' }}>
+                  <Typography variant="body2" sx={{ color: "error.main" }}>
                     {oldValue}
                   </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 'medium' }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "success.main", fontWeight: "medium" }}
+                  >
                     ✅ Стало:
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'success.main' }}>
+                  <Typography variant="body2" sx={{ color: "success.main" }}>
                     {newValue}
                   </Typography>
                 </Box>
@@ -136,27 +168,44 @@ function HistoryContent() {
             </Box>
           )
         } else {
-          // Это создание (просто значение)
           parts.push(
-            <Box key={key} sx={{ mb: 1, p: 1, bgcolor: 'success.light', borderRadius: 1, border: '1px solid', borderColor: 'success.main' }}>
-              <Typography variant="body2" sx={{ color: 'success.contrastText', fontWeight: 'medium' }}>
+            <Box
+              key={key}
+              sx={{
+                mb: 1,
+                p: 1,
+                bgcolor: "success.light",
+                borderRadius: 1,
+                border: "1px solid",
+                borderColor: "success.main",
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{ color: "success.contrastText", fontWeight: "medium" }}
+              >
                 ➕ Создано: <strong>{key}</strong> = {String(value)}
               </Typography>
             </Box>
           )
         }
       }
-      
+
       if (parts.length === 0) {
-        return <Typography variant="body2" color="text.secondary">Изменений нет</Typography>
+        return (
+          <Typography variant="body2" color="text.secondary">
+            Изменений нет
+          </Typography>
+        )
       }
-      
+
       return <Box>{parts}</Box>
     } catch (error) {
       return (
-        <Box sx={{ p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
+        <Box sx={{ p: 1, bgcolor: "error.light", borderRadius: 1 }}>
           <Typography variant="body2" color="error.contrastText">
-            ⚠️ Ошибка парсинга данных: {error instanceof Error ? error.message : 'Неизвестная ошибка'}
+            ⚠️ Ошибка парсинга данных:{" "}
+            {error instanceof Error ? error.message : "Неизвестная ошибка"}
           </Typography>
         </Box>
       )
@@ -166,12 +215,12 @@ function HistoryContent() {
   // Обработчик экспорта в CSV
   const handleExportCSV = async () => {
     if (!itemId) return
-    
+
     try {
       setError(null)
       const blob = await itemsAPI.exportItemHistoryCSV(parseInt(itemId))
-      
-      // Создаем ссылку для скачивания
+
+      // Создание ссылки для скачивания
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.href = url
@@ -182,7 +231,9 @@ function HistoryContent() {
       window.URL.revokeObjectURL(url)
     } catch (err) {
       console.error("Failed to export CSV:", err)
-      setError(err instanceof Error ? err.message : "Не удалось экспортировать CSV")
+      setError(
+        err instanceof Error ? err.message : "Не удалось экспортировать CSV"
+      )
     }
   }
 
@@ -190,7 +241,6 @@ function HistoryContent() {
     router.push("/")
   }
 
-  // Показываем загрузку
   if (isLoading || loading) {
     return (
       <Box
@@ -206,7 +256,6 @@ function HistoryContent() {
     )
   }
 
-  // Если не авторизован или не Аудитор, useAuthGuard перенаправит
   if (!isAuthenticated || !hasRole(["Аудитор"])) {
     return null
   }
@@ -303,14 +352,22 @@ function HistoryContent() {
   )
 }
 
-// Главный компонент страницы с Suspense
 export default function HistoryPage() {
   return (
-    <Suspense fallback={
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "50vh" }}>
-        <CircularProgress />
-      </Box>
-    }>
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "50vh",
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      }
+    >
       <HistoryContent />
     </Suspense>
   )

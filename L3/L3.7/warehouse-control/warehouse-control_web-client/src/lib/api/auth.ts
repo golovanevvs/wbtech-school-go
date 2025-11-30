@@ -39,7 +39,6 @@ export const authAPI = {
         password,
       })
 
-      // Сервер уже установил cookie с токенами
       return response
     } catch (error) {
       console.error("Login failed:", error)
@@ -72,7 +71,6 @@ export const authAPI = {
         }
       )
 
-      // Сервер уже установил cookie с токенами
       return response
     } catch (error) {
       console.error("Registration failed:", error)
@@ -91,7 +89,6 @@ export const authAPI = {
       // Cookie будут удалены сервером
     } catch (error) {
       console.error("Logout failed:", error)
-      // Очищение локальных данных, даже если сервер не ответил
     }
   },
 
@@ -105,7 +102,6 @@ export const authAPI = {
       return response
     } catch (error) {
       console.error("Get current user failed:", error)
-      // Пробрасываем оригинальную ошибку, чтобы пользователь видел правильное сообщение
       if (error instanceof Error) {
         throw error
       }
@@ -163,7 +159,6 @@ export const authAPI = {
   async deleteUser(): Promise<void> {
     try {
       await apiClient.delete("/auth/delete")
-      // Cookie будут удалены сервером
     } catch (error) {
       console.error("Delete user failed:", error)
       throw new Error("Не удалось удалить пользователя")

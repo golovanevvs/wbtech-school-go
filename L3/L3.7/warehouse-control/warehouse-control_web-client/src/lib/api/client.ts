@@ -121,7 +121,7 @@ class ApiClient {
       })
 
       if (refreshResponse.ok) {
-        return // Успешно обновили токен
+        return
       }
 
       // Если ответ не ok, пробрасываем ошибку
@@ -137,7 +137,7 @@ class ApiClient {
 
   private async redirectToLogin(): Promise<void> {
     if (typeof window !== "undefined") {
-      // Сохраняем текущий путь для возврата после авторизации
+      // Сохранение текущего пути для возврата после авторизации
       const currentPath = window.location.pathname + window.location.search
       if (currentPath !== "/auth") {
         sessionStorage.setItem("redirectAfterLogin", currentPath)

@@ -15,7 +15,6 @@ import (
 // ISvForAuthHandler interface for auth handler
 type ISvForAuthHandler interface {
 	ValidateToken(ctx context.Context, tokenString string) (userID int, userRole, userName string, err error)
-	// RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 }
 
 // AuthMiddleware handles JWT authentication
@@ -31,9 +30,8 @@ type AuthMiddleware struct {
 func NewAuthMiddleware(parentLg *zlog.Zerolog, sv ISvForAuthHandler, accessTokenExp, refreshTokenExp time.Duration) *AuthMiddleware {
 	lg := parentLg.With().Str("component", "middleware-auth").Logger()
 	return &AuthMiddleware{
-		lg: &lg,
-		sv: sv,
-		// publicHost:         publicHost,
+		lg:              &lg,
+		sv:              sv,
 		accessTokenExp:  accessTokenExp,
 		refreshTokenExp: refreshTokenExp,
 	}
@@ -55,40 +53,10 @@ func (mw *AuthMiddleware) JWTMiddleware(c *gin.Context) {
 
 	userID, userRole, userName, err := mw.sv.ValidateToken(c.Request.Context(), tokenString)
 	if err != nil {
-		// lg.Warn().Err(err).Msg("Failed to validate token, attempting refresh")
 
 		lg.Warn().Msgf("%s Access token cookie is missing", pkgConst.Warn)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
 		return
-
-		// refreshToken, err := c.Cookie("refresh_token")
-		// if err != nil || refreshToken == "" {
-		// 	lg.Warn().Msg("Refresh token cookie is missing")
-		// 	c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
-		// 	c.Abort()
-		// 	return
-		// }
-
-		// newAccessToken, newRefreshToken, err := mw.sv.RefreshTokens(c.Request.Context(), refreshToken)
-		// if err != nil {
-		// 	lg.Warn().Err(err).Msg("Failed to refresh tokens")
-		// 	c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
-		// 	c.Abort()
-		// 	return
-		// }
-
-		// c.SetCookie("access_token", newAccessToken, int(mw.accessTokenExp.Seconds()), "/", extractDomain(mw.webHost), true, true)
-		// c.SetCookie("refresh_token", newRefreshToken, int(mw.refreshTokenExp.Seconds()), "/", extractDomain(mw.webHost), true, true)
-
-		// userID, userRole, err = mw.sv.ValidateToken(c.Request.Context(), newAccessToken)
-		// if err != nil {
-		// 	lg.Warn().Err(err).Msg("Failed to validate refreshed token")
-		// 	c.JSON(http.StatusUnauthorized, gin.H{"error": pkgErrors.ErrUnauthorized.Error()})
-		// 	c.Abort()
-		// 	return
-		// }
-
-		// lg.Debug().Msg("Token refreshed and validated successfully")
 	}
 
 	c.Set("user_id", userID)
@@ -114,14 +82,3 @@ func GetUserIDFromContext(c *gin.Context) (int, error) {
 
 	return userIDInt, nil
 }
-
-// extractDomain extracts the domain from a URL
-// func extractDomain(url string) string {
-// 	if strings.HasPrefix(url, "https://") {
-// 		return strings.TrimPrefix(url, "https://")
-// 	}
-// 	if strings.HasPrefix(url, "http://") {
-// 		return strings.TrimPrefix(url, "http://")
-// 	}
-// 	return url
-// }

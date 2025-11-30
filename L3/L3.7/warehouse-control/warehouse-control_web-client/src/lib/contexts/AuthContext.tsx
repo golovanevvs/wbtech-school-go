@@ -33,7 +33,10 @@ interface AuthContextType {
   checkAuth: () => Promise<void>
   hasRole: (roles: UserRole[]) => boolean
   clearError: () => void
-  updateUser: (userData: { name?: string; user_role?: string }) => Promise<boolean>
+  updateUser: (userData: {
+    name?: string
+    user_role?: string
+  }) => Promise<boolean>
   deleteUser: () => Promise<boolean>
 }
 
@@ -63,9 +66,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const pathname = usePathname()
   const router = useRouter()
 
-  // Логирование изменений error (упрощенное)
-  // console.log("AuthProvider render - error:", error)
-
   // Авторизован?
   const isAuthenticated = user !== null
 
@@ -85,7 +85,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const currentUser = await authAPI.getCurrentUser()
       setUser(currentUser)
 
-      // Проверяем, есть ли сохраненный путь для перенаправления
+      // Проверка, есть ли сохраненный путь для перенаправления
       const redirectPath = sessionStorage.getItem("redirectAfterLogin")
       if (redirectPath) {
         sessionStorage.removeItem("redirectAfterLogin")
@@ -125,7 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const currentUser = await authAPI.getCurrentUser()
       setUser(currentUser)
 
-      // Проверяем, есть ли сохраненный путь для перенаправления
+      // Проверка, есть ли сохраненный путь для перенаправления
       const redirectPath = sessionStorage.getItem("redirectAfterLogin")
       if (redirectPath) {
         sessionStorage.removeItem("redirectAfterLogin")
@@ -152,10 +152,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Очищение состояния
     setUser(null)
 
-    // Очищаем сохраненный путь для перенаправления
+    // Очищение сохранённого пути для перенаправления
     sessionStorage.removeItem("redirectAfterLogin")
 
-    // Делегируем полную очистку серверу (включая cookie)
+    // Делегирование полной очистки серверу (включая cookie)
     authAPI.logout().catch(console.error)
   }
 
@@ -170,7 +170,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const currentUser = await authAPI.getCurrentUser()
       console.log("checkAuth: success, user:", currentUser)
       console.log("checkAuth: user type:", typeof currentUser)
-      console.log("checkAuth: user keys:", currentUser ? Object.keys(currentUser) : "null/undefined")
+      console.log(
+        "checkAuth: user keys:",
+        currentUser ? Object.keys(currentUser) : "null/undefined"
+      )
       setUser(currentUser)
     } catch (error) {
       console.error("Check auth failed:", error)
@@ -199,9 +202,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   // Функция обновления данных пользователя
-  const updateUser = async (
-    userData: { name?: string; user_role?: string }
-  ): Promise<boolean> => {
+  const updateUser = async (userData: {
+    name?: string
+    user_role?: string
+  }): Promise<boolean> => {
     try {
       setIsChecking(true)
       setError(null)
@@ -228,8 +232,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setError(null)
 
       await authAPI.deleteUser()
-      
-      // Очищаем локальное состояние
+
+      // Очищение локального состояния
       setUser(null)
       sessionStorage.removeItem("redirectAfterLogin")
 
@@ -248,7 +252,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Проверка авторизации при монтировании компонента
   useEffect(() => {
     console.log("AuthContext useEffect triggered, pathname:", pathname)
-    // Не проверяем авторизацию на странице входа
+    // Не проверяется авторизация на странице входа
     if (pathname !== "/auth") {
       console.log("AuthContext: starting checkAuth for pathname:", pathname)
       checkAuth()

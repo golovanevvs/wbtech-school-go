@@ -20,8 +20,6 @@ func New(
 	rp *repository.Repository,
 	rs *pkgRetry.Retry,
 ) *Service {
-	// lg := zlog.Logger.With().Str("layer", "service").Logger()
-
 	userService := NewUserService(rp.User())
 	authService := NewAuthService(cfg, rp.User(), rp.RefreshToken())
 	itemService := NewItemService(rp.Item(), rp.ItemHistory())

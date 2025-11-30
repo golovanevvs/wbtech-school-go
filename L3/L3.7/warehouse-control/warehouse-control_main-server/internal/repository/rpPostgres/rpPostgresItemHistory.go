@@ -55,7 +55,6 @@ func (rp *ItemHistoryRepository) GetByItemID(itemID int) ([]model.ItemAction, er
 			return nil, fmt.Errorf("failed to scan item action: %w", err)
 		}
 
-		// Преобразуем JSONB в строку для JSONB поля в Go модели
 		if changesJSON.Valid {
 			action.Changes = changesJSON.String
 		} else {
@@ -102,7 +101,6 @@ func (rp *ItemHistoryRepository) GetAll() ([]model.ItemAction, error) {
 			return nil, fmt.Errorf("failed to scan item action: %w", err)
 		}
 
-		// Преобразуем JSONB в строку для JSONB поля в Go модели
 		if changesJSON.Valid {
 			action.Changes = changesJSON.String
 		} else {

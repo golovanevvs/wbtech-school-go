@@ -53,12 +53,10 @@ func NewItemService(itemRp IItemRp, historyRp IItemHistoryRp) *ItemService {
 
 // Create creates a new item (only for Кладовщик)
 func (sv *ItemService) Create(ctx context.Context, item *model.Item, userID int, userRole, userName string) (*model.Item, error) {
-	// Проверяем права доступа
 	if userRole != "Кладовщик" {
 		return nil, fmt.Errorf("access denied: only Кладовщик can create items")
 	}
 
-	// Валидация данных
 	if item.Name == "" {
 		return nil, fmt.Errorf("item name cannot be empty")
 	}
@@ -69,12 +67,10 @@ func (sv *ItemService) Create(ctx context.Context, item *model.Item, userID int,
 		return nil, fmt.Errorf("item quantity cannot be negative")
 	}
 
-	// Устанавливаем временные метки
 	now := time.Now()
 	item.CreatedAt = now
 	item.UpdatedAt = now
 
-	// Создаем товар (триггер автоматически создаст запись в истории)
 	return sv.itemRp.Create(item, userID, userName)
 }
 
@@ -90,12 +86,10 @@ func (sv *ItemService) GetByID(ctx context.Context, id int, userID int) (*model.
 
 // Update updates an item (only for Кладовщик)
 func (sv *ItemService) Update(ctx context.Context, item *model.Item, userID int, userRole, userName string) error {
-	// Проверяем права доступа
 	if userRole != "Кладовщик" {
 		return fmt.Errorf("access denied: only Кладовщик can update items")
 	}
 
-	// Валидация данных
 	if item.Name == "" {
 		return fmt.Errorf("item name cannot be empty")
 	}
@@ -106,27 +100,22 @@ func (sv *ItemService) Update(ctx context.Context, item *model.Item, userID int,
 		return fmt.Errorf("item quantity cannot be negative")
 	}
 
-	// Обновляем время изменения
 	item.UpdatedAt = time.Now()
 
-	// Обновляем товар (триггер автоматически создаст запись в истории)
 	return sv.itemRp.Update(item, userID, userName)
 }
 
 // Delete deletes an item (only for Кладовщик)
 func (sv *ItemService) Delete(ctx context.Context, id int, userID int, userRole, userName string) error {
-	// Проверяем права доступа
 	if userRole != "Кладовщик" {
 		return fmt.Errorf("access denied: only Кладовщик can delete items")
 	}
 
-	// Удаляем товар (триггер автоматически создаст запись в истории)
 	return sv.itemRp.Delete(id, userID, userName)
 }
 
 // GetHistory returns item history (only for Аудитор)
 func (sv *ItemService) GetHistory(ctx context.Context, itemID int, userID int, userRole string) ([]model.ItemAction, error) {
-	// Проверяем права доступа
 	if userRole != "Аудитор" {
 		return nil, fmt.Errorf("access denied: only Аудитор can view item history")
 	}
@@ -136,7 +125,6 @@ func (sv *ItemService) GetHistory(ctx context.Context, itemID int, userID int, u
 
 // GetAllHistory returns all item history (only for Аудитор)
 func (sv *ItemService) GetAllHistory(ctx context.Context, userID int, userRole string) ([]model.ItemAction, error) {
-	// Проверяем права доступа
 	if userRole != "Аудитор" {
 		return nil, fmt.Errorf("access denied: only Аудитор can view item history")
 	}
@@ -146,7 +134,6 @@ func (sv *ItemService) GetAllHistory(ctx context.Context, userID int, userRole s
 
 // ExportHistoryToCSV exports item history to CSV format (only for Аудитор)
 func (sv *ItemService) ExportHistoryToCSV(ctx context.Context, itemID int, userID int, userRole string) ([]map[string]interface{}, error) {
-	// Проверяем права доступа
 	if userRole != "Аудитор" {
 		return nil, fmt.Errorf("access denied: only Аудитор can export item history")
 	}

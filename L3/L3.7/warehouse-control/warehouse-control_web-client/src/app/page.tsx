@@ -80,16 +80,14 @@ export default function Home() {
     if (!window.confirm("Вы уверены, что хотите удалить этот товар?")) {
       return
     }
-    
+
     try {
       await itemsAPI.deleteItem(itemId)
-      // Обновляем список товаров после удаления
-      setItems(items.filter(item => item.id !== itemId))
+      // Обновление списка товаров после удаления
+      setItems(items.filter((item) => item.id !== itemId))
     } catch (err) {
       console.error("Failed to delete item:", err)
-      setError(
-        err instanceof Error ? err.message : "Не удалось удалить товар"
-      )
+      setError(err instanceof Error ? err.message : "Не удалось удалить товар")
     }
   }
 
@@ -101,7 +99,6 @@ export default function Home() {
     router.push("/add-item")
   }
 
-  // Показываем загрузку
   if (isLoading || loading) {
     return (
       <Box
@@ -117,7 +114,6 @@ export default function Home() {
     )
   }
 
-  // Если не авторизован, useAuthGuard перенаправит на /auth
   if (!isAuthenticated) {
     return null
   }

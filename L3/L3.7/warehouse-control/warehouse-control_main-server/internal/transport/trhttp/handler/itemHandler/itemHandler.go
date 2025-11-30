@@ -41,14 +41,12 @@ func New(lg *zlog.Zerolog, sv IItemService) *ItemHandler {
 
 // RegisterProtectedRoutes registers protected routes for items
 func (hd *ItemHandler) RegisterProtectedRoutes(rt *ginext.RouterGroup) {
-	// CRUD операции с товарами
 	rt.POST("/items", hd.createItem)
 	rt.GET("/items", hd.getAllItems)
 	rt.GET("/items/:id", hd.getItemByID)
 	rt.PUT("/items/:id", hd.updateItem)
 	rt.DELETE("/items/:id", hd.deleteItem)
 
-	// История изменений
 	rt.GET("/items/:id/history", hd.getItemHistory)
 	rt.GET("/items/:id/history/export", hd.exportItemHistory)
 	rt.GET("/history", hd.getAllHistory)
@@ -64,7 +62,6 @@ func (hd *ItemHandler) createItem(c *gin.Context) {
 		return
 	}
 
-	// Получаем информацию о пользователе из контекста
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -89,7 +86,6 @@ func (hd *ItemHandler) createItem(c *gin.Context) {
 		return
 	}
 
-	// Создаем контекст с информацией о пользователе
 	ctx := c.Request.Context()
 	ctx = context.WithValue(ctx, "user_id", userID)
 
@@ -109,7 +105,6 @@ func (hd *ItemHandler) createItem(c *gin.Context) {
 
 // getAllItems returns all items
 func (hd *ItemHandler) getAllItems(c *gin.Context) {
-	// Получаем информацию о пользователе из Gin контекста
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -153,7 +148,6 @@ func (hd *ItemHandler) getItemByID(c *gin.Context) {
 		return
 	}
 
-	// Получаем информацию о пользователе из Gin контекста
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -195,7 +189,6 @@ func (hd *ItemHandler) updateItem(c *gin.Context) {
 		return
 	}
 
-	// Получаем ID из URL
 	idParam := c.Param("id")
 	itemID, err := strconv.Atoi(idParam)
 	if err != nil {
@@ -206,7 +199,6 @@ func (hd *ItemHandler) updateItem(c *gin.Context) {
 	}
 	item.ID = itemID
 
-	// Получаем информацию о пользователе
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -231,7 +223,6 @@ func (hd *ItemHandler) updateItem(c *gin.Context) {
 		return
 	}
 
-	// Создаем контекст с информацией о пользователе
 	ctx := c.Request.Context()
 	ctx = context.WithValue(ctx, "user_id", userID)
 
@@ -260,7 +251,6 @@ func (hd *ItemHandler) deleteItem(c *gin.Context) {
 		return
 	}
 
-	// Получаем информацию о пользователе
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -285,7 +275,6 @@ func (hd *ItemHandler) deleteItem(c *gin.Context) {
 		return
 	}
 
-	// Создаем контекст с информацией о пользователе
 	ctx := c.Request.Context()
 	ctx = context.WithValue(ctx, "user_id", userID)
 
@@ -314,7 +303,6 @@ func (hd *ItemHandler) getItemHistory(c *gin.Context) {
 		return
 	}
 
-	// Получаем роль пользователя
 	userRole, exists := c.Get("user_role")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -323,7 +311,6 @@ func (hd *ItemHandler) getItemHistory(c *gin.Context) {
 		return
 	}
 
-	// Получаем ID пользователя
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -350,7 +337,6 @@ func (hd *ItemHandler) getItemHistory(c *gin.Context) {
 
 // getAllHistory returns all item history
 func (hd *ItemHandler) getAllHistory(c *gin.Context) {
-	// Получаем роль пользователя
 	userRole, exists := c.Get("user_role")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -359,7 +345,6 @@ func (hd *ItemHandler) getAllHistory(c *gin.Context) {
 		return
 	}
 
-	// Получаем ID пользователя
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -395,7 +380,6 @@ func (hd *ItemHandler) exportItemHistory(c *gin.Context) {
 		return
 	}
 
-	// Получаем роль пользователя
 	userRole, exists := c.Get("user_role")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -404,7 +388,6 @@ func (hd *ItemHandler) exportItemHistory(c *gin.Context) {
 		return
 	}
 
-	// Получаем ID пользователя
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{
@@ -424,21 +407,18 @@ func (hd *ItemHandler) exportItemHistory(c *gin.Context) {
 		return
 	}
 
-	// Создаем CSV файл
 	c.Header("Content-Type", "text/csv")
 	c.Header("Content-Disposition", "attachment; filename=item_history.csv")
 
 	writer := csv.NewWriter(c.Writer)
 	defer writer.Flush()
 
-	// Записываем заголовки
 	headers := []string{"ID", "Товар", "Действие", "Пользователь", "Дата", "Изменения"}
 	writer.Write(headers)
 
-	// Записываем данные
 	for _, row := range csvData {
 		record := []string{
-			fmt.Sprintf("%v", row["ID"]), // Преобразуем int в string
+			fmt.Sprintf("%v", row["ID"]),
 			fmt.Sprintf("%v", row["Товар"]),
 			fmt.Sprintf("%v", row["Действие"]),
 			fmt.Sprintf("%v", row["Пользователь"]),

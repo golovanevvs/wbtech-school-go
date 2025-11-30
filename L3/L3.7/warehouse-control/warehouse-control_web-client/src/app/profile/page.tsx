@@ -4,14 +4,22 @@ import { useState, useEffect } from "react"
 import { useAuthGuard } from "@/lib/hooks/useAuthGuard"
 import { useAuth } from "@/lib/contexts/AuthContext"
 import { authAPI } from "@/lib/api/auth"
-import { Box, Typography, Card, CardContent, Button, Alert, CircularProgress } from "@mui/material"
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Button,
+  Alert,
+  CircularProgress,
+} from "@mui/material"
 
 export default function ProfilePage() {
   const { user, deleteUser } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [userData, setUserData] = useState(user)
-  
+
   // Проверка авторизации для всех ролей
   useAuthGuard()
 
@@ -24,35 +32,43 @@ export default function ProfilePage() {
       setUserData(currentUser)
     } catch (err) {
       console.error("Failed to load user data:", err)
-      setError(err instanceof Error ? err.message : "Не удалось загрузить данные пользователя")
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Не удалось загрузить данные пользователя"
+      )
     } finally {
       setLoading(false)
     }
   }
 
-  // Загружаем данные при монтировании компонента
+  // Загрузка данных при монтировании компонента
   useEffect(() => {
     loadUserData()
   }, [])
 
   // Обработчик удаления профиля
   const handleDeleteProfile = async () => {
-    if (!window.confirm("Вы уверены, что хотите удалить свой профиль? Это действие нельзя отменить.")) {
+    if (
+      !window.confirm(
+        "Вы уверены, что хотите удалить свой профиль? Это действие нельзя отменить."
+      )
+    ) {
       return
     }
 
     try {
       setLoading(true)
       setError(null)
-      
+
       const success = await deleteUser()
       if (success) {
-        // Пользователь будет автоматически перенаправлен после выхода
-        // так как состояние пользователя станет null
       }
     } catch (err) {
       console.error("Failed to delete profile:", err)
-      setError(err instanceof Error ? err.message : "Не удалось удалить профиль")
+      setError(
+        err instanceof Error ? err.message : "Не удалось удалить профиль"
+      )
     } finally {
       setLoading(false)
     }
@@ -81,12 +97,8 @@ export default function ProfilePage() {
             <Typography variant="h6">
               Отображаемое имя: {userData.name}
             </Typography>
-            <Typography variant="h6">
-              Роль: {userData.user_role}
-            </Typography>
-            <Typography variant="h6">
-              ID: {userData.id}
-            </Typography>
+            <Typography variant="h6">Роль: {userData.user_role}</Typography>
+            <Typography variant="h6">ID: {userData.id}</Typography>
 
             <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
               <Button

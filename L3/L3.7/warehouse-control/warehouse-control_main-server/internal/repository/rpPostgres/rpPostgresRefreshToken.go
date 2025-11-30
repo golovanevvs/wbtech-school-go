@@ -176,9 +176,7 @@ func (rp *RefreshTokenRepository) DeleteByToken(token string) error {
 		return fmt.Errorf("failed to get affected rows: %w", err)
 	}
 
-	// Не возвращаем ошибку, если токен не найден - это нормально для операции удаления
 	if rowsAffected == 0 {
-		// Логируем, но не возвращаем ошибку
 		fmt.Printf("Refresh token with value %s not found for deletion (already deleted or never existed)\n", token)
 		return nil
 	}
@@ -206,7 +204,6 @@ func (rp *RefreshTokenRepository) DeleteByUserID(userID int) error {
 		return fmt.Errorf("failed to get affected rows: %w", err)
 	}
 
-	// Не возвращаем ошибку, если токены не найдены - это нормально
 	return nil
 }
 
