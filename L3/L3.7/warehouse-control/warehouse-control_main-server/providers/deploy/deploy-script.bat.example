@@ -1,6 +1,6 @@
 @echo off
 echo ======================================================
-echo    Starting warehouse-control_web-client deployment
+echo    Starting warehouse-control_main-server deployment
 echo    Time: %date% %time%
 echo ======================================================
 echo.
@@ -15,7 +15,7 @@ if "%VERSION%"=="" (
 )
 
 echo Changing to project directory...
-cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.7\warehouse-control\warehouse-control_web-client\deploy"
+cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.7\warehouse-control\warehouse-control_main-server\deploy"
 
 echo Stopping existing containers...
 docker compose down
@@ -24,15 +24,15 @@ echo Pulling image...
 docker compose pull
 
 echo Starting new containers with version: %APP_VERSION%
-docker compose -p warehouse-control_web-client up -d
+docker compose -p warehouse-control_main-server up -d
 
 echo.
 echo Checking container status...
-docker ps --filter "name=warehouse-control_web-client"
+docker ps --filter "name=warehouse-control_main-server"
 
 echo.
 echo =====================================================================
-echo    warehouse-control_web-client deployment completed successfully!
+echo    warehouse-control_main-server deployment completed successfully!
 echo =====================================================================
 echo.
 
