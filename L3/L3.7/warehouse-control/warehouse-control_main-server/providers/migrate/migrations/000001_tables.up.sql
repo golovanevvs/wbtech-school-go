@@ -46,13 +46,26 @@ DECLARE
     current_user_name TEXT;
 BEGIN
     -- Получаем информацию о пользователе из пользовательских параметров
-    -- Используем NULLIF и COALESCE для безопасности
-    current_user_id := NULLIF(current_setting('app.current_user_id', true), '')::INTEGER;
-    current_user_name := COALESCE(current_setting('app.current_user_name', true), 'Unknown User');
+    BEGIN
+        current_user_id := NULLIF(current_setting('app.current_user_id', true), '')::INTEGER;
+        current_user_name := COALESCE(current_setting('app.current_user_name', true), 'System');
+    EXCEPTION WHEN others THEN
+        -- Если произошла ошибка при получении настроек, используем значения по умолчанию
+        current_user_id := NULL;
+        current_user_name := 'System';
+    END;
     
-    -- Если user_id все еще NULL, используем значение по умолчанию
+    -- Если user_id все еще NULL, пропускаем логирование (безопасно)
     IF current_user_id IS NULL THEN
-        current_user_id := 0; -- Или другое значение по умолчанию
+        RAISE NOTICE 'Skipping item action logging - user_id not set';
+        IF TG_OP = 'INSERT' THEN
+            RETURN NEW;
+        ELSIF TG_OP = 'UPDATE' THEN
+            RETURN NEW;
+        ELSIF TG_OP = 'DELETE' THEN
+            RETURN OLD;
+        END IF;
+        RETURN NULL;
     END IF;
     
     -- Для операции INSERT
