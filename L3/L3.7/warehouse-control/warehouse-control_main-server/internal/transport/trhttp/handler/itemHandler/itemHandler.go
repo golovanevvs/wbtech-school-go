@@ -3,6 +3,7 @@ package itemHandler
 import (
 	"context"
 	"encoding/csv"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -437,12 +438,12 @@ func (hd *ItemHandler) exportItemHistory(c *gin.Context) {
 	// Записываем данные
 	for _, row := range csvData {
 		record := []string{
-			row["ID"].(string),
-			row["Товар"].(string),
-			row["Действие"].(string),
-			row["Пользователь"].(string),
-			row["Дата"].(string),
-			row["Изменения"].(string),
+			fmt.Sprintf("%v", row["ID"]), // Преобразуем int в string
+			fmt.Sprintf("%v", row["Товар"]),
+			fmt.Sprintf("%v", row["Действие"]),
+			fmt.Sprintf("%v", row["Пользователь"]),
+			fmt.Sprintf("%v", row["Дата"]),
+			fmt.Sprintf("%v", row["Изменения"]),
 		}
 		writer.Write(record)
 	}
