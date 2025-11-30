@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     UNIQUE(user_id, token)
 );
 
+-- Таблица товаров склада
 CREATE TABLE IF NOT EXISTS items (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS items (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Таблица истории изменений товаров
 CREATE TABLE IF NOT EXISTS item_actions (
     id SERIAL PRIMARY KEY,
     item_id INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
@@ -36,16 +38,31 @@ CREATE TABLE IF NOT EXISTS item_actions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Функция для создания записи в истории изменений
 CREATE OR REPLACE FUNCTION log_item_changes()
 RETURNS TRIGGER AS $$
+DECLARE
+    current_user_id INTEGER;
+    current_user_name TEXT;
 BEGIN
+    -- Получаем информацию о пользователе из пользовательских параметров
+    -- Используем NULLIF и COALESCE для безопасности
+    current_user_id := NULLIF(current_setting('app.current_user_id', true), '')::INTEGER;
+    current_user_name := COALESCE(current_setting('app.current_user_name', true), 'Unknown User');
+    
+    -- Если user_id все еще NULL, используем значение по умолчанию
+    IF current_user_id IS NULL THEN
+        current_user_id := 0; -- Или другое значение по умолчанию
+    END IF;
+    
+    -- Для операции INSERT
     IF TG_OP = 'INSERT' THEN
         INSERT INTO item_actions (item_id, action_type, user_id, user_name, changes)
         VALUES (
             NEW.id,
             'create',
-            current_setting('app.current_user_id', true)::INTEGER,
-            current_setting('app.current_user_name', true),
+            current_user_id,
+            current_user_name,
             jsonb_build_object(
                 'name', NEW.name,
                 'price', NEW.price,
@@ -55,13 +72,14 @@ BEGIN
         RETURN NEW;
     END IF;
     
+    -- Для операции UPDATE
     IF TG_OP = 'UPDATE' THEN
         INSERT INTO item_actions (item_id, action_type, user_id, user_name, changes)
         VALUES (
             NEW.id,
             'update',
-            current_setting('app.current_user_id', true)::INTEGER,
-            current_setting('app.current_user_name', true),
+            current_user_id,
+            current_user_name,
             jsonb_build_object(
                 'name', jsonb_build_object('old', OLD.name, 'new', NEW.name),
                 'price', jsonb_build_object('old', OLD.price, 'new', NEW.price),
@@ -71,13 +89,14 @@ BEGIN
         RETURN NEW;
     END IF;
     
+    -- Для операции DELETE
     IF TG_OP = 'DELETE' THEN
         INSERT INTO item_actions (item_id, action_type, user_id, user_name, changes)
         VALUES (
             OLD.id,
             'delete',
-            current_setting('app.current_user_id', true)::INTEGER,
-            current_setting('app.current_user_name', true),
+            current_user_id,
+            current_user_name,
             jsonb_build_object(
                 'name', OLD.name,
                 'price', OLD.price,
@@ -89,13 +108,15 @@ BEGIN
     
     RETURN NULL;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Создание триггера для автоматического логирования изменений
 DROP TRIGGER IF EXISTS item_changes_trigger ON items;
 CREATE TRIGGER item_changes_trigger
     AFTER INSERT OR UPDATE OR DELETE ON items
     FOR EACH ROW EXECUTE FUNCTION log_item_changes();
 
+-- Индексы для улучшения производительности
 CREATE INDEX IF NOT EXISTS idx_item_actions_item_id ON item_actions(item_id);
 CREATE INDEX IF NOT EXISTS idx_item_actions_created_at ON item_actions(created_at);
 CREATE INDEX IF NOT EXISTS idx_item_actions_user_id ON item_actions(user_id);

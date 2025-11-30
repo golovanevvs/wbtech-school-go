@@ -23,8 +23,8 @@ func NewItemRepository(db *pkgPostgres.Postgres) *ItemRepository {
 // Create creates a new item
 func (rp *ItemRepository) Create(item *model.Item, userID int, userName string) (*model.Item, error) {
 	// Устанавливаем контекст пользователя для триггера
-	rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_id = $1", userID)
-	rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_name = $1", userName)
+	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_id = $1", userID)
+	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_name = $1", userName)
 
 	query := `
 		INSERT INTO items
@@ -128,8 +128,8 @@ func (rp *ItemRepository) GetByID(id int) (*model.Item, error) {
 // Update updates an item
 func (rp *ItemRepository) Update(item *model.Item, userID int, userName string) error {
 	// Устанавливаем контекст пользователя для триггера
-	rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_id = $1", userID)
-	rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_name = $1", userName)
+	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_id = $1", userID)
+	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_name = $1", userName)
 
 	query := `
 		UPDATE
@@ -171,8 +171,8 @@ func (rp *ItemRepository) Update(item *model.Item, userID int, userName string) 
 // Delete deletes an item by ID
 func (rp *ItemRepository) Delete(id int, userID int, userName string) error {
 	// Устанавливаем контекст пользователя для триггера
-	rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_id = $1", userID)
-	rp.db.DB.Master.ExecContext(context.Background(), "SET app.current_user_name = $1", userName)
+	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_id = $1", userID)
+	rp.db.DB.Master.ExecContext(context.Background(), "SET LOCAL app.current_user_name = $1", userName)
 
 	query := `
 		DELETE FROM

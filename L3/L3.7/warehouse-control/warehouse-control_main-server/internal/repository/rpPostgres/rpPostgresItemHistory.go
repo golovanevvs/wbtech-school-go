@@ -115,6 +115,21 @@ func (rp *ItemHistoryRepository) GetAll() ([]model.ItemAction, error) {
 	return history, nil
 }
 
+// CreateAction creates a new item action record
+func (rp *ItemHistoryRepository) CreateAction(itemID int, actionType string, userID int, userName string, changes map[string]interface{}) error {
+	query := `
+		INSERT INTO item_actions (item_id, action_type, user_id, user_name, changes)
+		VALUES ($1, $2, $3, $4, $5)
+	`
+
+	_, err := rp.db.DB.ExecContext(context.Background(), query, itemID, actionType, userID, userName, changes)
+	if err != nil {
+		return fmt.Errorf("failed to create item action: %w", err)
+	}
+
+	return nil
+}
+
 // ExportToCSV returns history data formatted for CSV export
 func (rp *ItemHistoryRepository) ExportToCSV(itemID int) ([]map[string]interface{}, error) {
 	query := `

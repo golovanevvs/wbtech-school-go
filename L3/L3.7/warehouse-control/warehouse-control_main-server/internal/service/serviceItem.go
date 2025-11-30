@@ -22,6 +22,7 @@ type IItemHistoryRp interface {
 	GetByItemID(itemID int) ([]model.ItemAction, error)
 	GetAll() ([]model.ItemAction, error)
 	ExportToCSV(itemID int) ([]map[string]interface{}, error)
+	CreateAction(itemID int, actionType string, userID int, userName string, changes map[string]interface{}) error
 }
 
 // IItemService interface for item service
@@ -73,12 +74,13 @@ func (sv *ItemService) Create(ctx context.Context, item *model.Item, userRole, u
 	item.CreatedAt = now
 	item.UpdatedAt = now
 
-	// Получаем ID пользователя из контекста (предполагаем, что он там есть)
+	// Получаем ID пользователя из контекста
 	userID, ok := ctx.Value("user_id").(int)
 	if !ok {
 		return nil, fmt.Errorf("user ID not found in context")
 	}
 
+	// Создаем товар (триггер автоматически создаст запись в истории)
 	return sv.itemRp.Create(item, userID, userName)
 }
 
@@ -131,6 +133,7 @@ func (sv *ItemService) Update(ctx context.Context, item *model.Item, userRole, u
 		return fmt.Errorf("user ID not found in context")
 	}
 
+	// Обновляем товар (триггер автоматически создаст запись в истории)
 	return sv.itemRp.Update(item, userID, userName)
 }
 
@@ -147,6 +150,7 @@ func (sv *ItemService) Delete(ctx context.Context, id int, userRole, userName st
 		return fmt.Errorf("user ID not found in context")
 	}
 
+	// Удаляем товар (триггер автоматически создаст запись в истории)
 	return sv.itemRp.Delete(id, userID, userName)
 }
 
