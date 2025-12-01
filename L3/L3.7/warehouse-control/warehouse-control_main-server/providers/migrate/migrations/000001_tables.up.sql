@@ -28,9 +28,10 @@ CREATE TABLE IF NOT EXISTS items (
 );
 
 -- Таблица истории изменений товаров
+-- Убираем внешний ключ для избежания проблем с удалением
 CREATE TABLE IF NOT EXISTS item_actions (
     id SERIAL PRIMARY KEY,
-    item_id INTEGER NOT NULL REFERENCES items(id) ON DELETE CASCADE,
+    item_id INTEGER NOT NULL,
     action_type VARCHAR(10) NOT NULL CHECK (action_type IN ('create', 'update', 'delete')),
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     user_name VARCHAR(255) NOT NULL,
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS item_actions (
 );
 
 -- Функция для создания записи в истории изменений
+-- При удалении товара логирование не выполняется - используется ON DELETE CASCADE
 CREATE OR REPLACE FUNCTION log_item_changes()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -97,22 +99,10 @@ BEGIN
         RETURN NEW;
     END IF;
     
-    -- Для операции DELETE
+    -- Для операции DELETE - не логируем, полагаемся на ON DELETE CASCADE
+    -- При удалении товара связанные записи в item_actions будут автоматически удалены
     IF TG_OP = 'DELETE' THEN
-        RAISE NOTICE 'Deleting item with ID: %', OLD.id;
-        INSERT INTO item_actions (item_id, action_type, user_id, user_name, changes)
-        VALUES (
-            OLD.id,
-            'delete',
-            COALESCE(current_user_id, 0),
-            current_user_name,
-            jsonb_build_object(
-                'name', OLD.name,
-                'price', OLD.price,
-                'quantity', OLD.quantity
-            )
-        );
-        RAISE NOTICE 'Item action record created for DELETE';
+        RAISE NOTICE 'Deleting item with ID: % - related item_actions will be deleted by CASCADE', OLD.id;
         RETURN OLD;
     END IF;
     
@@ -121,9 +111,10 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Создание триггера для автоматического логирования изменений
+-- Триггер только для INSERT и UPDATE - для DELETE используется ON DELETE CASCADE
 DROP TRIGGER IF EXISTS item_changes_trigger ON items;
 CREATE TRIGGER item_changes_trigger
-    AFTER INSERT OR UPDATE OR DELETE ON items
+    AFTER INSERT OR UPDATE ON items
     FOR EACH ROW EXECUTE FUNCTION log_item_changes();
 
 -- Индексы для улучшения производительности
