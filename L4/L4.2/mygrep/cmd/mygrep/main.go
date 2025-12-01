@@ -8,7 +8,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/golovanevvs/wbtech-school-go/L4/L4.2/mygcs/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.2/mygrep/internal/model"
 )
 
 // Config содержит конфигурацию для локального режима

@@ -1,0 +1,8 @@
+Hello World
+This is a test file
+Contains multiple lines
+Some lines have the word "test"
+Other lines do not match
+Testing grep functionality
+Another test example
+Just regular text
