@@ -38,6 +38,27 @@ type GrepResult struct {
 	Match      string
 }
 
+// QuorumStatus отслеживает статус кворума
+type QuorumStatus struct {
+	TotalServers  int                   `json:"total_servers"`
+	RequiredVotes int                   `json:"required_votes"` // N/2+1
+	ReceivedVotes int                   `json:"received_votes"`
+	Results       map[string]*JobResult `json:"results"` // serverID -> result
+	Completed     bool                  `json:"completed"`
+	mu            sync.RWMutex
+}
+
+// JobResult результат выполнения задания
+type JobResult struct {
+	JobID       string       `json:"job_id"`
+	ServerID    string       `json:"server_id"`
+	Matches     []GrepResult `json:"matches"`   // найденные совпадения
+	Processed   int          `json:"processed"` // количество обработанных строк
+	Error       string       `json:"error,omitempty"`
+	Success     bool         `json:"success"`
+	CompletedAt time.Time    `json:"completed_at"`
+}
+
 // Message структура для сетевого обмена
 type Message struct {
 	Type      string      `json:"type"`
@@ -64,6 +85,56 @@ type App struct {
 	quit        chan bool
 }
 
+// NewQuorumStatus создаёт новый QuorumStatus
+func NewQuorumStatus(totalServers int) *QuorumStatus {
+	return &QuorumStatus{
+		TotalServers:  totalServers,
+		RequiredVotes: totalServers/2 + 1,
+		Results:       make(map[string]*JobResult),
+		Completed:     false,
+	}
+}
+
+// AddResult добавляет результат и проверяет достижение кворума
+func (q *QuorumStatus) AddResult(result *JobResult) bool {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+
+	q.Results[result.ServerID] = result
+	q.ReceivedVotes++
+
+	fmt.Printf("Кворум: получено %d из %d голосов (нужно %d)\n",
+		q.ReceivedVotes, q.TotalServers, q.RequiredVotes)
+
+	// Проверяем достижение кворума
+	if q.ReceivedVotes >= q.RequiredVotes {
+		q.Completed = true
+		return true
+	}
+
+	return false
+}
+
+// IsCompleted проверяет, достигнут ли кворум
+func (q *QuorumStatus) IsCompleted() bool {
+	q.mu.RLock()
+	defer q.mu.RUnlock()
+	return q.Completed
+}
+
+// GetResults возвращает все результаты
+func (q *QuorumStatus) GetResults() map[string]*JobResult {
+	q.mu.RLock()
+	defer q.mu.RUnlock()
+
+	// Создаём копию для безопасности
+	results := make(map[string]*JobResult)
+	for k, v := range q.Results {
+		results[k] = v
+	}
+	return results
+}
+
 // NewApp создаёт новый экземпляр приложения
 func NewApp() *App {
 	return &App{
@@ -87,11 +158,27 @@ func (a *App) Run() error {
 		}
 	} else {
 		// Локальный режим
-		if err := a.runGrep(); err != nil {
+		if err := a.runLocalGrep(); err != nil {
 			return fmt.Errorf("ошибка выполнения grep: %v", err)
 		}
 	}
 
+	return nil
+}
+
+// runLocalGrep выполняет локальный grep
+func (a *App) runLocalGrep() error {
+	if len(a.config.Files) > 0 {
+		for _, filename := range a.config.Files {
+			if err := a.processFile(filename); err != nil {
+				return fmt.Errorf("ошибка обработки файла %s: %v", filename, err)
+			}
+		}
+	} else {
+		if err := a.processStream(os.Stdin, "stdin"); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -262,45 +349,52 @@ func (a *App) handleConnection(conn net.Conn) {
 func (a *App) handleJobRequest(conn net.Conn, msg Message) {
 	fmt.Printf("Получен запрос на выполнение задания от %s\n", msg.From)
 
-	// TODO: реализовать выполнение задания
-	// 1. Извлечь данные задания из msg.Data
-	// 2. Прочитать указанные строки из файла
-	// 3. Выполнить grep на этих строках
-	// 4. Отправить результат обратно
-
 	jobData, ok := msg.Data.(map[string]interface{})
 	if !ok {
 		fmt.Println("Неверный формат данных задания")
+		a.sendErrorResponse(conn, msg.From, "Неверный формат данных задания")
 		return
 	}
 
-	filename, _ := jobData["filename"].(string)
-	startLine, _ := jobData["start_line"].(float64)
-	endLine, _ := jobData["end_line"].(float64)
-	pattern, _ := jobData["pattern"].(string)
-
-	fmt.Printf("Задание: файл=%s, строки=%d-%d, паттерн=%s\n",
-		filename, int(startLine), int(endLine), pattern)
-
-	// Заглушка - отправляем успешный ответ
-	result := map[string]interface{}{
-		"job_id":       jobData["job_id"],
-		"server_id":    a.config.ServerID,
-		"matches":      []map[string]interface{}{},
-		"processed":    int(endLine - startLine + 1),
-		"success":      true,
-		"completed_at": time.Now(),
+	// Выполняем задание локально
+	result, err := a.executeJobsLocallyWithResult(jobData)
+	if err != nil {
+		fmt.Printf("Ошибка выполнения задания: %v\n", err)
+		a.sendErrorResponse(conn, msg.From, err.Error())
+		return
 	}
 
+	// Отправляем результат
+	a.sendJobResponse(conn, msg.From, result)
+}
+
+// sendJobResponse отправляет ответ с результатом
+func (a *App) sendJobResponse(conn net.Conn, to string, result *JobResult) {
 	response := Message{
 		Type:      "job_response",
 		From:      a.config.ServerID,
-		To:        msg.From,
+		To:        to,
 		Data:      result,
 		Timestamp: time.Now(),
 	}
 
-	json.NewEncoder(conn).Encode(response)
+	if err := json.NewEncoder(conn).Encode(response); err != nil {
+		fmt.Printf("Ошибка отправки ответа: %v\n", err)
+	}
+}
+
+// sendErrorResponse отправляет ответ с ошибкой
+func (a *App) sendErrorResponse(conn net.Conn, to string, errorMsg string) {
+	result := &JobResult{
+		JobID:       "",
+		ServerID:    a.config.ServerID,
+		Processed:   0,
+		Success:     false,
+		Error:       errorMsg,
+		CompletedAt: time.Now(),
+	}
+
+	a.sendJobResponse(conn, to, result)
 }
 
 // sendStatusResponse отправляет ответ со статусом
@@ -376,7 +470,7 @@ func (a *App) processFileDistributed(filename string) error {
 
 	fmt.Printf("Файл содержит %d строк\n", totalLines)
 
-	// Определяем количество серверов (текущий + пиы)
+	// Определяем количество серверов (текущий + пиры)
 	numServers := 1 + len(a.config.Peers)
 	if numServers == 1 {
 		// Только один сервер, выполняем локально
@@ -442,43 +536,74 @@ func (a *App) distributeAndProcess(filename string, totalLines, numServers int) 
 	return a.executeJobsLocally(jobs)
 }
 
-// sendJobsToPeers отправляет задания пирам
+// sendJobsToPeers отправляет задания пирам с кворумом
 func (a *App) sendJobsToPeers(jobs []map[string]interface{}) error {
-	fmt.Printf("Отправляем %d заданий %d пирам\n", len(jobs), len(a.config.Peers))
+	numPeers := len(a.config.Peers)
+	if numPeers == 0 {
+		return a.executeJobsLocally(jobs)
+	}
+
+	// Создаём кворум (все серверы: текущий + пиры)
+	totalServers := numPeers + 1
+	quorum := NewQuorumStatus(totalServers)
+
+	fmt.Printf("Запуск кворума: %d серверов, нужно %d голосов\n",
+		totalServers, quorum.RequiredVotes)
 
 	var wg sync.WaitGroup
-	errors := make(chan error, len(a.config.Peers))
+	errors := make(chan error, totalServers)
 
-	// Отправляем задания каждому пиру
+	// Отправляем задания пирам параллельно
 	for i, peer := range a.config.Peers {
 		wg.Add(1)
 		go func(peerAddr string, jobIndex int) {
 			defer wg.Done()
 
-			if err := a.sendJobToPeer(peerAddr, jobs[jobIndex]); err != nil {
+			result, err := a.sendJobToPeerWithResult(peerAddr, jobs[jobIndex])
+			if err != nil {
 				errors <- fmt.Errorf("ошибка отправки задания пиру %s: %v", peerAddr, err)
+				return
+			}
+
+			// Добавляем результат в кворум
+			if quorum.AddResult(result) {
+				fmt.Println("Кворум достигнут!")
 			}
 		}(peer, i)
 	}
 
-	// Ждём завершения всех отправок
-	wg.Wait()
-	close(errors)
+	// Выполняем локальные задания в отдельной горутине
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 
-	// Проверяем на ошибки
-	for err := range errors {
-		fmt.Printf("Ошибка: %v\n", err)
-	}
+		localResult, err := a.executeJobsLocallyWithResult(jobs[0]) // Первый job для локального выполнения
+		if err != nil {
+			errors <- fmt.Errorf("ошибка локального выполнения: %v", err)
+			return
+		}
 
-	// Выполняем локальные задания
-	return a.executeJobsLocally(jobs)
+		// Добавляем локальный результат в кворум
+		if quorum.AddResult(localResult) {
+			fmt.Println("Кворум достигнут!")
+		}
+	}()
+
+	// Ожидаем завершения всех заданий или достижения кворума
+	go func() {
+		wg.Wait()
+		close(errors)
+	}()
+
+	// Ждём достижения кворума или завершения всех заданий
+	return a.waitForQuorum(quorum, errors)
 }
 
-// sendJobToPeer отправляет одно задание пиру
-func (a *App) sendJobToPeer(peerAddr string, job map[string]interface{}) error {
+// sendJobToPeerWithResult отправляет задание пиру и возвращает результат
+func (a *App) sendJobToPeerWithResult(peerAddr string, job map[string]interface{}) (*JobResult, error) {
 	conn, err := net.Dial("tcp", peerAddr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer conn.Close()
 
@@ -494,26 +619,179 @@ func (a *App) sendJobToPeer(peerAddr string, job map[string]interface{}) error {
 	// Отправляем сообщение
 	encoder := json.NewEncoder(conn)
 	if err := encoder.Encode(msg); err != nil {
-		return err
+		return nil, err
 	}
 
 	// Читаем ответ
 	var response Message
 	decoder := json.NewDecoder(conn)
 	if err := decoder.Decode(&response); err != nil {
-		return err
+		return nil, err
 	}
 
-	if response.Type == "job_response" {
-		fmt.Printf("Получен ответ от %s: успех=%v\n", peerAddr, response.Data.(map[string]interface{})["success"])
+	if response.Type != "job_response" {
+		return nil, fmt.Errorf("неожиданный ответ от %s: тип=%s", peerAddr, response.Type)
+	}
+
+	// Преобразуем ответ в JobResult
+	return a.convertToJobResult(response.Data, peerAddr)
+}
+
+// convertToJobResult преобразует данные ответа в JobResult
+func (a *App) convertToJobResult(data interface{}, serverID string) (*JobResult, error) {
+	dataMap, ok := data.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("неверный формат данных результата")
+	}
+
+	jobID, _ := dataMap["job_id"].(string)
+	processed, _ := dataMap["processed"].(float64)
+	success, _ := dataMap["success"].(bool)
+	completedAt, _ := dataMap["completed_at"].(time.Time)
+
+	// Преобразуем matches (заглушка - пока пустой массив)
+	matches := make([]GrepResult, 0)
+
+	result := &JobResult{
+		JobID:       jobID,
+		ServerID:    serverID,
+		Matches:     matches,
+		Processed:   int(processed),
+		Success:     success,
+		CompletedAt: completedAt,
+	}
+
+	if !success {
+		result.Error, _ = dataMap["error"].(string)
+	}
+
+	return result, nil
+}
+
+// waitForQuorum ожидает достижения кворума или завершения всех заданий
+func (a *App) waitForQuorum(quorum *QuorumStatus, errors <-chan error) error {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			if quorum.IsCompleted() {
+				fmt.Println("Кворум достигнут, объединяем результаты...")
+				return a.combineResults(quorum.GetResults())
+			}
+		case err := <-errors:
+			fmt.Printf("Ошибка выполнения: %v\n", err)
+		case <-time.After(30 * time.Second): // Таймаут 30 секунд
+			fmt.Println("Таймаут ожидания кворума")
+			return a.combineResults(quorum.GetResults())
+		}
+	}
+}
+
+// combineResults объединяет результаты от всех серверов
+func (a *App) combineResults(results map[string]*JobResult) error {
+	fmt.Printf("Объединяем результаты от %d серверов\n", len(results))
+
+	totalMatches := 0
+	totalProcessed := 0
+	allSuccessful := true
+
+	for serverID, result := range results {
+		fmt.Printf("Сервер %s: обработано %d строк, найдено %d совпадений\n",
+			serverID, result.Processed, len(result.Matches))
+
+		totalProcessed += result.Processed
+		totalMatches += len(result.Matches)
+
+		if !result.Success {
+			allSuccessful = false
+			fmt.Printf("Ошибка на сервере %s: %s\n", serverID, result.Error)
+		}
+	}
+
+	if allSuccessful {
+		fmt.Printf("Успешно: обработано %d строк, найдено %d совпадений\n", totalProcessed, totalMatches)
 	} else {
-		fmt.Printf("Неожиданный ответ от %s: тип=%s\n", peerAddr, response.Type)
+		fmt.Printf("Частично успешно: обработано %d строк, найдено %d совпадений\n", totalProcessed, totalMatches)
 	}
 
 	return nil
 }
 
-// executeJobsLocally выполняет задания локально
+// executeJobsLocallyWithResult выполняет задания локально и возвращает результат
+func (a *App) executeJobsLocallyWithResult(job map[string]interface{}) (*JobResult, error) {
+	filename := job["filename"].(string)
+	startLine := int(job["start_line"].(float64))
+	endLine := int(job["end_line"].(float64))
+	pattern := job["pattern"].(string)
+	jobID := job["job_id"].(string)
+
+	fmt.Printf("Выполняем локальное задание %s: файл=%s, строки=%d-%d, паттерн=%s\n",
+		jobID, filename, startLine, endLine, pattern)
+
+	// Открываем файл
+	file, err := os.Open(filename)
+	if err != nil {
+		return &JobResult{
+			JobID:       jobID,
+			ServerID:    a.config.ServerID,
+			Processed:   0,
+			Success:     false,
+			Error:       err.Error(),
+			CompletedAt: time.Now(),
+		}, nil
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	currentLine := 0
+	matches := make([]GrepResult, 0)
+
+	for scanner.Scan() {
+		currentLine++
+
+		// Пропускаем строки до startLine
+		if currentLine < startLine {
+			continue
+		}
+
+		// Останавливаемся после endLine
+		if currentLine > endLine {
+			break
+		}
+
+		line := scanner.Text()
+
+		// Выполняем поиск в строке
+		result, found := a.searchInLineForJob(line, currentLine, job)
+		if found {
+			matches = append(matches, *result)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return &JobResult{
+			JobID:       jobID,
+			ServerID:    a.config.ServerID,
+			Processed:   currentLine - startLine + 1,
+			Success:     false,
+			Error:       err.Error(),
+			CompletedAt: time.Now(),
+		}, nil
+	}
+
+	return &JobResult{
+		JobID:       jobID,
+		ServerID:    a.config.ServerID,
+		Matches:     matches,
+		Processed:   currentLine - startLine + 1,
+		Success:     true,
+		CompletedAt: time.Now(),
+	}, nil
+}
+
+// executeJobsLocally выполняет задания локально (старая версия для совместимости)
 func (a *App) executeJobsLocally(jobs []map[string]interface{}) error {
 	fmt.Printf("Выполняем %d заданий локально\n", len(jobs))
 
@@ -522,10 +800,9 @@ func (a *App) executeJobsLocally(jobs []map[string]interface{}) error {
 		filename := job["filename"].(string)
 		startLine := int(job["start_line"].(float64))
 		endLine := int(job["end_line"].(float64))
-		pattern := job["pattern"].(string)
 
-		fmt.Printf("Задание %d: файл=%s, строки=%d-%d, паттерн=%s\n",
-			i+1, filename, startLine, endLine, pattern)
+		fmt.Printf("Задание %d: файл=%s, строки=%d-%d\n",
+			i+1, filename, startLine, endLine)
 
 		// Выполняем grep на указанном диапазоне строк
 		if err := a.executeJobLocally(job); err != nil {
@@ -674,22 +951,6 @@ func (a *App) printResultForJob(result *GrepResult) {
 	}
 }
 
-// runGrep выполняет поиск (локальный режим)
-func (a *App) runGrep() error {
-	if len(a.config.Files) > 0 {
-		for _, filename := range a.config.Files {
-			if err := a.processFile(filename); err != nil {
-				return fmt.Errorf("ошибка обработки файла %s: %v", filename, err)
-			}
-		}
-	} else {
-		if err := a.processStream(os.Stdin, "stdin"); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // processFile обрабатывает один файл
 func (a *App) processFile(filename string) error {
 	file, err := os.Open(filename)
@@ -735,54 +996,7 @@ func (a *App) processStream(reader io.Reader, sourceName string) error {
 
 // searchInLine ищет совпадения в строке
 func (a *App) searchInLine(line string, lineNumber int) (*GrepResult, bool) {
-	pattern := regexp.QuoteMeta(a.config.Pattern)
-	if a.config.Flags.WholeLine {
-		pattern = "^" + pattern + "$"
-	}
-
-	flags := ""
-	if a.config.Flags.IgnoreCase {
-		flags = "(?i)"
-	}
-
-	fullPattern := flags + pattern
-	re, err := regexp.Compile(fullPattern)
-	if err != nil {
-		return nil, false
-	}
-
-	matches := re.FindAllString(line, -1)
-
-	if a.config.Flags.InvertMatch {
-		if len(matches) == 0 {
-			return &GrepResult{
-				LineNumber: lineNumber,
-				Line:       line,
-				Match:      line,
-			}, true
-		}
-		return nil, false
-	}
-
-	if len(matches) > 0 {
-		if a.config.Flags.OnlyMatching {
-			for _, match := range matches {
-				return &GrepResult{
-					LineNumber: lineNumber,
-					Line:       match,
-					Match:      match,
-				}, true
-			}
-		}
-
-		return &GrepResult{
-			LineNumber: lineNumber,
-			Line:       line,
-			Match:      matches[0],
-		}, true
-	}
-
-	return nil, false
+	return a.searchInLineWithConfig(line, lineNumber, a.config)
 }
 
 // printResult выводит результат
