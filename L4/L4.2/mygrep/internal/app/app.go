@@ -58,7 +58,6 @@ func (a *App) parseFlags() (*Config, error) {
 	flag.StringVar(&pattern, "pattern", "", "Паттерн для поиска")
 	flag.StringVar(&pattern, "e", "", "Паттерн для поиска (alias для --pattern)")
 
-	color := flag.Bool("color", false, "Выделить совпадения цветом")
 	invertMatch := flag.Bool("v", false, "Инвертировать совпадения")
 	ignoreCase := flag.Bool("i", false, "Игнорировать регистр")
 	wholeLine := flag.Bool("x", false, "Искать только полные строки")
@@ -80,7 +79,6 @@ func (a *App) parseFlags() (*Config, error) {
 			Pattern: pattern,
 			Files:   args,
 			Flags: model.GrepFlags{
-				Color:        *color,
 				InvertMatch:  *invertMatch,
 				IgnoreCase:   *ignoreCase,
 				WholeLine:    *wholeLine,
@@ -98,7 +96,6 @@ func (a *App) parseFlags() (*Config, error) {
 		Pattern: pattern,
 		Files:   flag.Args(),
 		Flags: model.GrepFlags{
-			Color:        *color,
 			InvertMatch:  *invertMatch,
 			IgnoreCase:   *ignoreCase,
 			WholeLine:    *wholeLine,
