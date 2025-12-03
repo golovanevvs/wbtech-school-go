@@ -1,0 +1,6 @@
+hello world
+test line 1
+another test line
+grep functionality test
+no match here
+testing distributed mode
