@@ -1,0 +1,39 @@
+@echo off
+echo ==================================================
+echo    Starting warehouse-control_web-client deployment
+echo    Time: %date% %time%
+echo ==================================================
+echo.
+
+set VERSION=%~1
+if "%VERSION%"=="" (
+    echo No version specified, using 'latest'
+    set APP_VERSION=latest
+) else (
+    echo Deploying version: %VERSION%
+    set APP_VERSION=%VERSION%
+)
+
+echo Changing to project directory...
+cd /d "C:\Golovanev\Dev\Projects\wbtech-school-go\L3\L3.7\warehouse-control\warehouse-control_web-client\deploy"
+
+echo Stopping existing containers...
+docker compose down
+
+echo Pulling image...
+docker compose pull
+
+echo Starting new containers with version: %APP_VERSION%
+docker compose -p warehouse-control_web-client up -d
+
+echo.
+echo Checking container status...
+docker ps --filter "name=warehouse-control_web-client"
+
+echo.
+echo =================================================================
+echo    warehouse-control_web-client deployment completed successfully!
+echo =================================================================
+echo.
+
+ping -n 3 127.0.0.1 > nul
