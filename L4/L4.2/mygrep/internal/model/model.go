@@ -9,15 +9,15 @@ import (
 
 // Config contains application configuration
 type Config struct {
-	ServerID      string        `json:"server_id"` // server identifier
+	ServerID      string        `json:"server_id"`
 	Port          string        `json:"port"`
-	Peers         []string      `json:"peers"` // addresses of other servers
+	Peers         []string      `json:"peers"`
 	Pattern       string        `json:"pattern"`
-	Files         []string      `json:"files"`          // list of files to process
-	Input         io.Reader     `json:"-"`              // input reader (stdin by default)
-	Output        io.Writer     `json:"-"`              // output writer (stdout by default)
-	IsDistributed bool          `json:"is_distributed"` // distributed mode flag
-	Flags         GrepFlags     `json:"flags"`          // grep flags
+	Files         []string      `json:"files"`
+	Input         io.Reader     `json:"-"`
+	Output        io.Writer     `json:"-"`
+	IsDistributed bool          `json:"is_distributed"`
+	Flags         GrepFlags     `json:"flags"`
 	Timeout       time.Duration `json:"timeout"`
 	LocalAddress  *net.TCPAddr  `json:"-"`
 }
@@ -33,8 +33,8 @@ type GrepResult struct {
 type JobResult struct {
 	JobID       string       `json:"job_id"`
 	ServerID    string       `json:"server_id"`
-	Matches     []GrepResult `json:"matches"`   // found matches
-	Processed   int          `json:"processed"` // number of processed lines
+	Matches     []GrepResult `json:"matches"`
+	Processed   int          `json:"processed"`
 	Error       string       `json:"error,omitempty"`
 	Success     bool         `json:"success"`
 	CompletedAt time.Time    `json:"completed_at"`
@@ -45,9 +45,9 @@ type Job struct {
 	ID        string    `json:"id"`
 	ServerID  string    `json:"server_id"`
 	Pattern   string    `json:"pattern"`
-	Data      string    `json:"data"`       // data for processing
-	StartLine int       `json:"start_line"` // starting line
-	EndLine   int       `json:"end_line"`   // ending line
+	Data      string    `json:"data"`
+	StartLine int       `json:"start_line"`
+	EndLine   int       `json:"end_line"`
 	Flags     GrepFlags `json:"flags"`
 	CreatedAt time.Time `json:"created_at"`
 }
@@ -56,8 +56,8 @@ type Job struct {
 type Result struct {
 	JobID       string    `json:"job_id"`
 	ServerID    string    `json:"server_id"`
-	Matches     []Match   `json:"matches"`   // found matches
-	Processed   int       `json:"processed"` // number of processed lines
+	Matches     []Match   `json:"matches"`
+	Processed   int       `json:"processed"`
 	Error       string    `json:"error,omitempty"`
 	Success     bool      `json:"success"`
 	CompletedAt time.Time `json:"completed_at"`
@@ -67,7 +67,7 @@ type Result struct {
 type Match struct {
 	LineNumber int    `json:"line_number"`
 	Line       string `json:"line"`
-	Column     int    `json:"column,omitempty"` // position in line
+	Column     int    `json:"column,omitempty"`
 }
 
 // ServerInfo contains server state information

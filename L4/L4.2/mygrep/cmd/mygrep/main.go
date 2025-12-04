@@ -7,10 +7,8 @@ import (
 )
 
 func main() {
-	// Создаём экземпляр приложения
-	application := app.NewApp()
+	application := app.New()
 
-	// Запускаем приложение
 	if err := application.Run(); err != nil {
 		os.Exit(1)
 	}

@@ -19,8 +19,8 @@ type App struct {
 	client      *transport.Client
 }
 
-// NewApp creates a new application instance
-func NewApp() *App {
+// New creates a new application instance
+func New() *App {
 	return &App{}
 }
 
