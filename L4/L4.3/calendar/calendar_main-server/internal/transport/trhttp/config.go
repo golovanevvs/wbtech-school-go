@@ -3,7 +3,7 @@ package trhttp
 import (
 	"fmt"
 
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.5/event-booker/event-booker_main-server/internal/transport/trhttp/handler"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.3/calendar/calendar_main-server/internal/transport/trhttp/handler"
 	"github.com/wb-go/wbf/config"
 )
 
