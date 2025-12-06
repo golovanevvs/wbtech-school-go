@@ -7,33 +7,42 @@ import (
 	"github.com/wb-go/wbf/config"
 )
 
-// Config service configuration
+// Config service configuration for calendar
 type Config struct {
-	JWTSecret          string
-	AccessTokenExpiry  time.Duration
-	RefreshTokenExpiry time.Duration
+	// Background workers configuration
+	CleanupInterval       time.Duration // How often to run cleanup (default: 30 minutes)
+	ReminderCheckInterval time.Duration // How often to check for due reminders (default: 1 minute)
+
+	// Notification settings
+	EnableTelegramNotifications bool
+	EnableEmailNotifications    bool
+
+	// Retention settings
+	EventRetentionDays int // How many days to keep events before archiving (default: 365)
 }
 
 func NewConfig(cfg *config.Config) *Config {
 	return &Config{
-		JWTSecret:          cfg.GetString("app.service.jwt_secret"),
-		AccessTokenExpiry:  cfg.GetDuration("app.service.jwt_access_token_expiry"),
-		RefreshTokenExpiry: cfg.GetDuration("app.service.jwt_refresh_token_expiry"),
+		CleanupInterval:             cfg.GetDuration("app.service.cleanup_interval"),
+		ReminderCheckInterval:       cfg.GetDuration("app.service.reminder_check_interval"),
+		EnableTelegramNotifications: cfg.GetBool("app.service.enable_telegram_notifications"),
+		EnableEmailNotifications:    cfg.GetBool("app.service.enable_email_notifications"),
+		EventRetentionDays:          cfg.GetInt("app.service.event_retention_days"),
 	}
 }
 
 func (c Config) String() string {
-	var jwtSecret string
-	if c.JWTSecret != "" {
-		jwtSecret = "***"
-	}
 	return fmt.Sprintf(`service:
   %s: %s
   %s: %s
-  %s: %s 
+  %s: %v
+  %s: %v
+  %s: %d days
   `,
-		"JWT secret", jwtSecret,
-		"JWT access token expiry", c.AccessTokenExpiry,
-		"JWT refresh token expiry", c.RefreshTokenExpiry,
+		"cleanup_interval", c.CleanupInterval,
+		"reminder_check_interval", c.ReminderCheckInterval,
+		"enable_telegram_notifications", c.EnableTelegramNotifications,
+		"enable_email_notifications", c.EnableEmailNotifications,
+		"event_retention_days", c.EventRetentionDays,
 	)
 }

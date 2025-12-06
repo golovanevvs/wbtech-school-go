@@ -4,66 +4,48 @@ import (
 	"time"
 )
 
-type User struct {
-	ID                    int       `json:"id" db:"id"`
-	Email                 string    `json:"email" db:"email"`
-	Name                  string    `json:"name" db:"name"`
-	PasswordHash          string    `json:"-" db:"password_hash"`
-	TelegramUsername      *string   `json:"telegramUsername,omitempty" db:"telegram_username"`
-	TelegramChatID        *int64    `json:"telegramChatID" db:"telegram_chat_id"`
-	TelegramNotifications bool      `json:"telegramNotifications" db:"telegram_notifications"`
-	EmailNotifications    bool      `json:"emailNotifications" db:"email_notifications"`
-	CreatedAt             time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt             time.Time `json:"updated_at" db:"updated_at"`
-}
-
+// Event represents a calendar event
 type Event struct {
-	ID                    int       `json:"id" db:"id"`
-	Title                 string    `json:"title" db:"title"`
-	Date                  time.Time `json:"date" db:"date"`
-	Description           string    `json:"description" db:"description"`
-	TotalPlaces           int       `json:"total_places" db:"total_places"`
-	AvailablePlaces       int       `json:"available_places" db:"available_places"`
-	BookingDeadline       int       `json:"booking_deadline" db:"booking_deadline"` // minute
-	OwnerID               int       `json:"owner_id" db:"owner_id"`
-	TelegramNotifications bool      `json:"telegram_notifications" db:"telegram_notifications"`
-	EmailNotifications    bool      `json:"email_notifications" db:"email_notifications"`
-	CreatedAt             time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt             time.Time `json:"updated_at" db:"updated_at"`
+	ID           int        `json:"id" db:"id"`
+	Title        string     `json:"title" db:"title"`
+	Description  string     `json:"description" db:"description"`
+	Start        time.Time  `json:"start" db:"start"`
+	End          *time.Time `json:"end,omitempty" db:"end"`
+	AllDay       bool       `json:"allDay" db:"all_day"`
+	Reminder     bool       `json:"reminder" db:"reminder"`
+	ReminderTime *time.Time `json:"reminderTime,omitempty" db:"reminder_time"`
+	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at" db:"updated_at"`
 }
 
-type BookingStatus string
-
-const (
-	BookingPending   BookingStatus = "pending"
-	BookingConfirmed BookingStatus = "confirmed"
-	BookingCancelled BookingStatus = "cancelled"
-)
-
-type Booking struct {
-	ID          int           `json:"id" db:"id"`
-	UserID      int           `json:"user_id" db:"user_id"`
-	EventID     int           `json:"event_id" db:"event_id"`
-	Status      BookingStatus `json:"status" db:"status"`
-	CreatedAt   time.Time     `json:"created_at" db:"created_at"`
-	ExpiresAt   time.Time     `json:"expires_at" db:"expires_at"`
-	ConfirmedAt *time.Time    `json:"confirmedAt,omitempty" db:"confirmed_at"`
-	CancelledAt *time.Time    `json:"cancelledAt,omitempty" db:"cancelled_at"`
+// CreateEventRequest represents the request body for creating an event
+type CreateEventRequest struct {
+	Title        string     `json:"title"`
+	Description  string     `json:"description,omitempty"`
+	Start        time.Time  `json:"start"`
+	End          *time.Time `json:"end,omitempty"`
+	AllDay       bool       `json:"allDay"`
+	Reminder     bool       `json:"reminder"`
+	ReminderTime *time.Time `json:"reminderTime,omitempty"`
 }
 
-type RefreshToken struct {
-	ID        int       `json:"id" db:"id"`
-	UserID    int       `json:"user_id" db:"user_id"`
-	Token     string    `json:"token" db:"token"`
-	ExpiresAt time.Time `json:"expires_at" db:"expires_at"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
+// MonthEventsResponse represents the response for getting events for a month
+type MonthEventsResponse struct {
+	Events []Event `json:"events"`
 }
 
+// CreateEventResponse represents the response for creating an event
+type CreateEventResponse struct {
+	Event Event `json:"event"`
+}
+
+// NotificationChannels represents notification delivery channels
 type NotificationChannels struct {
 	Telegram bool
 	Email    bool
 }
 
+// Notice represents a notification to be sent
 type Notice struct {
 	UserID   int
 	Message  string

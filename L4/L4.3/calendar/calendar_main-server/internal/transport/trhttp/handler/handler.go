@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.3/calendar/calendar_main-server/internal/pkg/pkgPrometheus"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.3/calendar/calendar_main-server/internal/transport/trhttp/handler/eventHandler"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.3/calendar/calendar_main-server/internal/transport/trhttp/handler/healthHandler"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.3/calendar/calendar_main-server/internal/transport/trhttp/handler/telegramHandler"
 
@@ -14,6 +15,7 @@ import (
 
 type IService interface {
 	TelegramService() telegramHandler.ISvForTelegramHandler
+	CalendarService() eventHandler.IService
 }
 
 type Handler struct {
@@ -50,12 +52,6 @@ func New(
 		Rt: rt,
 	}
 
-	public := rt.Group("/")
-	{
-	}
-	protected := rt.Group("/")
-	{
-	}
 	{
 	}
 	telegramHandler := telegramHandler.New(&lg, rt, sv.TelegramService())
@@ -63,6 +59,9 @@ func New(
 
 	healthHandler := healthHandler.New(&lg, rt)
 	healthHandler.RegisterRoutes()
+
+	eventHandler := eventHandler.New(&lg, rt, sv.CalendarService())
+	eventHandler.RegisterRoutes()
 
 	return hd
 }

@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Warehouse Control",
-  description: "Warehouse Control",
+  title: "Calendar",
+  description: "Calendar",
 }
 
 export default function RootLayout({
