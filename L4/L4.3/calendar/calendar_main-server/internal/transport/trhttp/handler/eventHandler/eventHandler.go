@@ -60,7 +60,6 @@ func (hd *EventHandler) RegisterRoutes() {
 func (hd *EventHandler) GetMonthEventsHandler(c *ginext.Context) {
 	lg := hd.lg.With().Str("method", "GetMonthEventsHandler").Logger()
 
-	// Parse year and month from query parameters
 	yearStr := c.Query("year")
 	monthStr := c.Query("month")
 
@@ -90,7 +89,6 @@ func (hd *EventHandler) GetMonthEventsHandler(c *ginext.Context) {
 		return
 	}
 
-	// Get events from service
 	events, err := hd.sv.GetMonthEvents(c.Request.Context(), year, month)
 	if err != nil {
 		lg.Error().Err(err).Int("year", year).Int("month", month).Msg("Failed to get month events")
@@ -100,7 +98,6 @@ func (hd *EventHandler) GetMonthEventsHandler(c *ginext.Context) {
 
 	lg.Debug().Int("year", year).Int("month", month).Int("events_count", len(events)).Msg("Successfully retrieved month events")
 
-	// Return response in the format expected by the client
 	response := model.MonthEventsResponse{
 		Events: events,
 	}
@@ -118,7 +115,6 @@ func (hd *EventHandler) CreateEventHandler(c *ginext.Context) {
 		return
 	}
 
-	// Validate required fields
 	if eventData.Title == "" {
 		lg.Warn().Msg("Title is required")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "title is required"})
@@ -131,14 +127,12 @@ func (hd *EventHandler) CreateEventHandler(c *ginext.Context) {
 		return
 	}
 
-	// If end time is provided, it should be after start time
 	if eventData.End != nil && !eventData.End.IsZero() && eventData.End.Before(eventData.Start) {
 		lg.Warn().Time("start", eventData.Start).Time("end", *eventData.End).Msg("End time is before start time")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "end time must be after start time"})
 		return
 	}
 
-	// Create event through service
 	event, err := hd.sv.CreateEvent(c.Request.Context(), &eventData)
 	if err != nil {
 		lg.Error().Err(err).Str("title", eventData.Title).Msg("Failed to create event")
@@ -242,7 +236,6 @@ func (hd *EventHandler) GetDayEventsHandler(c *ginext.Context) {
 		return
 	}
 
-	// Validate date format (YYYY-MM-DD)
 	_, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		lg.Warn().Str("date", dateStr).Err(err).Msg("Invalid date format")

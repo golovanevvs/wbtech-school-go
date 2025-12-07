@@ -27,10 +27,15 @@ func (rp *RpPostgres) Close() error {
 // GetMonthEvents returns events for a specific month
 func (rp *RpPostgres) GetMonthEvents(year, month int) ([]model.Event, error) {
 	query := `
-		SELECT id, title, description, start, end, all_day, reminder, reminder_time, created_at, updated_at
-		FROM events
-		WHERE EXTRACT(YEAR FROM start) = $1 AND EXTRACT(MONTH FROM start) = $2
-		ORDER BY start ASC
+		SELECT
+			id, title, description, start, end, all_day, reminder, reminder_time, created_at
+		FROM
+			events
+		WHERE
+			EXTRACT(YEAR FROM start) = $1 AND EXTRACT(MONTH FROM start) = $2
+		ORDER BY
+			start 
+		ASC
 	`
 
 	rows, err := rp.db.DB.QueryContext(context.Background(), query, year, month)
@@ -55,7 +60,6 @@ func (rp *RpPostgres) GetMonthEvents(year, month int) ([]model.Event, error) {
 			&event.Reminder,
 			&reminderTime,
 			&event.CreatedAt,
-			&event.UpdatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scan event: %w", err)
@@ -77,9 +81,12 @@ func (rp *RpPostgres) GetMonthEvents(year, month int) ([]model.Event, error) {
 // CreateEvent creates a new event
 func (rp *RpPostgres) CreateEvent(eventData *model.CreateEventRequest) (*model.Event, error) {
 	query := `
-		INSERT INTO events (title, description, start, end, all_day, reminder, reminder_time)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, title, description, start, end, all_day, reminder, reminder_time, created_at, updated_at
+		INSERT INTO events
+			(title, description, start, end, all_day, reminder, reminder_time)
+		VALUES
+			($1, $2, $3, $4, $5, $6, $7)
+		RETURNING
+			id, title, description, start, end, all_day, reminder, reminder_time, created_at
 	`
 
 	var event model.Event
@@ -105,7 +112,6 @@ func (rp *RpPostgres) CreateEvent(eventData *model.CreateEventRequest) (*model.E
 		&event.Reminder,
 		&reminderTime,
 		&event.CreatedAt,
-		&event.UpdatedAt,
 	)
 
 	if err != nil {
@@ -125,9 +131,12 @@ func (rp *RpPostgres) CreateEvent(eventData *model.CreateEventRequest) (*model.E
 // GetEvent returns an event by ID
 func (rp *RpPostgres) GetEvent(id int) (*model.Event, error) {
 	query := `
-		SELECT id, title, description, start, end, all_day, reminder, reminder_time, created_at, updated_at
-		FROM events
-		WHERE id = $1
+		SELECT
+			id, title, description, start, end, all_day, reminder, reminder_time, created_at
+		FROM
+			events
+		WHERE
+			id = $1
 	`
 
 	var event model.Event
@@ -144,7 +153,6 @@ func (rp *RpPostgres) GetEvent(id int) (*model.Event, error) {
 		&event.Reminder,
 		&reminderTime,
 		&event.CreatedAt,
-		&event.UpdatedAt,
 	)
 
 	if err != nil {
@@ -167,10 +175,14 @@ func (rp *RpPostgres) GetEvent(id int) (*model.Event, error) {
 // UpdateEvent updates an existing event
 func (rp *RpPostgres) UpdateEvent(id int, eventData *model.CreateEventRequest) (*model.Event, error) {
 	query := `
-		UPDATE events 
-		SET title = $2, description = $3, start = $4, end = $5, all_day = $6, reminder = $7, reminder_time = $8, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $1
-		RETURNING id, title, description, start, end, all_day, reminder, reminder_time, created_at, updated_at
+		UPDATE
+			events 
+		SET
+			title = $2, description = $3, start = $4, end = $5, all_day = $6, reminder = $7, reminder_time = $8
+		WHERE
+			id = $1
+		RETURNING
+			id, title, description, start, end, all_day, reminder, reminder_time, created_at
 	`
 
 	var event model.Event
@@ -197,7 +209,6 @@ func (rp *RpPostgres) UpdateEvent(id int, eventData *model.CreateEventRequest) (
 		&event.Reminder,
 		&reminderTime,
 		&event.CreatedAt,
-		&event.UpdatedAt,
 	)
 
 	if err != nil {
@@ -219,7 +230,12 @@ func (rp *RpPostgres) UpdateEvent(id int, eventData *model.CreateEventRequest) (
 
 // DeleteEvent deletes an event by ID
 func (rp *RpPostgres) DeleteEvent(id int) error {
-	query := `DELETE FROM events WHERE id = $1`
+	query := `
+		DELETE FROM
+			events
+		WHERE
+			id = $1
+	`
 
 	result, err := rp.db.DB.ExecContext(context.Background(), query, id)
 	if err != nil {
@@ -241,10 +257,15 @@ func (rp *RpPostgres) DeleteEvent(id int) error {
 // GetDayEvents returns events for a specific day
 func (rp *RpPostgres) GetDayEvents(date string) ([]model.Event, error) {
 	query := `
-		SELECT id, title, description, start, end, all_day, reminder, reminder_time, created_at, updated_at
-		FROM events
-		WHERE DATE(start) = $1
-		ORDER BY start ASC
+		SELECT
+			id, title, description, start, end, all_day, reminder, reminder_time, created_at
+		FROM
+			events
+		WHERE
+			DATE(start) = $1
+		ORDER BY
+			start
+		ASC
 	`
 
 	rows, err := rp.db.DB.QueryContext(context.Background(), query, date)
@@ -269,7 +290,6 @@ func (rp *RpPostgres) GetDayEvents(date string) ([]model.Event, error) {
 			&event.Reminder,
 			&reminderTime,
 			&event.CreatedAt,
-			&event.UpdatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scan event: %w", err)

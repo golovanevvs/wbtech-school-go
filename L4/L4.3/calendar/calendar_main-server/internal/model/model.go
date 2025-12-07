@@ -15,7 +15,6 @@ type Event struct {
 	Reminder     bool       `json:"reminder" db:"reminder"`
 	ReminderTime *time.Time `json:"reminderTime,omitempty" db:"reminder_time"`
 	CreatedAt    time.Time  `json:"created_at" db:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at" db:"updated_at"`
 }
 
 // CreateEventRequest represents the request body for creating an event

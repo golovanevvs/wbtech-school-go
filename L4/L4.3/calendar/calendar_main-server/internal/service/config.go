@@ -9,16 +9,13 @@ import (
 
 // Config service configuration for calendar
 type Config struct {
-	// Background workers configuration
-	CleanupInterval       time.Duration // How often to run cleanup (default: 30 minutes)
-	ReminderCheckInterval time.Duration // How often to check for due reminders (default: 1 minute)
+	CleanupInterval       time.Duration
+	ReminderCheckInterval time.Duration
 
-	// Notification settings
 	EnableTelegramNotifications bool
 	EnableEmailNotifications    bool
 
-	// Retention settings
-	EventRetentionDays int // How many days to keep events before archiving (default: 365)
+	EventRetentionDays int
 }
 
 func NewConfig(cfg *config.Config) *Config {

@@ -8,25 +8,9 @@ CREATE TABLE IF NOT EXISTS events (
     all_day BOOLEAN NOT NULL DEFAULT false,
     reminder BOOLEAN NOT NULL DEFAULT false,
     reminder_time TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Index for fast month queries
 CREATE INDEX IF NOT EXISTS idx_events_start ON events(start);
 CREATE INDEX IF NOT EXISTS idx_events_start_end ON events(start, end);
-
--- Function to update updated_at column
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS 
-$$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ 
-LANGUAGE plpgsql;
-
--- Trigger to automatically update updated_at on events table
-CREATE TRIGGER update_events_updated_at BEFORE UPDATE ON events
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

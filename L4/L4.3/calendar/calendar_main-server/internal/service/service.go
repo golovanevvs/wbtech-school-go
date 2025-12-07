@@ -10,6 +10,7 @@ import (
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.3/calendar/calendar_main-server/internal/pkg/pkgRetry"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.3/calendar/calendar_main-server/internal/pkg/pkgTelegram"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.3/calendar/calendar_main-server/internal/repository"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.3/calendar/calendar_main-server/internal/transport/trhttp/handler/eventHandler"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.3/calendar/calendar_main-server/internal/transport/trhttp/handler/telegramHandler"
 	"github.com/rs/zerolog"
 	"github.com/wb-go/wbf/zlog"
@@ -22,11 +23,9 @@ type CalendarService struct {
 	lg         *zlog.Zerolog
 	cfg        *Config
 
-	// Channels for background workers
 	reminderChan chan *model.Event
 	logChan      chan LogEntry
 
-	// Background workers
 	wg sync.WaitGroup
 }
 
@@ -78,18 +77,16 @@ func New(
 
 // TelegramService returns the telegram service (for compatibility)
 func (sv *Service) TelegramService() telegramHandler.ISvForTelegramHandler {
-	// Return a simple handler that does nothing for now
 	return &TelegramHandler{tg: nil}
 }
 
 // Start implements the telegramHandler.ISvForTelegramHandler interface
 func (th *TelegramHandler) Start(ctx context.Context, username string, chatID int64, message string) error {
-	// Simple implementation that does nothing for now
 	return nil
 }
 
 // CalendarService returns the calendar service
-func (sv *Service) CalendarService() CalendarServiceInterface {
+func (sv *Service) CalendarService() eventHandler.IService {
 	return sv.Calendar
 }
 
@@ -133,8 +130,6 @@ func (sv *Service) StopBackgroundWorkers() {
 	sv.Calendar.wg.Wait()
 }
 
-// CalendarService methods
-
 // GetMonthEvents returns events for a specific month
 func (cs *CalendarService) GetMonthEvents(ctx context.Context, year, month int) ([]model.Event, error) {
 	events, err := cs.repository.GetMonthEvents(year, month)
@@ -159,7 +154,6 @@ func (cs *CalendarService) CreateEvent(ctx context.Context, eventData *model.Cre
 		return nil, err
 	}
 
-	// If event has reminder, add it to reminder channel
 	if event.Reminder && event.ReminderTime != nil {
 		select {
 		case cs.reminderChan <- event:
@@ -261,8 +255,6 @@ func (cs *CalendarService) LogWarn(method, message string, data map[string]inter
 	}
 }
 
-// Background worker methods
-
 // startReminderWorker starts the reminder worker
 func (cs *CalendarService) startReminderWorker(ctx context.Context) {
 	cs.wg.Add(1)
@@ -313,25 +305,14 @@ func (cs *CalendarService) reminderWorker(ctx context.Context) {
 
 // processReminder sends a reminder for an event
 func (cs *CalendarService) processReminder(lg zerolog.Logger, event *model.Event) {
-	// Format reminder message
-	// message := fmt.Sprintf("Напоминание: %s\nВремя: %s",
-	//     event.Title,
-	//     event.Start.Format("2006-01-02 15:04"))
-
-	// For now, we'll just log the reminder
-	// In a real implementation, you might send to a specific user or channel
 	lg.Info().Int("event_id", event.ID).Str("title", event.Title).Msg("Sending reminder")
 
-	// Here you could integrate with Telegram/Email services
-	// cs.noticeSvc.SendNotice(ctx, model.Notice{...})
 }
 
 // checkDueReminders checks for reminders that are due
 func (cs *CalendarService) checkDueReminders(lg zerolog.Logger) {
 	now := time.Now()
 
-	// This is a simplified implementation
-	// In a real application, you might query the database for events with due reminders
 	lg.Debug().Time("check_time", now).Msg("Checking for due reminders")
 }
 
@@ -356,15 +337,9 @@ func (cs *CalendarService) cleanupWorker(ctx context.Context) {
 
 // performCleanup removes old events
 func (cs *CalendarService) performCleanup(lg zerolog.Logger) {
-	// Archive events older than 1 year
 	cutoffDate := time.Now().AddDate(-1, 0, 0)
 
 	lg.Info().Time("cutoff_date", cutoffDate).Msg("Starting cleanup of old events")
-
-	// This would typically involve:
-	// 1. Moving old events to an archive table
-	// 2. Or deleting events that are no longer needed
-	// For now, we'll just log the action
 
 	lg.Info().Msg("Cleanup completed")
 }

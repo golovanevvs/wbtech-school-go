@@ -3,8 +3,18 @@ app:
     attempts: 5
     delay: 300ms
     backoff: 2
+  service:
+    cleanup_interval: 30m
+    reminder_check_interval: 1m
+    enable_telegram_notifications: false
+    enable_email_notifications: false
+    event_retention_days: 365
+
   transport:
     http:
+      port: 7777
+      public_host: "https://morbidly-willing-redpoll.cloudpub.ru"
+      web_public_host: "https://plentifully-faultless-cicada.cloudpub.ru"
       handler:
         gin_mode: release
         web_port: 7778
