@@ -28,7 +28,7 @@ func (rp *RpPostgres) Close() error {
 func (rp *RpPostgres) GetMonthEvents(year, month int) ([]model.Event, error) {
 	query := `
 		SELECT
-			id, title, description, start, end, all_day, reminder, reminder_time, created_at
+			id, title, description, start, "end", all_day, reminder, reminder_time, created_at
 		FROM
 			events
 		WHERE
@@ -82,11 +82,11 @@ func (rp *RpPostgres) GetMonthEvents(year, month int) ([]model.Event, error) {
 func (rp *RpPostgres) CreateEvent(eventData *model.CreateEventRequest) (*model.Event, error) {
 	query := `
 		INSERT INTO events
-			(title, description, start, end, all_day, reminder, reminder_time)
+			(title, description, start, "end", all_day, reminder, reminder_time)
 		VALUES
 			($1, $2, $3, $4, $5, $6, $7)
 		RETURNING
-			id, title, description, start, end, all_day, reminder, reminder_time, created_at
+			id, title, description, start, "end", all_day, reminder, reminder_time, created_at
 	`
 
 	var event model.Event
@@ -132,7 +132,7 @@ func (rp *RpPostgres) CreateEvent(eventData *model.CreateEventRequest) (*model.E
 func (rp *RpPostgres) GetEvent(id int) (*model.Event, error) {
 	query := `
 		SELECT
-			id, title, description, start, end, all_day, reminder, reminder_time, created_at
+			id, title, description, start, "end", all_day, reminder, reminder_time, created_at
 		FROM
 			events
 		WHERE
@@ -178,11 +178,11 @@ func (rp *RpPostgres) UpdateEvent(id int, eventData *model.CreateEventRequest) (
 		UPDATE
 			events 
 		SET
-			title = $2, description = $3, start = $4, end = $5, all_day = $6, reminder = $7, reminder_time = $8
+			title = $2, description = $3, start = $4, "end" = $5, all_day = $6, reminder = $7, reminder_time = $8
 		WHERE
 			id = $1
 		RETURNING
-			id, title, description, start, end, all_day, reminder, reminder_time, created_at
+			id, title, description, start, "end", all_day, reminder, reminder_time, created_at
 	`
 
 	var event model.Event
@@ -258,7 +258,7 @@ func (rp *RpPostgres) DeleteEvent(id int) error {
 func (rp *RpPostgres) GetDayEvents(date string) ([]model.Event, error) {
 	query := `
 		SELECT
-			id, title, description, start, end, all_day, reminder, reminder_time, created_at
+			id, title, description, start, "end", all_day, reminder, reminder_time, created_at
 		FROM
 			events
 		WHERE
