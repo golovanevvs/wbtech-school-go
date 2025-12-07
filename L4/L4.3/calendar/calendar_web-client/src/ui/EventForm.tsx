@@ -57,7 +57,15 @@ export default function EventForm({ onSuccess, onCancel }: EventFormProps) {
       setLoading(true)
       setError(null)
       
-      await calendarApi.createEvent(formData)
+      // Добавляем timezone к времени для совместимости с Go
+      const eventData = {
+        ...formData,
+        start: formData.start.includes('T') ? formData.start + ':00Z' : formData.start,
+        end: formData.end ? (formData.end.includes('T') ? formData.end + ':00Z' : formData.end) : undefined,
+        reminderTime: formData.reminderTime ? (formData.reminderTime.includes('T') ? formData.reminderTime + ':00Z' : formData.reminderTime) : undefined,
+      }
+      
+      await calendarApi.createEvent(eventData)
       
       if (onSuccess) {
         onSuccess()
