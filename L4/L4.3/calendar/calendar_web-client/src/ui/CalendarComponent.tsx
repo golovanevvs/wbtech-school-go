@@ -18,7 +18,6 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [currentDate, setCurrentDate] = useState(new Date())
 
   const loadEvents = async (date: Date) => {
     try {
@@ -39,11 +38,13 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
   }
 
   useEffect(() => {
-    loadEvents(currentDate)
-  }, [currentDate])
+    // Загружаем события для текущего месяца при монтировании
+    loadEvents(new Date())
+  }, []) // Пустой массив - выполнится только при монтировании
 
   const handleDatesSet = (arg: { start: Date }) => {
-    setCurrentDate(arg.start)
+    // Загружаем события для новой даты без изменения currentDate
+    loadEvents(arg.start)
   }
 
   const handleEventClick = (clickInfo: { event: { id: string } }) => {
