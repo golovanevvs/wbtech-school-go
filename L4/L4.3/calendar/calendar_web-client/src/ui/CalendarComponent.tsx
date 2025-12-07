@@ -59,7 +59,7 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
     }
   }
 
-  const calendarEvents = events.map(event => ({
+  const calendarEvents = events?.map(event => ({
     id: event.id,
     title: event.title,
     start: event.start,
@@ -70,7 +70,7 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
       reminder: event.reminder,
       reminderTime: event.reminderTime,
     },
-  }))
+  })) || []
 
   if (loading) {
     return (
