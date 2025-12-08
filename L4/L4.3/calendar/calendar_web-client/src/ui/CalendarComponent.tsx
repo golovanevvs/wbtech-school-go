@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import FullCalendar from "@fullcalendar/react"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
@@ -16,10 +16,11 @@ interface CalendarComponentProps {
 
 export default function CalendarComponent({ onEventClick, onDateClick }: CalendarComponentProps) {
   const [events, setEvents] = useState<CalendarEvent[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [currentDate, setCurrentDate] = useState(new Date())
 
-  const loadEvents = async (date: Date) => {
+  const loadEvents = useCallback(async (date: Date) => {
     try {
       setLoading(true)
       setError(null)
@@ -35,43 +36,53 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     // Загружаем события для текущего месяца при монтировании
     loadEvents(new Date())
-  }, []) // Пустой массив - выполнится только при монтировании
+  }, [loadEvents])
 
-  const handleDatesSet = (arg: { start: Date }) => {
-    // Загружаем события для новой даты без изменения currentDate
-    loadEvents(arg.start)
-  }
+  const handleDatesSet = useCallback((arg: { start: Date }) => {
+    // Обновляем только если дата действительно изменилась
+    const newDate = arg.start
+    const currentDateStr = currentDate.toISOString().split('T')[0]
+    const newDateStr = newDate.toISOString().split('T')[0]
+    
+    if (currentDateStr !== newDateStr) {
+      setCurrentDate(newDate)
+      loadEvents(newDate)
+    }
+  }, [currentDate, loadEvents])
 
-  const handleEventClick = (clickInfo: { event: { id: string } }) => {
+  const handleEventClick = useCallback((clickInfo: { event: { id: string } }) => {
     const event = events.find(e => e.id === clickInfo.event.id)
     if (event && onEventClick) {
       onEventClick(event)
     }
-  }
+  }, [events, onEventClick])
 
-  const handleDateClick = (clickInfo: { date: Date }) => {
+  const handleDateClick = useCallback((clickInfo: { date: Date }) => {
     if (onDateClick) {
       onDateClick(clickInfo.date)
     }
-  }
+  }, [onDateClick])
 
-  const calendarEvents = events?.map(event => ({
-    id: event.id,
-    title: event.title,
-    start: event.start,
-    end: event.end,
-    allDay: event.allDay || false,
-    extendedProps: {
-      description: event.description,
-      reminder: event.reminder,
-      reminderTime: event.reminderTime,
-    },
-  })) || []
+  const calendarEvents = useMemo(() => {
+    if (!events) return []
+    return events.map(event => ({
+      id: event.id,
+      title: event.title,
+      start: event.start,
+      end: event.end,
+      allDay: event.allDay || false,
+      extendedProps: {
+        description: event.description,
+        reminder: event.reminder,
+        reminderTime: event.reminderTime,
+      },
+    }))
+  }, [events])
 
   if (loading) {
     return (
