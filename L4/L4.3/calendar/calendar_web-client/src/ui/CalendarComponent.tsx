@@ -20,18 +20,29 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
   const [error, setError] = useState<string | null>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
 
+  // Тестовые события для проверки работы
+  const testEvents = useMemo(() => [
+    {
+      id: '1',
+      title: 'Тестовое событие',
+      start: new Date().toISOString(),
+    }
+  ], [])
+
   const loadEvents = useCallback(async (date: Date) => {
     try {
       setLoading(true)
       setError(null)
       
+      console.log('Загружаем события для даты:', date)
       const year = date.getFullYear()
-      const month = date.getMonth() + 1 // FullCalendar uses 0-based months
+      const month = date.getMonth() + 1
       
       const monthEvents = await calendarApi.getMonthEvents(year, month)
+      console.log('Получены события:', monthEvents)
       setEvents(monthEvents)
     } catch (err) {
-      console.error("Failed to load events:", err)
+      console.error('Failed to load events:', err)
       setError(err instanceof Error ? err.message : "Failed to load events")
     } finally {
       setLoading(false)
@@ -39,21 +50,11 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
   }, [])
 
   useEffect(() => {
-    // Загружаем события для текущего месяца при монтировании
-    loadEvents(new Date())
-  }, [loadEvents])
+    console.log('CalendarComponent mounted, loading events...')
+    loadEvents(currentDate)
+  }, [loadEvents, currentDate])
 
-  const handleDatesSet = useCallback((arg: { start: Date }) => {
-    // Обновляем только если дата действительно изменилась
-    const newDate = arg.start
-    const currentDateStr = currentDate.toISOString().split('T')[0]
-    const newDateStr = newDate.toISOString().split('T')[0]
-    
-    if (currentDateStr !== newDateStr) {
-      setCurrentDate(newDate)
-      loadEvents(newDate)
-    }
-  }, [currentDate, loadEvents])
+  // УБРАЛИ datesSet - это была причина бесконечного цикла!
 
   const handleEventClick = useCallback((clickInfo: { event: { id: string } }) => {
     const event = events.find(e => e.id === clickInfo.event.id)
@@ -63,13 +64,24 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
   }, [events, onEventClick])
 
   const handleDateClick = useCallback((clickInfo: { date: Date }) => {
+    console.log('Date clicked:', clickInfo.date)
     if (onDateClick) {
       onDateClick(clickInfo.date)
     }
   }, [onDateClick])
 
+  // Функция для обновления даты (вызывается вручную)
+  const handleDateChange = useCallback((newDate: Date) => {
+    console.log('Меняем дату на:', newDate)
+    setCurrentDate(newDate)
+    loadEvents(newDate)
+  }, [loadEvents])
+
   const calendarEvents = useMemo(() => {
-    if (!events) return []
+    console.log('Формируем calendarEvents, events:', events)
+    if (!events || events.length === 0) {
+      return testEvents // Используем тестовые события если нет реальных
+    }
     return events.map(event => ({
       id: event.id,
       title: event.title,
@@ -82,7 +94,9 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
         reminderTime: event.reminderTime,
       },
     }))
-  }, [events])
+  }, [events, testEvents])
+
+  console.log('CalendarComponent render, events:', events, 'calendarEvents:', calendarEvents)
 
   if (loading) {
     return (
@@ -110,13 +124,14 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
           right: "dayGridMonth,timeGridWeek,timeGridDay",
         }}
         initialView="dayGridMonth"
+        initialDate={currentDate}
         editable={true}
         selectable={true}
         selectMirror={true}
         dayMaxEvents={true}
         weekends={true}
         events={calendarEvents}
-        datesSet={handleDatesSet}
+        // УБРАЛИ datesSet - это была причина бесконечного цикла!
         eventClick={handleEventClick}
         dateClick={handleDateClick}
         height="auto"
@@ -135,7 +150,34 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
           minute: "2-digit",
           meridiem: false,
         }}
+        navLinks={true}
+        // Добавим ручную навигацию через кнопки
+        datesSet={(arg) => {
+          // Только логирование, без обновления состояния
+          console.log('FullCalendar dates set:', arg.start)
+        }}
       />
+      
+      {/* Ручные кнопки для навигации */}
+      <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'center' }}>
+        <button onClick={() => {
+          const newDate = new Date(currentDate)
+          newDate.setMonth(newDate.getMonth() - 1)
+          handleDateChange(newDate)
+        }}>
+          Предыдущий месяц
+        </button>
+        <button onClick={() => handleDateChange(new Date())}>
+          Сегодня
+        </button>
+        <button onClick={() => {
+          const newDate = new Date(currentDate)
+          newDate.setMonth(newDate.getMonth() + 1)
+          handleDateChange(newDate)
+        }}>
+          Следующий месяц
+        </button>
+      </Box>
     </Box>
   )
 }
