@@ -7,18 +7,38 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import interactionPlugin from "@fullcalendar/interaction"
 import { Box, CircularProgress, Alert } from "@mui/material"
 import { calendarApi } from "@/lib/api/calendar"
-import { CalendarEvent } from "@/lib/types/calendar"
+import { CalendarEvent, CreateEventRequest } from "@/lib/types/calendar"
+import { EventDropArg } from "@fullcalendar/core"
 
 interface CalendarComponentProps {
   onEventClick?: (event: CalendarEvent) => void
   onDateClick?: (date: Date) => void
 }
 
+// Simple logger function to avoid TypeScript issues with console
+interface Logger {
+  error: (...args: unknown[]) => void
+  log: (...args: unknown[]) => void
+}
+
+const logger: Logger = {
+  error: (...args: unknown[]) => {
+    if (typeof window !== 'undefined' && window.console) {
+      window.console.error(...args)
+    }
+  },
+  log: (...args: unknown[]) => {
+    if (typeof window !== 'undefined' && window.console) {
+      window.console.log(...args)
+    }
+  }
+}
+
 export default function CalendarComponent({ onEventClick, onDateClick }: CalendarComponentProps) {
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [currentDate, setCurrentDate] = useState(() => new Date())
 
   // Тестовые события для проверки работы
   const testEvents = useMemo(() => [
@@ -54,7 +74,79 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
     loadEvents(currentDate)
   }, [loadEvents, currentDate])
 
-  // УБРАЛИ datesSet - это была причина бесконечного цикла!
+  // Обработчик перетаскивания события (eventDrop)
+  const handleEventDrop = useCallback(async (info: EventDropArg) => {
+    try {
+      const event = info.event
+      const eventId = event.id
+      
+      console.log('Событие перетащено:', eventId, 'новая дата:', event.start)
+      
+      // Подготавливаем данные для обновления
+      const updatedEventData: Partial<CreateEventRequest> = {
+        title: event.title,
+        start: event.start ? event.start.toISOString() : '',
+        end: event.end ? event.end.toISOString() : undefined,
+        allDay: event.allDay,
+      }
+      
+      // Обновляем событие на сервере
+      const updatedEvent = await calendarApi.updateEvent(eventId, updatedEventData)
+      
+      // Обновляем локальное состояние
+      setEvents(prevEvents => 
+        prevEvents.map(evt => 
+          evt.id === eventId 
+            ? { ...evt, start: updatedEvent.start, end: updatedEvent.end }
+            : evt
+        )
+      )
+      
+      logger.log('Событие успешно обновлено:', updatedEvent)
+    } catch (err) {
+      // Откатываем изменения в UI
+      (info as any).revert()
+      
+      setError(err instanceof Error ? err.message : "Failed to update event")
+    }
+  }, [])
+
+  // Обработчик изменения размера события (eventResize)
+  const handleEventResize = useCallback(async (info: unknown) => {
+    try {
+      const event = (info as any).event
+      const eventId = event.id
+      
+      console.log('Размер события изменен:', eventId, 'новое время окончания:', event.end)
+      
+      // Подготавливаем данные для обновления
+      const updatedEventData: Partial<CreateEventRequest> = {
+        title: event.title,
+        start: event.start ? event.start.toISOString() : '',
+        end: event.end ? event.end.toISOString() : undefined,
+        allDay: event.allDay,
+      }
+      
+      // Обновляем событие на сервере
+      const updatedEvent = await calendarApi.updateEvent(eventId, updatedEventData)
+      
+      // Обновляем локальное состояние
+      setEvents(prevEvents => 
+        prevEvents.map(evt => 
+          evt.id === eventId 
+            ? { ...evt, start: updatedEvent.start, end: updatedEvent.end }
+            : evt
+        )
+      )
+      
+      logger.log('Событие успешно обновлено после изменения размера:', updatedEvent)
+    } catch (err) {
+      // Откатываем изменения в UI
+      (info as any).revert()
+      
+      setError(err instanceof Error ? err.message : "Failed to update event")
+    }
+  }, [])
 
   const handleEventClick = useCallback((clickInfo: { event: { id: string } }) => {
     const event = events.find(e => e.id === clickInfo.event.id)
@@ -70,7 +162,7 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
     }
   }, [onDateClick])
 
-  // Функция для обновления даты (вызывается вручную)
+  // Функция для обновления даты (вызывается вручной)
   const handleDateChange = useCallback((newDate: Date) => {
     console.log('Меняем дату на:', newDate)
     setCurrentDate(newDate)
@@ -125,13 +217,15 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
         }}
         initialView="dayGridMonth"
         initialDate={currentDate}
-        editable={true}
+        editable={true} // Включаем редактирование
         selectable={true}
         selectMirror={true}
         dayMaxEvents={true}
         weekends={true}
         events={calendarEvents}
         // УБРАЛИ datesSet - это была причина бесконечного цикла!
+        eventDrop={handleEventDrop} // Обработчик перетаскивания
+        eventResize={handleEventResize} // Обработчик изменения размера
         eventClick={handleEventClick}
         dateClick={handleDateClick}
         height="auto"
