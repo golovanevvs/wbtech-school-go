@@ -8,7 +8,13 @@ import interactionPlugin from "@fullcalendar/interaction"
 import { Box, CircularProgress, Alert } from "@mui/material"
 import { calendarApi } from "@/lib/api/calendar"
 import { CalendarEvent, CreateEventRequest } from "@/lib/types/calendar"
-import { EventDropArg } from "@fullcalendar/core"
+import { 
+  FullCalendarEventDropInfo, 
+  FullCalendarEventResizeInfo, 
+  FullCalendarEventResizeStartInfo, 
+  FullCalendarEventResizeStopInfo,
+  DateUtils
+} from "@/lib/types/fullcalendar-types"
 
 interface CalendarComponentProps {
   onEventClick?: (event: CalendarEvent) => void
@@ -75,19 +81,19 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
   }, [loadEvents, currentDate])
 
   // Обработчик перетаскивания события (eventDrop)
-  const handleEventDrop = useCallback(async (info: EventDropArg) => {
+  const handleEventDrop = useCallback(async (info: FullCalendarEventDropInfo) => {
     try {
       const event = info.event
-      const eventId = event.id
+      const eventId = event.id || ''
       
       console.log('Событие перетащено:', eventId, 'новая дата:', event.start)
       
-      // Подготавливаем данные для обновления
+      // Подготавливаем данные для обновления, преобразуя Date в строку
       const updatedEventData: Partial<CreateEventRequest> = {
         title: event.title,
-        start: event.start ? event.start.toISOString() : '',
-        end: event.end ? event.end.toISOString() : undefined,
-        allDay: event.allDay,
+        start: DateUtils.toISOString(event.start) || undefined,
+        end: DateUtils.toISOString(event.end) || undefined,
+        allDay: event.allDay || false,
       }
       
       // Обновляем событие на сервере
@@ -105,26 +111,26 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
       logger.log('Событие успешно обновлено:', updatedEvent)
     } catch (err) {
       // Откатываем изменения в UI
-      (info as any).revert()
+      info.revert()
       
       setError(err instanceof Error ? err.message : "Failed to update event")
     }
   }, [])
 
   // Обработчик изменения размера события (eventResize)
-  const handleEventResize = useCallback(async (info: unknown) => {
+  const handleEventResize = useCallback(async (info: FullCalendarEventResizeInfo) => {
     try {
-      const event = (info as any).event
-      const eventId = event.id
+      const event = info.event
+      const eventId = event.id || ''
       
       console.log('Размер события изменен:', eventId, 'новое время окончания:', event.end)
       
-      // Подготавливаем данные для обновления
+      // Подготавливаем данные для обновления, преобразуя Date в строку
       const updatedEventData: Partial<CreateEventRequest> = {
         title: event.title,
-        start: event.start ? event.start.toISOString() : '',
-        end: event.end ? event.end.toISOString() : undefined,
-        allDay: event.allDay,
+        start: DateUtils.toISOString(event.start) || undefined,
+        end: DateUtils.toISOString(event.end) || undefined,
+        allDay: event.allDay || false,
       }
       
       // Обновляем событие на сервере
@@ -142,10 +148,22 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
       logger.log('Событие успешно обновлено после изменения размера:', updatedEvent)
     } catch (err) {
       // Откатываем изменения в UI
-      (info as any).revert()
+      info.revert()
       
       setError(err instanceof Error ? err.message : "Failed to update event")
     }
+  }, [])
+
+  // Обработчик начала изменения размера события (eventResizeStart)
+  const handleEventResizeStart = useCallback((info: FullCalendarEventResizeStartInfo) => {
+    console.log('Начало изменения размера события:', info.event.title)
+    // Здесь можно добавить логику, например, показать индикатор загрузки
+  }, [])
+
+  // Обработчик окончания изменения размера события (eventResizeStop)
+  const handleEventResizeStop = useCallback((info: FullCalendarEventResizeStopInfo) => {
+    console.log('Окончание изменения размера события:', info.event.title)
+    // Здесь можно добавить логику, например, скрыть индикатор загрузки
   }, [])
 
   const handleEventClick = useCallback((clickInfo: { event: { id: string } }) => {
@@ -162,7 +180,7 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
     }
   }, [onDateClick])
 
-  // Функция для обновления даты (вызывается вручной)
+  // Функция для обновления даты (вызывается вручную)
   const handleDateChange = useCallback((newDate: Date) => {
     console.log('Меняем дату на:', newDate)
     setCurrentDate(newDate)
@@ -226,6 +244,8 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
         // УБРАЛИ datesSet - это была причина бесконечного цикла!
         eventDrop={handleEventDrop} // Обработчик перетаскивания
         eventResize={handleEventResize} // Обработчик изменения размера
+        eventResizeStart={handleEventResizeStart} // Обработчик начала изменения размера
+        eventResizeStop={handleEventResizeStop} // Обработчик окончания изменения размера
         eventClick={handleEventClick}
         dateClick={handleDateClick}
         height="auto"
