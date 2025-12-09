@@ -1,6 +1,6 @@
 services:
-  warehouse-control_web-client:
-    image: ghcr.io/golovanevvs/warehouse-control_web-client:${APP_VERSION:-latest}
+  calendar_web-client:
+    image: ghcr.io/golovanevvs/calendar_web-client:${APP_VERSION:-latest}
     container_name: ${WEB_CLIENT_CONTAINER}
     environment:
       - NODE_ENV=production

@@ -1,6 +1,6 @@
 # Build
 
-FROM golang:1.25.2-alpine AS builder
+FROM golang:1.25.4-alpine AS builder
 
 RUN apk add --no-cache git ca-certificates
 
@@ -28,4 +28,4 @@ COPY --from=builder /app/$APP_NAME .
 
 COPY --from=builder /app/providers ./providers/
 
-ENTRYPOINT ["/root/event-booker_main-server"]
+ENTRYPOINT ["/root/calendar_main-server"]
