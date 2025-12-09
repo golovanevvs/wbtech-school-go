@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import FullCalendar from "@fullcalendar/react"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
@@ -45,6 +45,7 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentDate, setCurrentDate] = useState(() => new Date())
+  const calendarRef = useRef<FullCalendar>(null)
 
   // Тестовые события для проверки работы
   const testEvents = useMemo(() => [
@@ -80,79 +81,119 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
     loadEvents(currentDate)
   }, [loadEvents, currentDate])
 
-  // Обработчик перетаскивания события (eventDrop)
+  // Обработчик перетаскивания события (eventDrop) - оптимистичное обновление
   const handleEventDrop = useCallback(async (info: FullCalendarEventDropInfo) => {
+    const event = info.event
+    const eventId = event.id || ''
+    
+    console.log('Событие перетащено:', eventId, 'новая дата:', event.start)
+    
+    // Сохраняем старые данные для отката в случае ошибки
+    const oldEventData = events.find(evt => evt.id === eventId)
+    
+    // ОПТИМИСТИЧНОЕ ОБНОВЛЕНИЕ: сначала обновляем UI
+    const newStart = DateUtils.toISOString(event.start)
+    const newEnd = DateUtils.toISOString(event.end)
+    
+    setEvents(prevEvents => 
+      prevEvents.map(evt => 
+        evt.id === eventId 
+          ? { ...evt, start: newStart || evt.start, end: newEnd || evt.end }
+          : evt
+      )
+    )
+    
     try {
-      const event = info.event
-      const eventId = event.id || ''
-      
-      console.log('Событие перетащено:', eventId, 'новая дата:', event.start)
-      
-      // Подготавливаем данные для обновления, преобразуя Date в строку
+      // Подготавливаем данные для обновления на сервере
       const updatedEventData: Partial<CreateEventRequest> = {
         title: event.title,
-        start: DateUtils.toISOString(event.start) || undefined,
-        end: DateUtils.toISOString(event.end) || undefined,
+        start: newStart || undefined,
+        end: newEnd || undefined,
         allDay: event.allDay || false,
       }
       
       // Обновляем событие на сервере
       const updatedEvent = await calendarApi.updateEvent(eventId, updatedEventData)
       
-      // Обновляем локальное состояние
+      // Обновляем локальное состояние данными от сервера
       setEvents(prevEvents => 
         prevEvents.map(evt => 
-          evt.id === eventId 
-            ? { ...evt, start: updatedEvent.start, end: updatedEvent.end }
-            : evt
+          evt.id === eventId ? updatedEvent : evt
         )
       )
       
       logger.log('Событие успешно обновлено:', updatedEvent)
     } catch (err) {
-      // Откатываем изменения в UI
-      info.revert()
+      // ОТКАТ: если сервер вернул ошибку, возвращаем старые данные
+      if (oldEventData) {
+        setEvents(prevEvents => 
+          prevEvents.map(evt => 
+            evt.id === eventId ? oldEventData : evt
+          )
+        )
+      }
       
       setError(err instanceof Error ? err.message : "Failed to update event")
+      logger.error('Ошибка обновления события:', err)
     }
-  }, [])
+  }, [events])
 
-  // Обработчик изменения размера события (eventResize)
+  // Обработчик изменения размера события (eventResize) - оптимистичное обновление
   const handleEventResize = useCallback(async (info: FullCalendarEventResizeInfo) => {
+    const event = info.event
+    const eventId = event.id || ''
+    
+    console.log('Размер события изменен:', eventId, 'новое время окончания:', event.end)
+    
+    // Сохраняем старые данные для отката в случае ошибки
+    const oldEventData = events.find(evt => evt.id === eventId)
+    
+    // ОПТИМИСТИЧНОЕ ОБНОВЛЕНИЕ: сначала обновляем UI
+    const newStart = DateUtils.toISOString(event.start)
+    const newEnd = DateUtils.toISOString(event.end)
+    
+    setEvents(prevEvents => 
+      prevEvents.map(evt => 
+        evt.id === eventId 
+          ? { ...evt, start: newStart || evt.start, end: newEnd || evt.end }
+          : evt
+      )
+    )
+    
     try {
-      const event = info.event
-      const eventId = event.id || ''
-      
-      console.log('Размер события изменен:', eventId, 'новое время окончания:', event.end)
-      
-      // Подготавливаем данные для обновления, преобразуя Date в строку
+      // Подготавливаем данные для обновления на сервере
       const updatedEventData: Partial<CreateEventRequest> = {
         title: event.title,
-        start: DateUtils.toISOString(event.start) || undefined,
-        end: DateUtils.toISOString(event.end) || undefined,
+        start: newStart || undefined,
+        end: newEnd || undefined,
         allDay: event.allDay || false,
       }
       
       // Обновляем событие на сервере
       const updatedEvent = await calendarApi.updateEvent(eventId, updatedEventData)
       
-      // Обновляем локальное состояние
+      // Обновляем локальное состояние данными от сервера
       setEvents(prevEvents => 
         prevEvents.map(evt => 
-          evt.id === eventId 
-            ? { ...evt, start: updatedEvent.start, end: updatedEvent.end }
-            : evt
+          evt.id === eventId ? updatedEvent : evt
         )
       )
       
       logger.log('Событие успешно обновлено после изменения размера:', updatedEvent)
     } catch (err) {
-      // Откатываем изменения в UI
-      info.revert()
+      // ОТКАТ: если сервер вернул ошибку, возвращаем старые данные
+      if (oldEventData) {
+        setEvents(prevEvents => 
+          prevEvents.map(evt => 
+            evt.id === eventId ? oldEventData : evt
+          )
+        )
+      }
       
       setError(err instanceof Error ? err.message : "Failed to update event")
+      logger.error('Ошибка изменения размера события:', err)
     }
-  }, [])
+  }, [events])
 
   // Обработчик начала изменения размера события (eventResizeStart)
   const handleEventResizeStart = useCallback((info: FullCalendarEventResizeStartInfo) => {
@@ -227,6 +268,7 @@ export default function CalendarComponent({ onEventClick, onDateClick }: Calenda
   return (
     <Box>
       <FullCalendar
+        ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         headerToolbar={{
           left: "prev,next today",
