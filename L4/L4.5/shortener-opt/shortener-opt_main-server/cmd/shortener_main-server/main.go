@@ -1,13 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"context"
-	"fmt"
 	"os"
 
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/app"
-	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.2/shortener/shortener_main-server/internal/pkg/pkgConst"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.5/shortener-opt/shortener-opt_main-server/internal/app"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.5/shortener-opt/shortener-opt_main-server/internal/pkg/pkgConst"
 	"github.com/wb-go/wbf/zlog"
 )
 
@@ -21,7 +19,7 @@ func main() {
 
 	lg := zlog.Logger.With().Str("component", "main").Logger()
 
-	lg.Info().Msgf("%s shortener_main-server started", pkgConst.AppStart)
+	lg.Info().Msgf("%s shortener-opt_main-server started", pkgConst.AppStart)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -44,8 +42,8 @@ func main() {
 	// wait()
 }
 
-func wait() {
-	fmt.Println("Press Enter to close…")
-	reader := bufio.NewReader(os.Stdin)
-	_, _ = reader.ReadString('\n')
-}
+// func wait() {
+// 	fmt.Println("Press Enter to close…")
+// 	reader := bufio.NewReader(os.Stdin)
+// 	_, _ = reader.ReadString('\n')
+// }
