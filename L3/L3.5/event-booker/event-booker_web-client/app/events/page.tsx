@@ -26,6 +26,7 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [bookingErrors, setBookingErrors] = useState<Record<number, string>>({})
   const [bookingsMap, setBookingsMap] = useState<Record<number, BookingInfo>>(
     {}
   )
@@ -123,13 +124,19 @@ export default function EventsPage() {
       return
     }
 
+    // Очищаем предыдущую ошибку
+    setBookingErrors(prev => ({ ...prev, [eventId]: "" }))
+
     const existingBooking = bookingsMap[eventId]
     if (
       existingBooking &&
       (existingBooking.status === "pending" ||
         existingBooking.status === "confirmed")
     ) {
-      setError("У вас уже есть бронь на это мероприятие")
+      setBookingErrors(prev => ({
+        ...prev,
+        [eventId]: "У вас уже есть бронь на это мероприятие",
+      }))
       return
     }
 
@@ -147,7 +154,10 @@ export default function EventsPage() {
 
       console.log("Booking created:", booking)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to book event")
+      setBookingErrors(prev => ({
+        ...prev,
+        [eventId]: err instanceof Error ? err.message : "Failed to book event",
+      }))
     }
   }
 
@@ -156,6 +166,9 @@ export default function EventsPage() {
       router.push("/auth?mode=login")
       return
     }
+
+    // Очищаем предыдущую ошибку
+    setBookingErrors(prev => ({ ...prev, [eventId]: "" }))
 
     try {
       const existingBooking = bookingsMap[eventId]
@@ -167,7 +180,10 @@ export default function EventsPage() {
         const booking = await getUserBookingByEventId(eventId)
 
         if (!booking) {
-          setError("Бронь не найдена")
+          setBookingErrors(prev => ({
+            ...prev,
+            [eventId]: "Бронь не найдена",
+          }))
           return
         }
         bookingId = booking.id
@@ -186,7 +202,31 @@ export default function EventsPage() {
 
       console.log("Booking confirmed:", confirmedBooking)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to confirm booking")
+      const errorMessage = err instanceof Error ? err.message : "Failed to confirm booking"
+      // Если бронь не в статусе pending (истекла или уже подтверждена)
+      if (errorMessage.includes("not in pending status")) {
+        setBookingErrors(prev => ({
+          ...prev,
+          [eventId]: "Срок брони истёк. Бронь была отменена.",
+        }))
+        // Обновляем список бронирований
+        try {
+          await getUserBookings()
+          
+          setBookingsMap((prev) => {
+            const newMap = { ...prev }
+            delete newMap[eventId]
+            return newMap
+          })
+        } catch {
+          // Игнорируем ошибку обновления
+        }
+      } else {
+        setBookingErrors(prev => ({
+          ...prev,
+          [eventId]: errorMessage,
+        }))
+      }
     }
   }
 
@@ -195,6 +235,9 @@ export default function EventsPage() {
       router.push("/auth?mode=login")
       return
     }
+
+    // Очищаем предыдущую ошибку
+    setBookingErrors(prev => ({ ...prev, [eventId]: "" }))
 
     try {
       const existingBooking = bookingsMap[eventId]
@@ -206,7 +249,10 @@ export default function EventsPage() {
         const booking = await getUserBookingByEventId(eventId)
 
         if (!booking) {
-          setError("Бронь не найдена")
+          setBookingErrors(prev => ({
+            ...prev,
+            [eventId]: "Бронь не найдена",
+          }))
           return
         }
         bookingId = booking.id
@@ -222,7 +268,10 @@ export default function EventsPage() {
 
       console.log("Booking cancelled:", cancelledBooking)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cancel booking")
+      setBookingErrors(prev => ({
+        ...prev,
+        [eventId]: err instanceof Error ? err.message : "Failed to cancel booking",
+      }))
     }
   }
 
@@ -286,7 +335,12 @@ export default function EventsPage() {
         }}
       >
         <Stack spacing={4}>
-          <Alert severity="error">{error}</Alert>
+          <Alert severity="error">
+            {error}
+            <Button onClick={() => setError(null)} sx={{ mt: 1 }} size="small">
+              Закрыть
+            </Button>
+          </Alert>
         </Stack>
       </Box>
     )
@@ -324,6 +378,7 @@ export default function EventsPage() {
 
           <EventList
             events={events}
+            bookingErrors={bookingErrors}
             onBook={handleBookEvent}
             onConfirmBooking={handleConfirmBooking}
             onCancelBooking={handleCancelBooking}

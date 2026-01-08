@@ -5,6 +5,7 @@ import {
   Typography,
   Button,
   Chip,
+  Alert,
 } from "@mui/material"
 import { Booking } from "../../lib/types"
 
@@ -12,12 +13,14 @@ interface BookingCardProps {
   booking: Booking
   onConfirm?: (id: number) => void
   onCancel?: (id: number) => void
+  error?: string | null
 }
 
 export default function BookingCard({
   booking,
   onConfirm,
   onCancel,
+  error,
 }: BookingCardProps) {
   const handleConfirm = () => {
     if (onConfirm) {
@@ -80,6 +83,11 @@ export default function BookingCard({
             Подтверждено:{" "}
             {new Date(booking.confirmedAt).toLocaleString("ru-RU")}
           </Typography>
+        )}
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error}
+          </Alert>
         )}
       </CardContent>
       <CardActions>

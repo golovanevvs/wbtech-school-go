@@ -23,6 +23,7 @@ interface EventCardProps {
   currentUserId?: number
   bookingStatus?: "pending" | "confirmed" | null
   bookingExpiresAt?: number | null
+  error?: string | null
 }
 
 export default function EventCard({
@@ -34,7 +35,7 @@ export default function EventCard({
   onDelete,
   currentUserId,
   bookingStatus,
-  bookingExpiresAt,
+  error,
 }: EventCardProps) {
   const handleBookClick = () => {
     if (onBook) {
@@ -154,6 +155,12 @@ export default function EventCard({
         {bookingStatus === "confirmed" && (
           <Alert severity="success" sx={{ mt: 1 }}>
             Ваше бронирование подтверждено
+          </Alert>
+        )}
+
+        {error && (
+          <Alert severity="error" sx={{ mt: 1 }}>
+            {error}
           </Alert>
         )}
       </CardContent>

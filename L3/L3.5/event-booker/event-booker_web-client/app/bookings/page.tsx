@@ -13,6 +13,7 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [bookingErrors, setBookingErrors] = useState<Record<number, string>>({})
   const router = useRouter()
 
   useEffect(() => {
@@ -39,30 +40,43 @@ export default function BookingsPage() {
   }, [user, authLoading, router])
 
   const handleConfirm = async (id: number) => {
+    // Очищаем предыдущую ошибку для этой брони
+    setBookingErrors(prev => ({ ...prev, [id]: "" }))
+
     try {
       await confirmBooking(id)
       const updatedBookings = await getUserBookings()
       setBookings(updatedBookings.map(transformBookingFromServer))
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to confirm booking"
-      // Если бронь не в статусе pending (истекла или уже подтверждена), обновляем список
+      // Если бронь не в статусе pending (истекла или уже подтверждена), показываем ошибку в карточке
       if (errorMessage.includes("not in pending status")) {
-        const updatedBookings = await getUserBookings()
-        setBookings(updatedBookings.map(transformBookingFromServer))
-        setError("Срок брони истёк. Бронь была отменена.")
+        setBookingErrors(prev => ({
+          ...prev,
+          [id]: "Срок брони истёк. Бронь была отменена.",
+        }))
       } else {
-        setError(errorMessage)
+        setBookingErrors(prev => ({
+          ...prev,
+          [id]: errorMessage,
+        }))
       }
     }
   }
 
   const handleCancel = async (id: number) => {
+    // Очищаем предыдущую ошибку для этой брони
+    setBookingErrors(prev => ({ ...prev, [id]: "" }))
+
     try {
       await cancelBooking(id)
       const updatedBookings = await getUserBookings()
       setBookings(updatedBookings.map(transformBookingFromServer))
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cancel booking")
+      setBookingErrors(prev => ({
+        ...prev,
+        [id]: err instanceof Error ? err.message : "Failed to cancel booking",
+      }))
     }
   }
 
@@ -127,6 +141,7 @@ export default function BookingsPage() {
         {bookings.length > 0 ? (
           <BookingList
             bookings={bookings}
+            bookingErrors={bookingErrors}
             onConfirm={handleConfirm}
             onCancel={handleCancel}
           />

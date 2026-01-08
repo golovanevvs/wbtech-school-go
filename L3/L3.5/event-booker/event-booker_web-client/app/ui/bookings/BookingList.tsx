@@ -4,12 +4,14 @@ import { Booking } from "../../lib/types"
 
 interface BookingListProps {
   bookings: Booking[]
+  bookingErrors?: Record<number, string>
   onConfirm?: (id: number) => void
   onCancel?: (id: number) => void
 }
 
 export default function BookingList({
   bookings,
+  bookingErrors = {},
   onConfirm,
   onCancel,
 }: BookingListProps) {
@@ -30,6 +32,7 @@ export default function BookingList({
         <BookingCard
           key={booking.id}
           booking={booking}
+          error={bookingErrors[booking.id] || null}
           onConfirm={onConfirm}
           onCancel={onCancel}
         />

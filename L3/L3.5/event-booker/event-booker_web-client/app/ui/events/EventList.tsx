@@ -14,6 +14,7 @@ interface EventListProps {
     number,
     { status: "pending" | "confirmed" | null; expiresAt?: number | null }
   >
+  bookingErrors?: Record<number, string>
 }
 
 export default function EventList({
@@ -25,6 +26,7 @@ export default function EventList({
   onDelete,
   currentUserId,
   bookingsMap = {},
+  bookingErrors = {},
 }: EventListProps) {
   if (!events) {
     return (
@@ -63,6 +65,7 @@ export default function EventList({
             currentUserId={currentUserId}
             bookingStatus={bookingInfo.status}
             bookingExpiresAt={bookingInfo.expiresAt}
+            error={bookingErrors[event.id] || null}
           />
         )
       })}
