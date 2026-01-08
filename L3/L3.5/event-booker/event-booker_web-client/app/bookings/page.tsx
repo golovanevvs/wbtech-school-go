@@ -44,7 +44,15 @@ export default function BookingsPage() {
       const updatedBookings = await getUserBookings()
       setBookings(updatedBookings.map(transformBookingFromServer))
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to confirm booking")
+      const errorMessage = err instanceof Error ? err.message : "Failed to confirm booking"
+      // Если бронь не в статусе pending (истекла или уже подтверждена), обновляем список
+      if (errorMessage.includes("not in pending status")) {
+        const updatedBookings = await getUserBookings()
+        setBookings(updatedBookings.map(transformBookingFromServer))
+        setError("Срок брони истёк. Бронь была отменена.")
+      } else {
+        setError(errorMessage)
+      }
     }
   }
 
