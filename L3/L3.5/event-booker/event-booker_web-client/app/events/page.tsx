@@ -152,6 +152,10 @@ export default function EventsPage() {
         },
       }))
 
+      // Обновляем список мероприятий для отображения актуального количества мест
+      const updatedEvents = await getEvents()
+      setEvents(updatedEvents)
+
       console.log("Booking created:", booking)
     } catch (err) {
       setBookingErrors(prev => ({
@@ -265,6 +269,10 @@ export default function EventsPage() {
         delete newMap[eventId]
         return newMap
       })
+
+      // Обновляем список мероприятий для отображения актуального количества мест
+      const updatedEvents = await getEvents()
+      setEvents(updatedEvents)
 
       console.log("Booking cancelled:", cancelledBooking)
     } catch (err) {
