@@ -27,15 +27,27 @@ type IEventRpForBooking interface {
 	UpdateAvailablePlaces(eventID int, newAvailablePlaces int) error
 }
 
+// IUserRpForBooking interface for user repository (needed for notifications)
+type IUserRpForBooking interface {
+	GetByID(id int) (*model.User, error)
+}
+
+// INoticeSvForBooking interface for notice service (needed for notifications)
+type INoticeSvForBooking interface {
+	SendNotice(ctx context.Context, notice model.Notice)
+}
+
 // BookingService service for working with bookings
 type BookingService struct {
 	rp IBookingRp
 	er IEventRpForBooking
+	ur IUserRpForBooking
+	ns INoticeSvForBooking
 }
 
 // NewBookingService creates a new BookingService
-func NewBookingService(rp IBookingRp, er IEventRpForBooking) *BookingService {
-	return &BookingService{rp: rp, er: er}
+func NewBookingService(rp IBookingRp, er IEventRpForBooking, ur IUserRpForBooking, ns INoticeSvForBooking) *BookingService {
+	return &BookingService{rp: rp, er: er, ur: ur, ns: ns}
 }
 
 // Create creates a new booking
@@ -82,6 +94,9 @@ func (sv *BookingService) Create(ctx context.Context, userID int, eventID int, b
 		return nil, fmt.Errorf("failed to update available places: %w", err)
 	}
 
+	// Send notification about successful booking
+	sv.SendBookingCreatedNotice(ctx, createdBooking, event)
+
 	return createdBooking, nil
 }
 
@@ -116,6 +131,11 @@ func (sv *BookingService) Confirm(ctx context.Context, bookingID int) error {
 		return fmt.Errorf("booking is not in pending status")
 	}
 
+	event, err := sv.er.GetByID(booking.EventID)
+	if err != nil {
+		return fmt.Errorf("failed to get event: %w", err)
+	}
+
 	confirmedTime := time.Now()
 	booking.Status = model.BookingConfirmed
 	booking.ConfirmedAt = &confirmedTime
@@ -124,6 +144,9 @@ func (sv *BookingService) Confirm(ctx context.Context, bookingID int) error {
 	if err != nil {
 		return fmt.Errorf("failed to confirm booking: %w", err)
 	}
+
+	// Send notification about confirmed booking
+	sv.SendBookingConfirmedNotice(ctx, booking, event)
 
 	return nil
 }
@@ -158,6 +181,9 @@ func (sv *BookingService) Cancel(ctx context.Context, bookingID int) error {
 		return fmt.Errorf("failed to update available places: %w", err)
 	}
 
+	// Send notification about cancelled booking
+	sv.SendBookingCancelledNotice(ctx, booking, event)
+
 	return nil
 }
 
@@ -187,7 +213,124 @@ func (sv *BookingService) ProcessExpiredBookings(ctx context.Context) error {
 		if err != nil {
 			continue
 		}
+
+		// Send notification about expired booking
+		sv.SendBookingExpiredNotice(ctx, booking, event)
 	}
 
 	return nil
+}
+
+// SendBookingCreatedNotice sends notification about successful booking
+func (sv *BookingService) SendBookingCreatedNotice(ctx context.Context, booking *model.Booking, event *model.Event) {
+	user, err := sv.ur.GetByID(booking.UserID)
+	if err != nil {
+		return
+	}
+
+	message := fmt.Sprintf(
+		"🎫 Бронирование создано!\n\n"+
+			"Мероприятие: %s\n"+
+			"Дата: %s\n"+
+			"Срок действия брони: до %s\n\n"+
+			"Подтвердите бронь, нажав кнопку в приложении.",
+		event.Title,
+		event.Date.Format("02.01.2006 в 15:04"),
+		booking.ExpiresAt.Format("02.01.2006 в 15:04"),
+	)
+
+	notice := model.Notice{
+		UserID:  user.ID,
+		Message: message,
+		Channels: model.NotificationChannels{
+			Telegram: user.TelegramNotifications && user.TelegramChatID != nil,
+			Email:    user.EmailNotifications,
+		},
+	}
+
+	sv.ns.SendNotice(ctx, notice)
+}
+
+// SendBookingConfirmedNotice sends notification about confirmed booking
+func (sv *BookingService) SendBookingConfirmedNotice(ctx context.Context, booking *model.Booking, event *model.Event) {
+	user, err := sv.ur.GetByID(booking.UserID)
+	if err != nil {
+		return
+	}
+
+	message := fmt.Sprintf(
+		"✅ Бронирование подтверждено!\n\n"+
+			"Мероприятие: %s\n"+
+			"Дата: %s\n\n"+
+			"Ждём вас на мероприятии!",
+		event.Title,
+		event.Date.Format("02.01.2006 в 15:04"),
+	)
+
+	notice := model.Notice{
+		UserID:  user.ID,
+		Message: message,
+		Channels: model.NotificationChannels{
+			Telegram: user.TelegramNotifications && user.TelegramChatID != nil,
+			Email:    user.EmailNotifications,
+		},
+	}
+
+	sv.ns.SendNotice(ctx, notice)
+}
+
+// SendBookingCancelledNotice sends notification about cancelled booking
+func (sv *BookingService) SendBookingCancelledNotice(ctx context.Context, booking *model.Booking, event *model.Event) {
+	user, err := sv.ur.GetByID(booking.UserID)
+	if err != nil {
+		return
+	}
+
+	message := fmt.Sprintf(
+		"❌ Бронирование отменено\n\n"+
+			"Мероприятие: %s\n"+
+			"Дата: %s\n\n"+
+			"Вы можете забронировать место снова, если оно ещё доступно.",
+		event.Title,
+		event.Date.Format("02.01.2006 в 15:04"),
+	)
+
+	notice := model.Notice{
+		UserID:  user.ID,
+		Message: message,
+		Channels: model.NotificationChannels{
+			Telegram: user.TelegramNotifications && user.TelegramChatID != nil,
+			Email:    user.EmailNotifications,
+		},
+	}
+
+	sv.ns.SendNotice(ctx, notice)
+}
+
+// SendBookingExpiredNotice sends notification about expired booking
+func (sv *BookingService) SendBookingExpiredNotice(ctx context.Context, booking *model.Booking, event *model.Event) {
+	user, err := sv.ur.GetByID(booking.UserID)
+	if err != nil {
+		return
+	}
+
+	message := fmt.Sprintf(
+		"⏰ Срок брони истёк\n\n"+
+			"Мероприятие: %s\n"+
+			"Дата: %s\n\n"+
+			"К сожалению, срок действия вашей брони истёк. Бронь была автоматически отменена.",
+		event.Title,
+		event.Date.Format("02.01.2006 в 15:04"),
+	)
+
+	notice := model.Notice{
+		UserID:  user.ID,
+		Message: message,
+		Channels: model.NotificationChannels{
+			Telegram: user.TelegramNotifications && user.TelegramChatID != nil,
+			Email:    user.EmailNotifications,
+		},
+	}
+
+	sv.ns.SendNotice(ctx, notice)
 }

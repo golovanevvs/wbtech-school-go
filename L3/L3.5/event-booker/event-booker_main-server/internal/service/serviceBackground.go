@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.5/event-booker/event-booker_main-server/internal/model"
+	"github.com/golovanevvs/wbtech-school-go/tree/main/L3/L3.5/event-booker/event-booker_main-server/internal/pkg/pkgRetry"
 	"github.com/wb-go/wbf/zlog"
 )
 
@@ -21,20 +22,36 @@ type IEventRpForBackground interface {
 	UpdateAvailablePlaces(eventID int, newAvailablePlaces int) error
 }
 
+// IUserRpForBackground interface for user repository in background service
+type IUserRpForBackground interface {
+	GetByID(id int) (*model.User, error)
+}
+
+// INoticeSvForBackground interface for notice service in background service
+type INoticeSvForBackground interface {
+	SendNotice(ctx context.Context, notice model.Notice)
+}
+
 // BackgroundService handles background tasks
 type BackgroundService struct {
 	lg        *zlog.Zerolog
+	rs        *pkgRetry.Retry
 	bookingRp IBookingRpForBackground
 	eventRp   IEventRpForBackground
+	userRp    IUserRpForBackground
+	noticeSv  INoticeSvForBackground
 }
 
 // NewBackgroundService creates a new BackgroundService
-func NewBackgroundService(parentLg *zlog.Zerolog, bookingRp IBookingRpForBackground, eventRp IEventRpForBackground) *BackgroundService {
+func NewBackgroundService(parentLg *zlog.Zerolog, rs *pkgRetry.Retry, bookingRp IBookingRpForBackground, eventRp IEventRpForBackground, userRp IUserRpForBackground, noticeSv INoticeSvForBackground) *BackgroundService {
 	lg := parentLg.With().Str("component", "service-BackgroundService").Logger()
 	return &BackgroundService{
 		lg:        &lg,
+		rs:        rs,
 		bookingRp: bookingRp,
 		eventRp:   eventRp,
+		userRp:    userRp,
+		noticeSv:  noticeSv,
 	}
 }
 
@@ -80,7 +97,38 @@ func (sv *BackgroundService) processExpiredBookings(ctx context.Context) error {
 			sv.lg.Error().Err(err).Int("event_id", booking.EventID).Msg("Failed to update available places")
 			continue
 		}
+
+		// Send notification about expired booking
+		sv.SendBookingExpiredNotice(ctx, booking, event)
 	}
 
 	return nil
+}
+
+// SendBookingExpiredNotice sends notification about expired booking
+func (sv *BackgroundService) SendBookingExpiredNotice(ctx context.Context, booking *model.Booking, event *model.Event) {
+	user, err := sv.userRp.GetByID(booking.UserID)
+	if err != nil {
+		return
+	}
+
+	message := fmt.Sprintf(
+		"⏰ Срок брони истёк\n\n"+
+			"Мероприятие: %s\n"+
+			"Дата: %s\n\n"+
+			"К сожалению, срок действия вашей брони истёк. Бронь была автоматически отменена.",
+		event.Title,
+		event.Date.Format("02.01.2006 в 15:04"),
+	)
+
+	notice := model.Notice{
+		UserID:  user.ID,
+		Message: message,
+		Channels: model.NotificationChannels{
+			Telegram: user.TelegramNotifications && user.TelegramChatID != nil,
+			Email:    user.EmailNotifications,
+		},
+	}
+
+	sv.noticeSv.SendNotice(ctx, notice)
 }

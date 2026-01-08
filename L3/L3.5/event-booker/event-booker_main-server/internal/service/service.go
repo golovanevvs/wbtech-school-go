@@ -36,11 +36,11 @@ func New(
 
 	userService := NewUserService(rp.User())
 	eventService := NewEventService(rp.Event())
-	bookingService := NewBookingService(rp.Booking(), rp.Event())
-	authService := NewAuthService(cfg, rp.User(), rp.RefreshToken())
-	backgroundService := NewBackgroundService(&lg, rp.Booking(), rp.Event())
-	telegramStartService := NewTelegramStartService(tgClient, rp.User())
 	noticeService := NewNoticeService(&lg, rs, tgClient, emailClient, rp.NoticeRepository)
+	bookingService := NewBookingService(rp.Booking(), rp.Event(), rp.User(), noticeService)
+	authService := NewAuthService(cfg, rp.User(), rp.RefreshToken())
+	backgroundService := NewBackgroundService(&lg, rs, rp.Booking(), rp.Event(), rp.User(), noticeService)
+	telegramStartService := NewTelegramStartService(tgClient, rp.User())
 
 	return &Service{
 		User:          userService,
