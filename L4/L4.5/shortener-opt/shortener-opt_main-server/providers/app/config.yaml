@@ -5,6 +5,8 @@ app:
     backoff: 2
   transport:
     http:
+      port: 7777
+      pprof_port: 7779
       handler:
         gin_mode: release
         web_port: 7778

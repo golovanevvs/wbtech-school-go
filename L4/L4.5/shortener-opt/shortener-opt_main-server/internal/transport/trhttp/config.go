@@ -9,6 +9,7 @@ import (
 
 type Config struct {
 	Port          int
+	PprofPort     int
 	PublicHost    string
 	WebPublicHost string
 	Handler       *handler.Config
@@ -17,6 +18,7 @@ type Config struct {
 func NewConfig(cfg *config.Config, env string) *Config {
 	return &Config{
 		Port:          cfg.GetInt("app.transport.http.port"),
+		PprofPort:     cfg.GetInt("app.transport.http.pprof_port"),
 		PublicHost:    cfg.GetString("app.transport.http.public_host"),
 		WebPublicHost: cfg.GetString("app.transport.http.web_public_host"),
 		Handler:       handler.NewConfig(cfg),
@@ -28,10 +30,12 @@ func (c Config) String() string {
     %s: %s
 	%s: %s
     %s: %d
+    %s: %d
     %s`,
 		"public host", c.PublicHost,
 		"web public host", c.WebPublicHost,
 		"port", c.Port,
+		"pprof port", c.PprofPort,
 		c.Handler.String(),
 	)
 }

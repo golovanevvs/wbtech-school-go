@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.5/shortener-opt/shortener-opt_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.5/shortener-opt/shortener-opt_main-server/internal/pkg/pkgErrors"
@@ -18,9 +19,10 @@ type IService interface {
 }
 
 type HTTP struct {
-	lg      *zlog.Zerolog
-	rs      *pkgRetry.Retry
-	httpsrv *http.Server
+	lg       *zlog.Zerolog
+	rs       *pkgRetry.Retry
+	httpsrv  *http.Server
+	pprofSrv *http.Server
 }
 
 func New(cfg *Config, parentLg *zlog.Zerolog, rs *pkgRetry.Retry, sv IService) *HTTP {
@@ -31,6 +33,9 @@ func New(cfg *Config, parentLg *zlog.Zerolog, rs *pkgRetry.Retry, sv IService) *
 		httpsrv: &http.Server{
 			Addr:    fmt.Sprintf(":%d", cfg.Port),
 			Handler: handler.New(cfg.Handler, &lg, sv, cfg.PublicHost, cfg.WebPublicHost).Rt,
+		},
+		pprofSrv: &http.Server{
+			Addr: fmt.Sprintf(":%d", cfg.PprofPort),
 		},
 	}
 }
@@ -43,6 +48,15 @@ func (h *HTTP) RunServer(cancel context.CancelFunc) {
 			cancel()
 		}
 	}()
+
+	if h.pprofSrv.Addr != "" {
+		go func() {
+			h.lg.Info().Str("addr", h.pprofSrv.Addr).Msgf("%s pprof server starting...", pkgConst.Starting)
+			if err := h.pprofSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				h.lg.Error().Err(err).Str("addr", h.pprofSrv.Addr).Msgf("%s error pprof server start", pkgConst.Error)
+			}
+		}()
+	}
 }
 
 func (h *HTTP) ShutdownServer(ctx context.Context) error {
@@ -53,6 +67,14 @@ func (h *HTTP) ShutdownServer(ctx context.Context) error {
 	}
 
 	h.lg.Info().Str("addr", h.httpsrv.Addr).Msgf("%s http server stopped successfully", pkgConst.Finished)
+
+	if h.pprofSrv != nil {
+		h.lg.Debug().Str("addr", h.pprofSrv.Addr).Msgf("%s pprof server stopping...", pkgConst.Starting)
+		if err := h.pprofSrv.Shutdown(ctx); err != nil {
+			pkgErrors.Wrapf(err, "pprof server shutdown, address: %s", h.pprofSrv.Addr)
+		}
+		h.lg.Info().Str("addr", h.pprofSrv.Addr).Msgf("%s pprof server stopped successfully", pkgConst.Finished)
+	}
 
 	return nil
 }
