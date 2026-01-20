@@ -17,7 +17,6 @@ function EditItemContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Получение ID товара из URL
   const itemId = searchParams.get("id")
   console.log("Edit item page - URL:", window.location.href)
   console.log("Edit item page - itemId from searchParams:", itemId)
@@ -26,7 +25,6 @@ function EditItemContent() {
     Object.fromEntries(searchParams.entries())
   )
 
-  // Загрузка данных товара
   useEffect(() => {
     const loadItem = async () => {
       if (!itemId) {
@@ -41,7 +39,6 @@ function EditItemContent() {
 
         console.log("Edit item page - loading item with ID:", itemId)
 
-        // Получение одного товара по ID
         const foundItem = await itemsAPI.getItem(parseInt(itemId))
         console.log("Edit item page - received item data:", foundItem)
         console.log("Edit item page - item data type:", typeof foundItem)
@@ -69,7 +66,6 @@ function EditItemContent() {
     }
   }, [isAuthenticated, isLoading, itemId])
 
-  // Проверка прав доступа
   useEffect(() => {
     if (!isLoading && isAuthenticated && !hasRole(["Кладовщик"])) {
       router.push("/")
@@ -115,7 +111,6 @@ function EditItemContent() {
     return null
   }
 
-  // Если товар не найден
   if (!item) {
     return (
       <Box sx={{ maxWidth: 600, mx: "auto", p: 3 }}>

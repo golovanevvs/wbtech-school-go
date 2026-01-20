@@ -160,7 +160,7 @@ func (rp *ItemHistoryRepository) ExportToCSV(itemID int) ([]map[string]interface
 	for rows.Next() {
 		var actionType, userName, itemName string
 		var actionID int
-		var itemPrice string // Изменено с int на string для DECIMAL
+		var itemPrice string
 		var itemQuantity int
 		var createdAt string
 		var changesJSON sql.NullString

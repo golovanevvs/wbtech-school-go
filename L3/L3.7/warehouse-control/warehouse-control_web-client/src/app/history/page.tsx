@@ -35,17 +35,14 @@ function HistoryContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Получение ID товара из URL
   const itemId = searchParams.get("itemId")
 
-  // Проверка прав доступа - только для Аудитора
   useEffect(() => {
     if (!isLoading && isAuthenticated && !hasRole(["Аудитор"])) {
       router.push("/")
     }
   }, [isLoading, isAuthenticated, hasRole, router])
 
-  // Загрузка истории изменений
   useEffect(() => {
     const loadHistory = async () => {
       if (!itemId) {
@@ -75,12 +72,10 @@ function HistoryContent() {
     }
   }, [isAuthenticated, isLoading, itemId, hasRole])
 
-  // Форматирование даты
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString("ru-RU")
   }
 
-  // Форматирование типа действия
   const formatActionType = (actionType: string) => {
     switch (actionType) {
       case "create":
@@ -94,7 +89,6 @@ function HistoryContent() {
     }
   }
 
-  // Форматирование изменений для отображения
   const formatChanges = (changes: string | undefined) => {
     if (!changes || changes === "null") return "Нет данных"
 
@@ -102,7 +96,6 @@ function HistoryContent() {
       const parsed = JSON.parse(changes)
       const parts = []
 
-      // Обрабатка разных типов изменений
       for (const [key, value] of Object.entries(parsed)) {
         if (
           typeof value === "object" &&
@@ -113,7 +106,6 @@ function HistoryContent() {
           const oldValue = String(value.old)
           const newValue = String(value.new)
 
-          // Если значения одинаковые
           if (oldValue === newValue) continue
 
           parts.push(
@@ -212,7 +204,6 @@ function HistoryContent() {
     }
   }
 
-  // Обработчик экспорта в CSV
   const handleExportCSV = async () => {
     if (!itemId) return
 
@@ -220,7 +211,6 @@ function HistoryContent() {
       setError(null)
       const blob = await itemsAPI.exportItemHistoryCSV(parseInt(itemId))
 
-      // Создание ссылки для скачивания
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement("a")
       link.href = url

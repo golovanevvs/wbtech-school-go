@@ -20,10 +20,8 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null)
   const [userData, setUserData] = useState(user)
 
-  // Проверка авторизации для всех ролей
   useAuthGuard()
 
-  // Загрузка данных пользователя с сервера
   const loadUserData = async () => {
     try {
       setLoading(true)
@@ -42,12 +40,10 @@ export default function ProfilePage() {
     }
   }
 
-  // Загрузка данных при монтировании компонента
   useEffect(() => {
     loadUserData()
   }, [])
 
-  // Обработчик удаления профиля
   const handleDeleteProfile = async () => {
     if (
       !window.confirm(
