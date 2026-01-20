@@ -12,7 +12,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 import ExpandLessIcon from "@mui/icons-material/ExpandLess"
 import DeleteIcon from "@mui/icons-material/Delete"
-import ReplyIcon from "@mui/icons-material/Reply" // <--- Добавили
+import ReplyIcon from "@mui/icons-material/Reply"
 import CommentForm from "./CommentForm"
 import { Comment } from "@/app/lib/types"
 import { useCommentContext } from "@/app/lib/CommentContext"
