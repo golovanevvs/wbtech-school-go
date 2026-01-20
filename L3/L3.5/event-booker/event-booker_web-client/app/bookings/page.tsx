@@ -40,7 +40,6 @@ export default function BookingsPage() {
   }, [user, authLoading, router])
 
   const handleConfirm = async (id: number) => {
-    // Очищаем предыдущую ошибку для этой брони
     setBookingErrors(prev => ({ ...prev, [id]: "" }))
 
     try {
@@ -49,7 +48,6 @@ export default function BookingsPage() {
       setBookings(updatedBookings.map(transformBookingFromServer))
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to confirm booking"
-      // Если бронь не в статусе pending (истекла или уже подтверждена), показываем ошибку в карточке
       if (errorMessage.includes("not in pending status")) {
         setBookingErrors(prev => ({
           ...prev,
@@ -65,7 +63,6 @@ export default function BookingsPage() {
   }
 
   const handleCancel = async (id: number) => {
-    // Очищаем предыдущую ошибку для этой брони
     setBookingErrors(prev => ({ ...prev, [id]: "" }))
 
     try {

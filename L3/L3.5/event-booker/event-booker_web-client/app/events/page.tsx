@@ -124,7 +124,6 @@ export default function EventsPage() {
       return
     }
 
-    // Очищаем предыдущую ошибку
     setBookingErrors(prev => ({ ...prev, [eventId]: "" }))
 
     const existingBooking = bookingsMap[eventId]
@@ -152,7 +151,6 @@ export default function EventsPage() {
         },
       }))
 
-      // Обновляем список мероприятий для отображения актуального количества мест
       const updatedEvents = await getEvents()
       setEvents(updatedEvents)
 
@@ -171,7 +169,6 @@ export default function EventsPage() {
       return
     }
 
-    // Очищаем предыдущую ошибку
     setBookingErrors(prev => ({ ...prev, [eventId]: "" }))
 
     try {
@@ -207,13 +204,11 @@ export default function EventsPage() {
       console.log("Booking confirmed:", confirmedBooking)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to confirm booking"
-      // Если бронь не в статусе pending (истекла или уже подтверждена)
       if (errorMessage.includes("not in pending status")) {
         setBookingErrors(prev => ({
           ...prev,
           [eventId]: "Срок брони истёк. Бронь была отменена.",
         }))
-        // Обновляем список бронирований
         try {
           await getUserBookings()
           
@@ -223,7 +218,6 @@ export default function EventsPage() {
             return newMap
           })
         } catch {
-          // Игнорируем ошибку обновления
         }
       } else {
         setBookingErrors(prev => ({
@@ -240,7 +234,6 @@ export default function EventsPage() {
       return
     }
 
-    // Очищаем предыдущую ошибку
     setBookingErrors(prev => ({ ...prev, [eventId]: "" }))
 
     try {
@@ -270,7 +263,6 @@ export default function EventsPage() {
         return newMap
       })
 
-      // Обновляем список мероприятий для отображения актуального количества мест
       const updatedEvents = await getEvents()
       setEvents(updatedEvents)
 

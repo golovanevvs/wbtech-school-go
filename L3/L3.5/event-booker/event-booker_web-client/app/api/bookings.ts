@@ -29,13 +29,11 @@ const apiRequest = async <T>(
   if (!response.ok) {
     const errorText = await response.text()
     console.error(`API Error: ${response.status}`, errorText)
-    // Попытка извлечь сообщение об ошибке из JSON
     try {
       const errorJson = JSON.parse(errorText)
       const errorMessage = errorJson.error || errorJson.message || errorText
       throw new ApiError(errorMessage, response.status)
     } catch {
-      // Если не JSON, используем текст как есть
       throw new ApiError(errorText, response.status)
     }
   }

@@ -94,7 +94,6 @@ func (sv *BookingService) Create(ctx context.Context, userID int, eventID int, b
 		return nil, fmt.Errorf("failed to update available places: %w", err)
 	}
 
-	// Send notification about successful booking
 	sv.SendBookingCreatedNotice(ctx, createdBooking, event)
 
 	return createdBooking, nil
@@ -145,7 +144,6 @@ func (sv *BookingService) Confirm(ctx context.Context, bookingID int) error {
 		return fmt.Errorf("failed to confirm booking: %w", err)
 	}
 
-	// Send notification about confirmed booking
 	sv.SendBookingConfirmedNotice(ctx, booking, event)
 
 	return nil
@@ -181,7 +179,6 @@ func (sv *BookingService) Cancel(ctx context.Context, bookingID int) error {
 		return fmt.Errorf("failed to update available places: %w", err)
 	}
 
-	// Send notification about cancelled booking
 	sv.SendBookingCancelledNotice(ctx, booking, event)
 
 	return nil
@@ -214,7 +211,6 @@ func (sv *BookingService) ProcessExpiredBookings(ctx context.Context) error {
 			continue
 		}
 
-		// Send notification about expired booking
 		sv.SendBookingExpiredNotice(ctx, booking, event)
 	}
 
@@ -233,7 +229,7 @@ func (sv *BookingService) SendBookingCreatedNotice(ctx context.Context, booking 
 			"Мероприятие: %s\n"+
 			"Дата: %s\n"+
 			"Срок действия брони: до %s\n\n"+
-			"Подтвердите бронь, нажав кнопку в приложении.",
+			"Подтвердите бронь на сайте",
 		event.Title,
 		event.Date.Format("02.01.2006 в 15:04"),
 		booking.ExpiresAt.Format("02.01.2006 в 15:04"),

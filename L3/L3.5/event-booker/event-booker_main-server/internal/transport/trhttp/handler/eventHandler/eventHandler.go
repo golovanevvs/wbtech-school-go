@@ -43,8 +43,8 @@ func New(parentLg *zlog.Zerolog, sv ISvForEventHandler) *EventHandler {
 func (hd *EventHandler) RegisterPublicRoutes(rt *ginext.RouterGroup) {
 	events := rt.Group("/events")
 	{
-		events.GET("", hd.GetAll)      // Публичный доступ - список мероприятий
-		events.GET("/:id", hd.GetByID) // Публичный доступ - детали мероприятия
+		events.GET("", hd.GetAll)
+		events.GET("/:id", hd.GetByID)
 	}
 }
 
@@ -52,10 +52,10 @@ func (hd *EventHandler) RegisterPublicRoutes(rt *ginext.RouterGroup) {
 func (hd *EventHandler) RegisterProtectedRoutes(rt *ginext.RouterGroup) {
 	events := rt.Group("/events")
 	{
-		events.POST("", hd.Create)                                    // Только для авторизованных - создание мероприятия
-		events.PUT("/:id", hd.Update)                                 // Только для авторизованных - обновление мероприятия
-		events.DELETE("/:id", hd.Delete)                              // Только для авторизованных - удаление мероприятия
-		events.PUT("/:id/available-places", hd.UpdateAvailablePlaces) // Только для авторизованных - обновление доступных мест
+		events.POST("", hd.Create)
+		events.PUT("/:id", hd.Update)
+		events.DELETE("/:id", hd.Delete)
+		events.PUT("/:id/available-places", hd.UpdateAvailablePlaces)
 	}
 }
 

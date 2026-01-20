@@ -98,7 +98,6 @@ func (sv *BackgroundService) processExpiredBookings(ctx context.Context) error {
 			continue
 		}
 
-		// Send notification about expired booking
 		sv.SendBookingExpiredNotice(ctx, booking, event)
 	}
 
