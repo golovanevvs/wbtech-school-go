@@ -21,7 +21,6 @@ export interface EventObject {
   editable?: boolean;
   duration?: Duration;
   extendedProps?: { [key: string]: any };
-  // ... другие свойства события
 }
 
 export interface ViewObject {
@@ -31,31 +30,20 @@ export interface ViewObject {
   activeEnd: Date;
   currentStart: Date;
   currentEnd: Date;
-  // ... другие свойства представления
 }
 
-// Вспомогательные функции для работы с датами
 export const DateUtils = {
-  /**
-   * Безопасно преобразует Date | string | null в Date или null
-   */
   toDate(date: Date | string | null | undefined): Date | null {
     if (!date) return null;
     if (date instanceof Date) return date;
     return new Date(date);
   },
   
-  /**
-   * Возвращает ISO строку из Date | string | null
-   */
   toISOString(date: Date | string | null | undefined): string | null {
     const dateObj = this.toDate(date);
     return dateObj ? dateObj.toISOString() : null;
   },
   
-  /**
-   * Проверяет, является ли значение объектом Date
-   */
   isDate(value: any): value is Date {
     return value instanceof Date;
   }
@@ -84,8 +72,6 @@ export interface EventResizeStopInfo {
   jsEvent: MouseEvent;
   view: ViewObject;
 }
-
-// Дополнительные интерфейсы для других событий FullCalendar
 
 export interface EventDropInfo {
   event: EventObject;
@@ -119,7 +105,6 @@ export interface EventMouseLeaveInfo {
   view: ViewObject;
 }
 
-// Совместимые с FullCalendar v6 типы
 export interface FullCalendarEventResizeInfo {
   event: {
     id?: string;

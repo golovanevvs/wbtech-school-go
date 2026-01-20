@@ -8,12 +8,10 @@ export default function CreateEventPage() {
   const router = useRouter()
 
   const handleSuccess = () => {
-    // Перенаправляем на главную страницу после успешного создания
     router.push("/")
   }
 
   const handleCancel = () => {
-    // Перенаправляем на главную страницу при отмене
     router.push("/")
   }
 

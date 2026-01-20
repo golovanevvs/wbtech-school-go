@@ -40,17 +40,10 @@ func NewNoticeService(
 func (sv *NoticeService) SendReminder(ctx context.Context, event *model.Event) {
 	lg := sv.lg.With().Str("method", "SendReminder").Logger()
 
-	// Format reminder message
 	message := sv.formatReminderMessage(event)
-
-	// For calendar events, we might send to:
-	// 1. A specific Telegram chat (if configured)
-	// 2. An email address (if configured)
-	// 3. Or just log it for now
 
 	wg := sync.WaitGroup{}
 
-	// Send to Telegram if configured
 	if sv.tg != nil {
 		wg.Add(1)
 		go func() {
@@ -59,7 +52,6 @@ func (sv *NoticeService) SendReminder(ctx context.Context, event *model.Event) {
 		}()
 	}
 
-	// Send to Email if configured
 	if sv.em != nil {
 		wg.Add(1)
 		go func() {
@@ -93,8 +85,6 @@ func (sv *NoticeService) formatReminderMessage(event *model.Event) string {
 func (sv *NoticeService) SendReminderToTelegram(ctx context.Context, message string) error {
 	lg := sv.lg.With().Str("method", "SendReminderToTelegram").Logger()
 
-	// For now, we'll just log the message
-	// In a real implementation, you would send to specific chat IDs
 	lg.Debug().Str("message", message).Msg("Would send reminder to Telegram")
 
 	// Example of actual sending (if you have configured chat IDs):
@@ -118,8 +108,6 @@ func (sv *NoticeService) SendReminderToTelegram(ctx context.Context, message str
 func (sv *NoticeService) SendReminderToEmail(ctx context.Context, message string) error {
 	lg := sv.lg.With().Str("method", "SendReminderToEmail").Logger()
 
-	// For now, we'll just log the message
-	// In a real implementation, you would send to specific email addresses
 	lg.Debug().Str("message", message).Msg("Would send reminder to email")
 
 	// Example of actual sending:
@@ -144,7 +132,6 @@ func (sv *NoticeService) SendTestNotification(ctx context.Context) error {
 
 	testMessage := "🧪 Тестовое уведомление от календаря событий"
 
-	// Send test to both channels
 	wg := sync.WaitGroup{}
 
 	if sv.tg != nil {
