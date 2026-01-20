@@ -40,8 +40,8 @@ sales-tracker/
 ├── sales-tracker_web-client/     # Веб-интерфейс (Next.js)
 ├── sales-tracker_main-server/    # API сервер (Go)
 └── providers/                    # Вспомогательные сервисы
-    ├── postgres/                # База данных
-    └── migrate/                 # Миграции БД
+    ├── postgres/                 # База данных
+    └── migrate/                  # Миграции БД
 ```
 
 ## Основные функции

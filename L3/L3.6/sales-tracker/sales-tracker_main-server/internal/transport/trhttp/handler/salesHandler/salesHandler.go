@@ -216,7 +216,6 @@ func (h *SalesHandler) UpdateSalesRecord(c *ginext.Context) {
 		return
 	}
 
-	// Validate request fields
 	if request.Type == "" {
 		lg.Warn().Msgf("%s type is required", pkgConst.Warn)
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -355,7 +354,6 @@ func (h *SalesHandler) GetAnalytics(c *ginext.Context) {
 		return
 	}
 
-	// Call service to get analytics data
 	analytics, err := h.sv.GetAnalytics(c.Request.Context(), from, to)
 	if err != nil {
 		lg.Error().Err(err).Msgf("%s failed to get analytics data", pkgConst.Error)
