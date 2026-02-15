@@ -10,15 +10,10 @@ import (
 	"time"
 )
 
-func main() {
-	var n int
-	var tSec int
-	fmt.Println("Enter the number of workers")
-	fmt.Scan(&n)
-	fmt.Println("Enter the program runtime in seconds")
-	fmt.Scan(&tSec)
+const numWorkers = 3
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(tSec)*time.Second)
+func main() {
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	inCh := make(chan int)
@@ -28,33 +23,43 @@ func main() {
 
 	wg := sync.WaitGroup{}
 
-	for w := range n {
+	for w := 0; w < numWorkers; w++ {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			for in := range inCh {
-				fmt.Printf("worker %d received data: %d\n", i, in)
-				time.Sleep(1 * time.Second)
+			for {
+				select {
+				case <-ctx.Done():
+					fmt.Printf("worker %d has closed\n", i)
+					return
+				case in, ok := <-inCh:
+					if !ok {
+						fmt.Printf("worker %d has closed (channel closed)\n", i)
+						return
+					}
+					fmt.Printf("worker %d received data: %d\n", i, in)
+					time.Sleep(1 * time.Second)
+				}
 			}
-			fmt.Printf("worker %d has closed\n", i)
 		}(w)
 	}
 
 	go func() {
-		for range signalCh {
-			cancel()
-		}
+		<-signalCh
+		fmt.Println("received SIGINT signal")
+		cancel()
 	}()
 
-	for i := 1; i > 0; i++ {
+	i := 1
+	for {
 		select {
 		case <-ctx.Done():
-			fmt.Printf("received signal: %v\n", ctx.Err())
 			close(inCh)
 			wg.Wait()
 			fmt.Println("end of work")
 			return
 		case inCh <- i:
+			i++
 		}
 	}
 }
