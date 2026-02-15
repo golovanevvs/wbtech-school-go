@@ -15,6 +15,7 @@ func main() {
 	fmt.Scan(&n)
 
 	wg := sync.WaitGroup{}
+	var mu sync.Mutex
 
 	inCh := make(chan int)
 
@@ -27,10 +28,14 @@ func main() {
 		go func(i int) {
 			defer wg.Done()
 			for in := range inCh {
+				mu.Lock()
 				fmt.Printf("worker %d received data: %d\n", i, in)
+				mu.Unlock()
 				time.Sleep(1 * time.Second)
 			}
+			mu.Lock()
 			fmt.Printf("worker %d has closed\n", i)
+			mu.Unlock()
 		}(w)
 
 	}
