@@ -12,22 +12,22 @@ func main() {
 
 	ch := make(chan int)
 
-	go func() {
-		for i := 1; i > 0; i++ {
-			select {
-			case _, ok := <-ch:
-				if !ok {
-					fmt.Println("Channel has closed")
-					return
-				}
-			case ch <- i:
-			}
-		}
-	}()
+	timeout := time.After(time.Duration(tSec) * time.Second)
 
 	go func() {
-		<-time.After(time.Duration(tSec) * time.Second)
-		close(ch)
+		i := 1
+		for {
+			select {
+			case <-timeout:
+				fmt.Println("Channel has closed")
+				close(ch)
+				return
+			default:
+				ch <- i
+				i++
+				time.Sleep(time.Second)
+			}
+		}
 	}()
 
 	for v := range ch {
