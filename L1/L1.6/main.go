@@ -4,51 +4,93 @@ import (
 	"context"
 	"fmt"
 	"runtime"
+	"sync"
 	"time"
 )
 
 func main() {
+	var wg sync.WaitGroup
+
 	// через канал уведомления
+	wg.Add(1)
 	ch := make(chan struct{})
-	go byChannel(ch)
+	go func() {
+		defer wg.Done()
+		byChannel(ch)
+	}()
+	time.Sleep(10 * time.Millisecond)
 	close(ch)
 
 	// через контекст при отмене
+	wg.Add(1)
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	go byCtxCancel(ctx)
+	go func() {
+		defer wg.Done()
+		byCtxCancel(ctx)
+	}()
+	time.Sleep(10 * time.Millisecond)
 	cancel()
 
 	// через контекст по истечении заданного интервала времени
+	wg.Add(1)
 	ctx, cancel = context.WithTimeout(context.Background(), 500*time.Millisecond)
 	defer cancel()
-	go byCtxTimeout(ctx)
+	go func() {
+		defer wg.Done()
+		byCtxTimeout(ctx)
+	}()
 
-	// через контекст по достижении заданного интервала времени
+	// через контекст с дедлайном
+	wg.Add(1)
 	deadLine := time.Now().Add(500 * time.Millisecond)
 	ctx, cancel = context.WithDeadline(context.Background(), deadLine)
 	defer cancel()
-	go byCtxDeadline(ctx)
+	go func() {
+		defer wg.Done()
+		byCtxDeadline(ctx)
+	}()
 
 	// через указанный промежуток времени с помощью time.After
-	go byTimeAfter()
+	// возможна утечка памяти
+	// wg.Add(1)
+	// go func() {
+	// 	defer wg.Done()
+	// 	byTimeAfter()
+	// }()
 
 	// через указанный промежуток времени по таймеру
-	go byTimer()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		byTimer()
+	}()
 
 	// через специальную функцию runtime.Goexit()
-	go byRuntime()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		byRuntime()
+	}()
 
-	time.Sleep(5 * time.Second)
+	// через тикер
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		byTicker()
+	}()
+
+	wg.Wait()
+	fmt.Println("All goroutines finished")
 }
 
 func byChannel(ch chan struct{}) {
-
 	for {
 		select {
 		case <-ch:
 			fmt.Println("Stop by channel")
 			return
+		default:
+			time.Sleep(10 * time.Millisecond)
 		}
 	}
 }
@@ -59,53 +101,64 @@ func byCtxCancel(ctx context.Context) {
 		case <-ctx.Done():
 			fmt.Println("Stop by context with cancel")
 			return
+		default:
+			time.Sleep(10 * time.Millisecond)
 		}
 	}
 }
 
 func byCtxTimeout(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			fmt.Println("Stop by context with timeout")
-			return
-		}
-	}
+	<-ctx.Done()
+	fmt.Println("Stop by context with timeout")
 }
 
 func byCtxDeadline(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			fmt.Println("Stop by context with deadline")
-			return
-		}
-	}
+	<-ctx.Done()
+	fmt.Println("Stop by context with deadline")
 }
 
-func byTimeAfter() {
-	timeToExit := time.After(500 * time.Millisecond)
-	for {
-		select {
-		case <-timeToExit:
-			fmt.Println("Stop by timeout of time.After")
-			return
-		}
-	}
-}
+// нельзя остановить!
+// func byTimeAfter() {
+// 	select {
+// 	case <-time.After(500 * time.Millisecond):
+// 		fmt.Println("Stop by time.After")
+// 		return
+// 	}
+// }
+
 func byTimer() {
-	t := time.NewTimer(500 * time.Millisecond)
-	for {
-		select {
-		case <-t.C:
-			fmt.Println("Stop by timeout of timer")
-			return
-		}
+	timer := time.NewTimer(500 * time.Millisecond)
+	defer timer.Stop()
+
+	select {
+	case <-timer.C:
+		fmt.Println("Stop by timer")
+		return
+	default:
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 
 func byRuntime() {
+	defer fmt.Println("Stop by Goexit (defer)")
 	time.Sleep(500 * time.Millisecond)
 	fmt.Println("Stop by Goexit")
 	runtime.Goexit()
+}
+
+func byTicker() {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	timeout := time.After(500 * time.Millisecond)
+
+	for {
+		select {
+		case t := <-ticker.C:
+			fmt.Printf("Ticker tick at %v\n", t.Format("15:04:05.000"))
+		case <-timeout:
+			fmt.Println("Stop by ticker timeout")
+			return
+		}
+	}
 }
