@@ -11,11 +11,10 @@ func main() {
 	sets := make([]string, 0)
 
 	for _, v := range arr {
-		mapSet[v] = true
-	}
-
-	for v := range mapSet {
-		sets = append(sets, v)
+		if !mapSet[v] {
+			mapSet[v] = true
+			sets = append(sets, v)
+		}
 	}
 
 	fmt.Printf("Sequence: %v\n", arr)
