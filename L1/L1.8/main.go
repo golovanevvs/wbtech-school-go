@@ -13,19 +13,15 @@ func main() {
 	fmt.Printf("The number %d in binary is: %s\n", number, numberStr)
 
 	var idx int
-	fmt.Println("Enter the index of the i-th bit to set (0 = LSB, negative from LSB):")
+	fmt.Println("Enter the index of the i-th bit to set (1 = LSB):")
 	fmt.Scan(&idx)
 
-	bitLen := len(numberStr)
-
-	if idx < 0 {
-		idx = bitLen + idx
-	}
-
-	if idx < 0 || idx >= bitLen {
-		fmt.Printf("There is no such bit index in the binary representation of the number %d\n", number)
+	if idx < 1 || idx > 64 {
+		fmt.Printf("Invalid bit index: %d. Must be between 1 and 64\n", idx)
 		return
 	}
+
+	bitPos := idx - 1
 
 	var bitValue int
 	fmt.Println("Enter the bit value (0 or 1):")
@@ -36,7 +32,7 @@ func main() {
 		return
 	}
 
-	mask := int64(1) << idx
+	mask := int64(1) << bitPos
 	var result int64
 	if bitValue == 1 {
 		result = number | mask
