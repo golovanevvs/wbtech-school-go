@@ -10,7 +10,20 @@ import (
 )
 
 func sleep(seconds int) {
-	<-time.After(time.Duration(seconds) * time.Second)
+	done := make(chan bool)
+
+	go func() {
+		start := time.Now()
+		for {
+			if time.Since(start) >= time.Duration(seconds)*time.Second {
+				done <- true
+				return
+			}
+			time.Sleep(time.Millisecond * 10)
+		}
+	}()
+
+	<-done
 }
 
 func main() {
