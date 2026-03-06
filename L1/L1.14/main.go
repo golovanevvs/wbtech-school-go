@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+)
 
 func main() {
 	data := []any{1, "string", true, make(chan int), 1.1}
@@ -16,11 +19,14 @@ func main() {
 		case bool:
 			fmt.Printf("Value: %v, variable type: %T\n", v, v)
 
-		case chan int:
-			fmt.Printf("Value: make(chan int), variable type: %T\n", v)
-
 		default:
-			fmt.Printf("Value: %v, unknown variable type\n", v)
+			t := reflect.TypeOf(v)
+			if t.Kind() == reflect.Chan {
+				fmt.Printf("Value (channel memory address): %v, type: %v %v\n",
+					v, t.Kind(), t.Elem())
+			} else {
+				fmt.Printf("Value: %v, unknown variable type: %T\n", v, v)
+			}
 		}
 	}
 }
