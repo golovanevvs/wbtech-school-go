@@ -51,7 +51,11 @@ loop:
 		}
 	}
 
-	copy(data[index:], data[index+1:])
+	if index < len(data)-1 {
+		copy(data[index:], data[index+1:])
+	}
+
+	data[len(data)-1] = 0
 	data = data[:len(data)-1]
 
 	fmt.Printf("Result: %v\n", data)
