@@ -27,25 +27,24 @@ func main() {
 }
 
 func (a *atomicExample) runCount(numWorkers int, n int) {
-	printMu := sync.Mutex{}
-
 	wg := sync.WaitGroup{}
 
 	wg.Add(numWorkers)
 
-	for i := 0; i < numWorkers; i++ {
+	for i := range numWorkers {
 		go func(i int) {
 			defer wg.Done()
 			for {
-				cur := atomic.LoadInt64(&a.count)
-				if cur >= int64(n) {
+				cur := atomic.AddInt64(&a.count, 1)
+				if cur > int64(n) {
+					atomic.AddInt64(&a.count, -1)
 					break
 				}
-				if atomic.CompareAndSwapInt64(&a.count, cur, cur+1) {
-					v := atomic.LoadInt64(&a.count)
-					printMu.Lock()
-					fmt.Printf("With atomic. Worker %d: %d\n", i, v)
-					printMu.Unlock()
+
+				fmt.Printf("With atomic. Worker %d: %d\n", i, cur)
+
+				if cur == int64(n) {
+					break
 				}
 			}
 		}(i)
