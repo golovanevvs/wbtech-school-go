@@ -19,7 +19,6 @@ func sleep(seconds int) {
 				done <- true
 				return
 			}
-			time.Sleep(time.Millisecond * 10)
 		}
 	}()
 
