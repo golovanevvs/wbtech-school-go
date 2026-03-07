@@ -14,9 +14,11 @@ func main() {
 	in := bufio.NewReader(os.Stdin)
 	str, err := in.ReadString('\n')
 	if err != nil {
-		fmt.Printf("Input error: %v", err)
+		fmt.Printf("Input error: %v\n", err)
 		os.Exit(1)
 	}
+
+	str = strings.TrimSpace(str)
 
 	unpackingString, err := unpackString(str)
 	if err != nil {
@@ -54,11 +56,25 @@ func unpackString(str string) (string, error) {
 			if r == 0 {
 				return "", errors.New("invalid string")
 			}
-			count := int(rs[i] - '0')
+
+			numStr := string(rs[i])
+			j := i + 1
+			for j < len(rs) && unicode.IsDigit(rs[j]) {
+				numStr += string(rs[j])
+				j++
+			}
+
+			count := 0
+			for _, d := range numStr {
+				count = count*10 + int(d-'0')
+			}
+
 			for range count {
 				res.WriteRune(r)
 			}
+
 			r = 0
+			i = j - 1
 		}
 	}
 
