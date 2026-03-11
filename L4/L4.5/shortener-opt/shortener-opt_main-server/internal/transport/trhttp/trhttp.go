@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	_ "net/http/pprof"
+	"net/http/pprof"
 
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.5/shortener-opt/shortener-opt_main-server/internal/pkg/pkgConst"
 	"github.com/golovanevvs/wbtech-school-go/tree/main/L4/L4.5/shortener-opt/shortener-opt_main-server/internal/pkg/pkgErrors"
@@ -27,6 +27,17 @@ type HTTP struct {
 
 func New(cfg *Config, parentLg *zlog.Zerolog, rs *pkgRetry.Retry, sv IService) *HTTP {
 	lg := parentLg.With().Str("component", "HTTP").Logger()
+
+	pprofMux := http.NewServeMux()
+	pprofMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/debug/pprof/", http.StatusMovedPermanently)
+	})
+	pprofMux.HandleFunc("GET /debug/pprof/", pprof.Index)
+	pprofMux.HandleFunc("GET /debug/pprof/cmdline", pprof.Cmdline)
+	pprofMux.HandleFunc("GET /debug/pprof/profile", pprof.Profile)
+	pprofMux.HandleFunc("GET /debug/pprof/symbol", pprof.Symbol)
+	pprofMux.HandleFunc("GET /debug/pprof/trace", pprof.Trace)
+
 	return &HTTP{
 		lg: &lg,
 		rs: rs,
@@ -35,7 +46,8 @@ func New(cfg *Config, parentLg *zlog.Zerolog, rs *pkgRetry.Retry, sv IService) *
 			Handler: handler.New(cfg.Handler, &lg, sv, cfg.PublicHost, cfg.WebPublicHost).Rt,
 		},
 		pprofSrv: &http.Server{
-			Addr: fmt.Sprintf(":%d", cfg.PprofPort),
+			Addr:    fmt.Sprintf(":%d", cfg.PprofPort),
+			Handler: pprofMux,
 		},
 	}
 }

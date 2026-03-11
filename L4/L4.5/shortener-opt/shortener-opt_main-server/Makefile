@@ -311,3 +311,79 @@ prometheus-ps:
 	$(MAKE_CMD) -C $(PROMETHEUS) ps
 prometheus-exec:
 	$(MAKE_CMD) -C $(PROMETHEUS) exec
+
+# ========================
+# BENCHMARKS
+# ========================
+
+.PHONY: bench bench-old bench-new bench-compare bench-cpu bench-mem bench-trace profile-clean install-benchstat profile-view-cpu profile-view-mem profile-view-trace
+
+BENCH_DIR = internal/service/addShortURL
+
+install-benchstat:
+	@echo "Installing benchstat..."
+	@go install golang.org/x/perf/cmd/benchstat@latest
+
+bench:
+	cd $(BENCH_DIR) && go test -bench=. -benchmem -run=^$$
+
+bench-old:
+	cd $(BENCH_DIR) && go test -bench=BenchmarkGenerateShortCode/old -benchmem
+
+bench-new:
+	cd $(BENCH_DIR) && go test -bench=BenchmarkGenerateShortCode/new -benchmem
+
+bench-save-old:
+	@echo "Running old version benchmark..."
+	cd $(BENCH_DIR) && go test -bench=BenchmarkGenerateShortCode/old -benchmem -count=5 > /tmp/bench_old.txt 2>&1
+	@echo "Result saved to /tmp/bench_old.txt"
+	@cat /tmp/bench_old.txt
+
+bench-save-new:
+	@echo "Running new version benchmark..."
+	cd $(BENCH_DIR) && go test -bench=BenchmarkGenerateShortCode/new -benchmem -count=5 > /tmp/bench_new.txt 2>&1
+	@echo "Result saved to /tmp/bench_new.txt"
+	@cat /tmp/bench_new.txt
+
+bench-compare: install-benchstat
+	@echo "Running old benchmark (uuid)..."
+	cd $(BENCH_DIR) && go test -bench=BenchmarkGenerateShortCode/old -benchmem -count=10 > /tmp/bench_old.txt 2>&1
+	@echo "Running new benchmark (sync.Pool)..."
+	cd $(BENCH_DIR) && go test -bench=BenchmarkGenerateShortCode/new -benchmem -count=10 > /tmp/bench_new.txt 2>&1
+	@echo ""
+	@echo "Benchstat comparison:"
+	@PATH=$$PATH:$$HOME/go/bin benchstat -row ".name" /tmp/bench_old.txt /tmp/bench_new.txt
+
+bench-cpu:
+	cd $(BENCH_DIR) && go test -bench=BenchmarkGenerateShortCode -cpuprofile=/tmp/cpu.prof -count=3
+	@echo "CPU profile saved to /tmp/cpu.prof"
+	@echo "View with: make profile-view-cpu"
+
+bench-mem:
+	cd $(BENCH_DIR) && go test -bench=BenchmarkGenerateShortCode -memprofile=/tmp/mem.prof -count=3
+	@echo "Memory profile saved to /tmp/mem.prof"
+	@echo "View with: make profile-view-mem"
+
+bench-trace:
+	cd $(BENCH_DIR) && go test -bench=BenchmarkGenerateShortCode -trace=/tmp/trace.out -count=1
+	@echo "Trace saved to /tmp/trace.out"
+	@echo "View with: make profile-view-trace"
+
+profile-view-cpu:
+	@echo "Opening CPU profile in pprof (interactive mode)..."
+	@echo "Commands: top, web, list <function>"
+	@go tool pprof /tmp/cpu.prof
+
+profile-view-mem:
+	@echo "Opening memory profile in pprof..."
+	@echo "Use -alloc_space to see all allocations, -inuse_space for current usage"
+	@echo "Commands: top, web, list <function>"
+	@go tool pprof -alloc_space /tmp/mem.prof
+
+profile-view-trace:
+	@echo "Opening trace in browser..."
+	@go tool trace /tmp/trace.out
+
+profile-clean:
+	rm -f /tmp/cpu.prof /tmp/mem.prof /tmp/trace.out /tmp/bench_old.txt /tmp/bench_new.txt
+	@echo "Profiles cleaned"
